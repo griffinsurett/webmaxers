@@ -1,0 +1,28 @@
+---
+import ScrollRevealTextComponent from "./ScrollRevealText.tsx";
+
+interface Props {
+  text: string;
+  className?: string;
+  splitType?: "character" | "word" | "line";
+  staggerDelay?: number;
+  scrollBuffer?: number;
+}
+
+const {
+  text,
+  className = "",
+  splitType = "character",
+  staggerDelay = 10,
+  scrollBuffer = 200,
+} = Astro.props;
+---
+
+<ScrollRevealTextComponent
+  client:load
+  text={text}
+  className={className}
+  splitType={splitType}
+  staggerDelay={staggerDelay}
+  scrollBuffer={scrollBuffer}
+/>

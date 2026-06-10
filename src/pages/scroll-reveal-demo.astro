@@ -1,0 +1,144 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import ScrollRevealText from "@/components/ScrollRevealText/ScrollRevealText.astro";
+---
+
+<BaseLayout title="Scroll Reveal Text Demo" description="Editorial scroll-driven text reveal animation">
+  <main class="min-h-screen bg-black text-white overflow-x-hidden">
+    <!-- Hero Section -->
+    <section class="h-screen flex items-center justify-center px-6 md:px-12">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-6xl md:text-8xl font-light tracking-tight mb-8">
+          Kinetic<br />Typography
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-400 leading-relaxed">
+          Scroll down to see the text reveal effect
+        </p>
+      </div>
+    </section>
+
+    <!-- Reveal Section 1 -->
+    <section class="min-h-screen flex items-center justify-center px-6 md:px-12 py-20">
+      <div class="max-w-4xl mx-auto">
+        <div class="mb-16">
+          <h2 class="text-5xl md:text-6xl font-light mb-12 text-white">
+            Character-by-Character
+          </h2>
+
+          <p class="text-2xl md:text-3xl font-light leading-relaxed text-gray-600">
+            <ScrollRevealText
+              text="Premium typography becomes an interaction. Each character illuminates as you scroll, creating a living document that responds to your attention. This technique transforms static copy into a kinetic experience that feels intentional and considered."
+              splitType="character"
+              className="text-inherit"
+            />
+          </p>
+        </div>
+
+        <div class="h-40"></div>
+
+        <div>
+          <h2 class="text-5xl md:text-6xl font-light mb-12 text-white">
+            Word-by-Word
+          </h2>
+
+          <p class="text-2xl md:text-3xl font-light leading-relaxed text-gray-600">
+            <ScrollRevealText
+              text="The rhythm of language becomes visible through progressive revelation. Words emerge from the darkness as you scroll, making readers hyper-aware of each phrase, each thought, each moment of meaning."
+              splitType="word"
+              className="text-inherit"
+            />
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reveal Section 2 -->
+    <section class="min-h-screen flex items-center justify-center px-6 md:px-12 py-20">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-5xl md:text-6xl font-light mb-12 text-white">
+          Editorial Presence
+        </h2>
+
+        <p class="text-2xl md:text-3xl font-light leading-relaxed text-gray-600 mb-12">
+          <ScrollRevealText
+            text="This effect lives in that space between interaction and storytelling. It's not gratuitous animation—it's a deliberate pacing tool. The fade from dark gray to white isn't just visual; it's a narrative device that guides attention and creates rhythm in the reading experience."
+            splitType="character"
+            className="text-inherit"
+          />
+        </p>
+
+        <p class="text-2xl md:text-3xl font-light leading-relaxed text-gray-600">
+          <ScrollRevealText
+            text="When implemented with restraint and precision, scroll-driven text reveal becomes invisible to the conscious mind but deeply felt in the experience. The user scrolls naturally, and the text responds. No click, no wait. Just pure, momentum-driven narrative."
+            splitType="word"
+            className="text-inherit"
+          />
+        </p>
+      </div>
+    </section>
+
+    <!-- Technical Section -->
+    <section class="min-h-screen flex items-center justify-center px-6 md:px-12 py-20 border-t border-gray-900">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-5xl md:text-6xl font-light mb-12 text-white">
+          How It Works
+        </h2>
+
+        <div class="space-y-12">
+          <div>
+            <h3 class="text-2xl font-light text-white mb-4">Scroll Detection</h3>
+            <p class="text-lg md:text-xl font-light leading-relaxed text-gray-400">
+              <ScrollRevealText
+                text="The component uses getBoundingClientRect() to detect when the text element enters the viewport and calculates scroll progress as a normalized value between 0 and 1."
+                splitType="word"
+                className="text-inherit"
+              />
+            </p>
+          </div>
+
+          <div>
+            <h3 class="text-2xl font-light text-white mb-4">Character Mapping</h3>
+            <p class="text-lg md:text-xl font-light leading-relaxed text-gray-400">
+              <ScrollRevealText
+                text="Text is split into individual characters or words, each receiving a staggered opacity value based on scroll progress. The calculation spreads the full reveal across the scroll distance."
+                splitType="character"
+                className="text-inherit"
+              />
+            </p>
+          </div>
+
+          <div>
+            <h3 class="text-2xl font-light text-white mb-4">Color Transition</h3>
+            <p class="text-lg md:text-xl font-light leading-relaxed text-gray-400">
+              <ScrollRevealText
+                text="As opacity increases, the text color transitions from dark gray to white using cubic-bezier easing for a smooth, premium feel. The effect feels natural because it mirrors how visibility works."
+                splitType="word"
+                className="text-inherit"
+              />
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Spacer for scrolling -->
+    <section class="h-screen bg-gradient-to-b from-black to-gray-950 flex items-center justify-center px-6">
+      <div class="text-center max-w-2xl">
+        <h2 class="text-4xl md:text-5xl font-light text-white mb-6">
+          Scroll further to see more
+        </h2>
+        <p class="text-lg text-gray-400">
+          The effect scales beautifully across all screen sizes and maintains performance through optimized rendering.
+        </p>
+      </div>
+    </section>
+
+    <style>
+      /* Ensure smooth rendering */
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    </style>
+  </main>
+</BaseLayout>

@@ -6,31 +6,33 @@ import { siteData } from "@/content/siteData";
 import {
   query,
   whereArrayContains,
-  whereEquals,
   sortByDate,
   sortByOrder,
-  sortBy,
 } from "@/utils/query";
 import FrontPageHero from "@/layouts/FrontPageHero.astro";
+import AboutSection from "@/components/AboutSection/AboutSection.astro";
 ---
 
 <BaseLayout title="Home" description={siteData.description}>
   <main class="flex-1">
-    <!-- Hero ContentRenderer with static content -->
     <FrontPageHero
-      title="Build Amazing Static Sites"
-      description="The fastest way to create type-safe, content-driven websites with Astro and React"
-      primaryCTA={{
-        text: "Get Started",
-        link: "/contact-us",
-      }}
-      secondaryCTA={{
-        text: "View Services",
-        link: "/services",
-      }}
+      headline="Designed to"
+      headlineLine2="grow your business."
+      ctaText="Start a project"
+      ctaLink="/contact-us"
+      statLabel={`EST. 2019`}
+      statValue="7+ years. $1M+ clients. Dominant results."
+      statDescription="Websites, AI products, and systems built for clarity, scale, and growth."
     />
 
-    <ContentRenderer query={query("about-us")} variant="AccordionVariant" />
+    <!-- About Section -->
+    <AboutSection
+      headline="About Us"
+      subheadline="Who We Are"
+      statement="We are dedicated to providing exceptional digital solutions that drive real results. With years of expertise and a passion for innovation, we partner with visionary companies to build digital experiences that matter. Our commitment is unwavering: deliver measurable impact through strategic thinking, technical excellence, and relentless attention to detail."
+      ctaText="Explore Our Story"
+      ctaLink="/about-us"
+    />
 
     <!-- Services - auto-populates from services meta -->
     <ContentRenderer
