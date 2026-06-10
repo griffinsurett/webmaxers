@@ -10,7 +10,7 @@ import {
   sortByOrder,
 } from "@/utils/query";
 import FrontPageHero from "@/layouts/FrontPageHero.astro";
-import AboutSection from "@/components/AboutSection/AboutSection.astro";
+import ScrollRevealAboutSection from "@/components/AboutSection/ScrollRevealAboutSection.astro";
 ---
 
 <BaseLayout title="Home" description={siteData.description}>
@@ -25,9 +25,9 @@ import AboutSection from "@/components/AboutSection/AboutSection.astro";
       statDescription="Websites, AI products, and systems built for clarity, scale, and growth."
     />
 
-    <!-- About Section -->
-    <AboutSection
-      statement="Trionn is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology."
+    <!-- About Section with Scroll Reveal -->
+    <ScrollRevealAboutSection
+      statement="Webmaxers is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology."
       ctaText="Explore Our Story"
       ctaLink="/about-us"
     />
