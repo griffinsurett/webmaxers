@@ -15,23 +15,33 @@ const {
 ---
 
 <section class="relative w-full py-20 md:py-32 px-6 md:px-[80px]">
-  <div class="max-w-5xl">
-    <div class="mb-12 md:mb-16">
-      <p class="text-[clamp(1.8rem,5vw,3.5rem)] font-light leading-tight text-heading">
-        <ScrollRevealText
-          text={statement}
-          splitType="word"
-          className="text-inherit"
-        />
-      </p>
+  <div class="flex gap-12 md:gap-16">
+    <!-- Left: Title -->
+    <div class="shrink-0">
+      <h2 class="text-[clamp(0.875rem,2vw,1.5rem)] font-light tracking-widest uppercase text-zinc-400 sticky top-[120px]">
+        About
+      </h2>
     </div>
 
-    <a
-      href={ctaLink}
-      class="group inline-flex items-center justify-between gap-8 text-[11px] font-medium tracking-[0.18em] uppercase text-zinc-400 border-b border-zinc-400 pb-[6px] hover:text-white hover:border-white transition-colors duration-200"
-    >
-      {ctaText}
-      <span class="transition-transform duration-200 group-hover:translate-x-1">→</span>
-    </a>
+    <!-- Right: Statement and CTA -->
+    <div class="flex-1 max-w-4xl">
+      <div class="mb-12 md:mb-16">
+        <p class="text-[clamp(2.5rem,7vw,4.5rem)] font-light leading-tight text-heading">
+          <ScrollRevealText
+            text={statement}
+            splitType="word"
+            className="text-inherit"
+          />
+        </p>
+      </div>
+
+      <a
+        href={ctaLink}
+        class="group inline-flex items-center justify-between gap-8 text-[11px] font-medium tracking-[0.18em] uppercase text-zinc-400 border-b border-zinc-400 pb-[6px] hover:text-white hover:border-white transition-colors duration-200"
+      >
+        {ctaText}
+        <span class="transition-transform duration-200 group-hover:translate-x-1">→</span>
+      </a>
+    </div>
   </div>
 </section>
