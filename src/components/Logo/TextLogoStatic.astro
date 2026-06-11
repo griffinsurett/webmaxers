@@ -1,0 +1,177 @@
+---
+// src/components/Logo/TextLogoStatic.astro
+// CSS-only scroll-driven text fade animation
+// Zero JavaScript required - uses modern CSS scroll timeline API
+
+interface Props {
+  title?: string;
+  className?: string;
+  firstClass?: string;
+  restClass?: string;
+  fadeDuration?: number;
+  animateOutText?: boolean;
+  asHeading?: boolean;
+  headingLevel?: number;
+  colorMode?: "invert" | "dark" | "light";
+}
+
+const {
+  title = "",
+  className = "",
+  firstClass = "text-3xl -ml-[0.1rem]",
+  restClass = "text-xs lg:text-sm p-0 m-0",
+  fadeDuration = 1200,
+  animateOutText = false,
+  asHeading = true,
+  headingLevel = 2,
+  colorMode = "invert",
+} = Astro.props;
+
+// invert: theme-aware — light text on dark, dark text on light
+// dark:  always dark text (for use on light backgrounds)
+// light: always light text (for use on dark backgrounds)
+const textColorClass =
+  colorMode === "dark"
+    ? "text-primary-dark"
+    : colorMode === "light"
+      ? "text-primary-light"
+      : "dark:text-primary-light light:text-primary-dark";
+
+const words = title.split(" ");
+const firstWord = words[0] || "";
+const restOfTitle = words.slice(1).join(" ");
+
+const headingAttrs = asHeading
+  ? ({
+      role: "heading",
+      "aria-level": headingLevel,
+    } as const)
+  : {};
+---
+
+<div
+  class={className}
+  data-scroll-fade-css={animateOutText ? "true" : undefined}
+  {...headingAttrs}
+>
+  <span class={`${firstClass} ${textColorClass} leading-wide font-semibold no-translate`} style="line-height: normal;">
+    {firstWord}
+  </span>
+  {restOfTitle && (
+    <span class={`${restClass} font-light emphasized-text uppercase tracking-[0.2em]`} style="line-height: normal;">
+      {" "}{restOfTitle}
+    </span>
+  )}
+</div>
+
+<style>
+  /* Ensure text is visible by default before scroll activation */
+  [data-scroll-fade-css] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* CSS-only scroll-driven fade animation - Zero JavaScript */
+  /* Only activate after user has scrolled (prevents mobile initial-load issues) */
+  @supports (animation-timeline: scroll()) {
+    [data-scroll-fade-css][data-scroll-activated] {
+      animation: text-fade-out linear forwards;
+      animation-timeline: scroll(root);
+      animation-range: 0px 50px;
+    }
+
+    @keyframes text-fade-out {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-1rem);
+      }
+    }
+  }
+
+  /* Fallback for older browsers - uses JavaScript scroll observer */
+  @supports not (animation-timeline: scroll()) {
+    [data-scroll-fade-css] {
+      transition: opacity 300ms ease, transform 300ms ease;
+    }
+
+    [data-scroll-fade-css][data-scrolled="true"] {
+      opacity: 0;
+      transform: translateY(-1rem);
+    }
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    [data-scroll-fade-css] {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+</style>
+
+<script>
+  // Handles scroll-fade for both modern and legacy browsers
+  (function initScrollFade() {
+    if (typeof window === "undefined") return;
+
+    const element = document.querySelector('[data-scroll-fade-css]');
+    if (!element) return;
+
+    const supportsScrollTimeline = CSS.supports && CSS.supports('animation-timeline: scroll()');
+    let ticking = false;
+    let hasScrolled = false;
+    const threshold = 50;
+
+    const updateFade = () => {
+      const scrollY = window.scrollY;
+
+      // For modern browsers: activate scroll animation only after first real scroll
+      // This prevents mobile browsers from starting with faded text due to non-zero initial scroll
+      if (supportsScrollTimeline) {
+        if (!hasScrolled && scrollY <= 5) {
+          // User scrolled back to top or near top - now safe to activate
+          hasScrolled = true;
+          element.setAttribute('data-scroll-activated', 'true');
+        } else if (!hasScrolled && scrollY > 5) {
+          // Page loaded with scroll position > 0 (mobile restore, etc.)
+          // Wait for user to scroll to top before activating
+        }
+      } else {
+        // Legacy browsers: use data-scrolled attribute
+        if (scrollY > threshold) {
+          element.setAttribute('data-scrolled', 'true');
+        } else {
+          element.removeAttribute('data-scrolled');
+        }
+      }
+
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(updateFade);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Check initial state after a brief delay to let browser settle
+    requestAnimationFrame(() => {
+      // If starting at or near top, activate immediately
+      if (window.scrollY <= 5) {
+        if (supportsScrollTimeline) {
+          hasScrolled = true;
+          element.setAttribute('data-scroll-activated', 'true');
+        }
+      }
+      // Otherwise, wait for user to scroll to top
+    });
+  })();
+</script>

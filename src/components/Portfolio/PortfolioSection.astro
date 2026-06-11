@@ -1,0 +1,23 @@
+---
+// src/components/Portfolio/PortfolioSection.astro
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query, whereArrayContains, sortByOrder } from "@/utils/query";
+
+interface Props {
+  heading?: string;
+  ctaLink?: string;
+}
+
+const { heading = "Selected work\n& explorations", ctaLink } = Astro.props;
+
+const featuredProjects = query("projects")
+  .where(whereArrayContains("tags", "featured"))
+  .orderBy(sortByOrder());
+---
+
+<ContentRenderer
+  query={featuredProjects}
+  variant="FilmstripVariant"
+  title={heading}
+  collectionUrl={ctaLink ?? "/projects"}
+/>

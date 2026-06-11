@@ -1,0 +1,37 @@
+---
+// src/pages/[collection]/[id].astro
+/**
+ * Collection-Level Item Pages
+ *
+ * Generates pages for items at /collection/id path.
+ * Items with rootPath: true use /[id].astro instead.
+ */
+
+import {
+  generateItemPaths,
+  prepareItemPageData,
+  collectionLevelFilter,
+  buildCollectionLevelParams,
+} from "@/utils/pages/pageGeneration/itemPageHelpers";
+
+export async function getStaticPaths() {
+  return generateItemPaths(collectionLevelFilter, buildCollectionLevelParams);
+}
+
+const {
+  LayoutComponent,
+  Content,
+  entry,
+  collectionName,
+  collectionMeta,
+  seoProps,
+} = await prepareItemPageData(Astro.props);
+---
+<LayoutComponent
+  entry={entry}
+  collection={collectionName}
+  collectionMeta={collectionMeta}
+  seoProps={seoProps}
+  Content={Content}
+  {...collectionMeta}  
+/>

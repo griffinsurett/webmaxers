@@ -1,39 +1,322 @@
 ---
+import { splitTextIntoAnimatedWords } from "@/utils/animatedText";
+import { Image } from "astro:assets";
+import LOGO_MARK from "@/assets/logo-mark.png";
+
 interface Props {
   statement?: string;
+  leftText?: string;
+  rightText?: string;
   ctaText?: string;
   ctaLink?: string;
+  stickyHeight?: string;
+  logoSize?: number;
 }
 
 const {
   statement = "Webmaxers is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology.",
+  leftText = "We design for longevity, clarity first, craft always, built to scale.",
+  rightText = "Our mission is to make technology feel human by designing digital products that are intuitive, purposeful, and meaningful to people.",
   ctaText = "Explore Our Story",
   ctaLink = "/about-us",
+  stickyHeight = "250svh",
+  logoSize = 56,
 } = Astro.props;
+
+const words = splitTextIntoAnimatedWords(statement);
 ---
 
-<section class="relative w-full py-20 md:py-32 px-6 md:px-[80px]">
-  <div class="flex gap-12 md:gap-16 w-full">
-    <!-- Left: Title -->
-    <div class="shrink-0">
-      <h2 class="text-lg font-light tracking-widest uppercase text-zinc-400">
-        About
-      </h2>
+<div class="flex flex-col gap-24 md:gap-36 lg:gap-48">
+
+  <!-- Sticky scroll statement -->
+  <aside
+    class="about-sticky-section"
+    aria-label="About statement"
+    data-about-sticky="true"
+    style={`--about-section-height:${stickyHeight};`}
+  >
+    <div class="about-sticky-pin" data-about-sticky-inner>
+      <section class="relative w-full">
+        <div class="flex gap-12 md:gap-16 w-full">
+          <!-- Left: Label -->
+          <div class="shrink-0 pt-2">
+            <p class="text-[11px] font-medium tracking-[0.18em] uppercase text-text">
+              About
+            </p>
+          </div>
+
+          <!-- Right: Animated statement -->
+          <div class="flex-1 max-w-4xl">
+            <h2
+              class="about-statement text-[clamp(2.5rem,7vw,4.5rem)] font-light leading-[1.1]"
+              aria-label={statement}
+            >
+              {words.map((word) => (
+                <>
+                  <span
+                    class="about-word"
+                    aria-hidden="true"
+                    data-about-word-progress
+                  >
+                    <span class="about-word-layer about-word-layer--base">{word.word}</span>
+                    <span class="about-word-layer about-word-layer--overlay">{word.word}</span>
+                  </span>
+                  {!word.isLast && <span class="about-space" aria-hidden="true"> </span>}
+                </>
+              ))}
+            </h2>
+          </div>
+        </div>
+      </section>
     </div>
+  </aside>
 
-    <!-- Right: Statement and CTA -->
-    <div class="flex-1 max-w-4xl">
-      <p class="text-[clamp(2.5rem,7vw,4.5rem)] font-light leading-[1.1] text-white mb-12 md:mb-16">
-        {statement}
-      </p>
-
-      <a
-        href={ctaLink}
-        class="group inline-flex items-center justify-between gap-8 text-[11px] font-medium tracking-[0.18em] uppercase text-zinc-400 border-b border-zinc-400 pb-[6px] hover:text-white hover:border-white transition-colors duration-200"
-      >
-        {ctaText}
-        <span class="transition-transform duration-200 group-hover:translate-x-1">→</span>
-      </a>
+  <!-- Rolling logo divider -->
+  <div class="about-roll-shell relative overflow-visible" aria-hidden="true">
+    <div class="border-t border-zinc-700 w-full"></div>
+    <div class="about-roll-track pointer-events-none absolute top-0 left-0 w-full overflow-visible">
+      <!-- Bounce wrapper handles the entry drop; inner img handles the roll -->
+      <span class="about-roll-bounce">
+        <Image
+          src={LOGO_MARK}
+          alt=""
+          width={logoSize}
+          height={logoSize}
+          class="about-roll-logo block"
+          loading="lazy"
+          decoding="async"
+        />
+      </span>
     </div>
   </div>
-</section>
+
+  <!-- About Bottom Section -->
+  <section class="about-bottom">
+    <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 0;">
+      <p class="text-base font-light leading-relaxed text-text">
+        {leftText}
+      </p>
+      <div></div>
+      <div class="flex flex-col justify-between gap-8">
+        <p class="text-base font-light leading-relaxed text-text">
+          {rightText}
+        </p>
+        <a
+          href={ctaLink}
+          class="group inline-flex items-center justify-between gap-4 w-fit text-[11px] font-medium tracking-[0.18em] uppercase text-text border-b border-text pb-[6px] hover:text-heading hover:border-heading transition-colors duration-200"
+        >
+          {ctaText}
+          <span class="transition-transform duration-200 group-hover:translate-x-1">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  .about-sticky-section {
+    min-height: var(--about-section-height);
+    position: relative;
+  }
+
+  .about-sticky-pin {
+    position: sticky;
+    top: clamp(5rem, 7vw, 7rem);
+    width: 100%;
+  }
+
+  .about-statement {
+    color: var(--color-heading);
+    line-height: 1.08;
+    text-wrap: balance;
+    width: 100%;
+  }
+
+  .about-word {
+    --word-progress: 0;
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .about-word-layer {
+    display: block;
+  }
+
+  .about-word-layer--base {
+    /* dim colour: blend heading toward transparent */
+    color: color-mix(in srgb, var(--color-heading) 12%, transparent);
+  }
+
+  .about-word-layer--overlay {
+    position: absolute;
+    inset: 0;
+    color: var(--color-heading);
+    pointer-events: none;
+    opacity: var(--word-progress);
+    will-change: opacity;
+  }
+
+  .about-space {
+    white-space: pre;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .about-sticky-section {
+      min-height: auto;
+    }
+    .about-sticky-pin {
+      position: static;
+      min-height: auto;
+      padding-block: 0;
+    }
+    .about-word-layer--overlay {
+      opacity: 1;
+      will-change: auto;
+    }
+  }
+
+  /* ── Rolling logo divider ── */
+  .about-roll-shell {
+    view-timeline-name: --about-roll;
+    view-timeline-axis: block;
+  }
+
+  /* Bounce wrapper: positioned along the line, handles horizontal travel + entry drop */
+  .about-roll-bounce {
+    position: absolute;
+    top: 50%;
+    left: -3rem;
+    display: block;
+    transform: translateX(-50%) translateY(-50%);
+    /* Entry bounce — fires once on first paint */
+    animation: about-logo-bounce 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.1s;
+    will-change: transform;
+  }
+
+  /* Logo itself: only rotates, scroll-linked */
+  .about-roll-logo {
+    display: block;
+    transform: rotate(0deg);
+    will-change: transform;
+  }
+
+  @supports (animation-timeline: view()) {
+    .about-roll-bounce {
+      animation:
+        about-logo-bounce 0.9s cubic-bezier(0.22, 1, 0.36, 1) both 0.1s,
+        about-logo-travel linear both;
+      animation-timeline: auto, --about-roll;
+      animation-range: auto, entry 0% cover 100%;
+    }
+
+    .about-roll-logo {
+      animation: about-logo-spin linear both;
+      animation-timeline: --about-roll;
+      animation-range: entry 0% cover 100%;
+    }
+  }
+
+  @keyframes about-logo-bounce {
+    0%   { transform: translateX(-50%) translateY(calc(-50% - 220px)) scaleY(1.1) scaleX(0.9); }
+    55%  { transform: translateX(-50%) translateY(-50%) scaleY(0.7)  scaleX(1.25); }
+    70%  { transform: translateX(-50%) translateY(calc(-50% - 40px))  scaleY(1.05) scaleX(0.97); }
+    82%  { transform: translateX(-50%) translateY(-50%) scaleY(0.88) scaleX(1.1); }
+    91%  { transform: translateX(-50%) translateY(calc(-50% - 12px))  scaleY(1)   scaleX(1); }
+    100% { transform: translateX(-50%) translateY(-50%) scaleY(1)    scaleX(1); }
+  }
+
+  @keyframes about-logo-travel {
+    from { left: -3rem; }
+    to   { left: calc(100% + 3rem); }
+  }
+
+  @keyframes about-logo-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(1440deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .about-roll-bounce,
+    .about-roll-logo {
+      display: none;
+    }
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    if (typeof window === "undefined") return;
+
+    const KEY = "__aboutStickyController";
+    if (window[KEY]) { window[KEY].register(); return; }
+
+    const ctrl = {
+      ticking: false,
+      started: false,
+      register() { this.update(); },
+      start() {
+        if (this.started) { this.schedule(); return; }
+        this.started = true;
+        window.addEventListener("scroll", () => ctrl.schedule(), { passive: true });
+        window.addEventListener("resize", () => ctrl.schedule());
+        document.addEventListener("astro:page-load", () => ctrl.schedule());
+        this.schedule();
+      },
+      schedule() {
+        if (this.ticking) return;
+        this.ticking = true;
+        requestAnimationFrame(() => { this.ticking = false; this.update(); });
+      },
+      update() {
+        const sections = document.querySelectorAll("[data-about-sticky='true']");
+        if (!sections.length) return;
+
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        sections.forEach((section) => {
+          if (!(section instanceof HTMLElement)) return;
+
+          if (reduced) {
+            section.querySelectorAll("[data-about-word-progress]").forEach((w) => {
+              if (w instanceof HTMLElement) w.style.setProperty("--word-progress", "1");
+            });
+            return;
+          }
+
+          const inner = section.querySelector("[data-about-sticky-inner]");
+          if (!(inner instanceof HTMLElement)) return;
+
+          const stickyTop = parseFloat(getComputedStyle(inner).top) || 0;
+          const scrollSpan = Math.max(section.offsetHeight - inner.offsetHeight, 1);
+          const sectionTop = section.getBoundingClientRect().top;
+          const progress = Math.max(0, Math.min((stickyTop - sectionTop) / scrollSpan, 1));
+
+          const wordNodes = section.querySelectorAll("[data-about-word-progress]");
+          const total = wordNodes.length || 1;
+
+          wordNodes.forEach((node, i) => {
+            if (!(node instanceof HTMLElement)) return;
+            const wp = Math.max(0, Math.min(progress * total - i, 1));
+            node.style.setProperty("--word-progress", wp.toFixed(4));
+          });
+        });
+      },
+    };
+
+    window[KEY] = ctrl;
+
+    const sections = document.querySelectorAll("[data-about-sticky='true']");
+    if (!sections.length) return;
+
+    if (!("IntersectionObserver" in window)) { ctrl.start(); return; }
+
+    const obs = new IntersectionObserver((entries, o) => {
+      if (entries.some((e) => e.isIntersecting)) { ctrl.start(); o.disconnect(); }
+    }, { rootMargin: "300px 0px", threshold: 0 });
+
+    sections.forEach((s) => obs.observe(s));
+  })();
+</script>
+

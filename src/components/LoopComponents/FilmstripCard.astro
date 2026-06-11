@@ -1,0 +1,240 @@
+---
+// src/components/LoopComponents/FilmstripCard.astro
+// One panel card for FilmstripVariant.
+// Owns all media rendering (video takes priority over image).
+
+import HoverScrollImage from "@/components/Portfolio/HoverScrollImage";
+import HoverPlayVideo from "@/components/Video/HoverPlayVideo/HoverPlayVideo.astro";
+import Button from "@/components/Button/Button";
+import { resolveImageMetadata, getImageAlt } from "@/utils/images";
+import { getImage } from "astro:assets";
+
+export interface Props {
+  title: string;
+  description?: string;
+  url?: string;
+  featuredVideo?: string;
+  fullSiteImage?: unknown;
+  bannerImage?: unknown;
+  featuredImage?: unknown;
+  industry?: string;
+  client?: string;
+  technologies?: string[];
+  link?: { label: string; url: string };
+  projectUrl?: string;
+}
+
+const {
+  title,
+  description,
+  url,
+  featuredVideo,
+  fullSiteImage,
+  bannerImage,
+  featuredImage,
+  industry,
+  technologies = [],
+  link,
+  projectUrl,
+} = Astro.props;
+
+const externalUrl = link?.url ?? projectUrl ?? url;
+const externalLabel = link?.label ?? "Visit ↗";
+
+const imageSource = fullSiteImage ?? bannerImage ?? featuredImage;
+const imageMetadata = resolveImageMetadata(imageSource);
+const imageAlt = getImageAlt(imageSource, `${title} website preview`);
+
+// Cropped placeholder shown until full image loads
+let croppedSrc: string | undefined;
+if (imageMetadata) {
+  const cropped = await getImage({
+    src: imageMetadata,
+    width: 860,
+    height: 559,
+    format: "webp",
+    quality: 70,
+    fit: "cover",
+    position: "top",
+  });
+  croppedSrc = cropped.src;
+}
+
+// Full-height image for hover-scroll
+let fullSrc: string | undefined;
+let fullWidth: number | undefined;
+let fullHeight: number | undefined;
+if (imageMetadata) {
+  const full = await getImage({
+    src: imageMetadata,
+    width: 1280,
+    format: "webp",
+    quality: 75,
+  });
+  fullSrc = full.src;
+  fullWidth = imageMetadata.width;
+  fullHeight = imageMetadata.height;
+}
+---
+
+<article class="fs-card">
+
+  <!-- Media frame -->
+  <div class="fs-card__media">
+    {featuredVideo ? (
+      <HoverPlayVideo
+        src={featuredVideo}
+        alt={imageAlt}
+        muted={true}
+        loop={true}
+        controls={false}
+        lazy={true}
+        playsInline={true}
+        posterWidth={1280}
+        generateThumbAt={0.75}
+        wrapperClass="h-full w-full overflow-hidden"
+        mediaClass="block !h-auto !w-full !object-contain object-top"
+        clientWrapperClass="h-full w-full overflow-hidden items-start"
+        class="m-0 h-full w-full"
+      />
+    ) : imageMetadata && fullSrc ? (
+      <div class="relative h-full w-full" data-hover-scroll-tile>
+        {croppedSrc && (
+          <figure
+            class="absolute inset-0 overflow-hidden"
+            data-hover-scroll-placeholder
+            aria-hidden="true"
+          >
+            <img
+              src={croppedSrc}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              draggable={false}
+              class="block h-full w-full select-none object-cover object-top"
+            />
+          </figure>
+        )}
+        <div class="relative z-10 h-full">
+          <HoverScrollImage
+            client:visible
+            src={fullSrc}
+            alt={imageAlt}
+            width={fullWidth}
+            height={fullHeight}
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+      </div>
+    ) : (
+      <div class="fs-card__placeholder">
+        Preview coming soon
+      </div>
+    )}
+  </div>
+
+  <!-- Card footer: title + meta + CTA -->
+  <div class="fs-card__footer">
+    <div class="fs-card__meta">
+      <h3 class="fs-card__title">{title}</h3>
+      {(industry || technologies.length > 0) && (
+        <p class="fs-card__tags">
+          {[industry, ...technologies].filter(Boolean).join(" · ")}
+        </p>
+      )}
+    </div>
+
+    {externalUrl && (
+      <Button
+        variant="underline"
+        href={externalUrl}
+        size="sm"
+        target="_blank"
+        rel="noopener noreferrer"
+        client:load
+      >
+        {externalLabel}
+      </Button>
+    )}
+  </div>
+
+  {description && (
+    <p class="fs-card__desc">{description}</p>
+  )}
+
+</article>
+
+<style>
+  .fs-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    height: 100%;
+  }
+
+  /* Media frame — fixed aspect ratio, full width */
+  .fs-card__media {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    aspect-ratio: 20 / 13;
+    flex-shrink: 0;
+  }
+
+  .fs-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg3, #18181b);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--fs-muted-col, rgba(212, 207, 200, 0.45));
+  }
+
+  /* Footer row: title+meta left, CTA right */
+  .fs-card__footer {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .fs-card__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .fs-card__title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--fs-heading-col, #f0ede8);
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .fs-card__tags {
+    font-size: 0.65rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fs-muted-col, rgba(212, 207, 200, 0.45));
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fs-card__desc {
+    font-size: clamp(0.7rem, 0.95vw, 0.8rem);
+    color: var(--fs-muted-col, rgba(212, 207, 200, 0.45));
+    line-height: 1.5;
+    max-width: 42ch;
+    margin: 0;
+  }
+</style>

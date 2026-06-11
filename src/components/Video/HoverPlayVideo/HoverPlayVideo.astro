@@ -1,0 +1,247 @@
+---
+import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import { generateVideoPoster } from "@/utils/videoThumbnails";
+import HoverPlayVideoClient from "./HoverPlayVideoClient";
+
+type PosterObject = { src?: string; width?: number; height?: number };
+type PosterInput = string | ImageMetadata | PosterObject | undefined;
+type VideoSource = { src: string; type?: string; media?: string };
+
+const VIDEO_DEFAULTS = {
+  muted: true,
+  loop: true,
+  controls: false,
+  playsInline: true,
+  lazy: true,
+} as const;
+
+const POSTER_OPTIMIZATION = {
+  desktopMaxWidth: 1366,
+  quality: 66,
+} as const;
+
+interface Props {
+  src?: string;
+  sources?: VideoSource[];
+  poster?: PosterInput;
+  fallbackPoster?: PosterInput;
+  alt?: string;
+  class?: string;
+  wrapperClass?: string;
+  mediaClass?: string;
+  clientWrapperClass?: string;
+  muted?: boolean;
+  loop?: boolean;
+  controls?: boolean;
+  playsInline?: boolean;
+  lazy?: boolean;
+  preload?: "none" | "metadata" | "auto";
+  sourceType?: string;
+  generateThumbAt?: number;
+  timecodeSeconds?: number;
+  posterWidth?: number;
+  ariaHidden?: boolean;
+  priority?: boolean;
+  [key: string]: any;
+}
+
+const {
+  src,
+  sources = [],
+  poster,
+  fallbackPoster,
+  alt = "Video",
+  class: className = "",
+  wrapperClass = "",
+  mediaClass = "w-full h-auto object-cover object-center",
+  clientWrapperClass = "w-full h-full overflow-hidden",
+  muted,
+  loop,
+  controls,
+  playsInline,
+  lazy,
+  preload,
+  sourceType,
+  generateThumbAt,
+  timecodeSeconds = 0,
+  posterWidth = 1600,
+  ariaHidden = false,
+  priority = false,
+  ...rest
+} = Astro.props as Props;
+
+const resolvedMuted = muted ?? VIDEO_DEFAULTS.muted;
+const resolvedLoop = loop ?? VIDEO_DEFAULTS.loop;
+const resolvedControls = controls ?? VIDEO_DEFAULTS.controls;
+const resolvedPlaysInline = playsInline ?? VIDEO_DEFAULTS.playsInline;
+const resolvedLazy = lazy ?? VIDEO_DEFAULTS.lazy;
+
+const mergedSources = Array.isArray(sources)
+  ? sources.filter((item) => item && typeof item.src === "string" && item.src.length > 0)
+  : [];
+
+const primarySrc = typeof src === "string" && src.length > 0 ? src : mergedSources[0]?.src;
+const clientSources =
+  typeof src === "string" && src.length > 0 ? mergedSources : mergedSources.slice(1);
+
+const primaryType =
+  sourceType ??
+  mergedSources[0]?.type ??
+  (primarySrc?.endsWith(".mov")
+    ? "video/quicktime"
+    : primarySrc?.endsWith(".webm")
+      ? "video/webm"
+      : primarySrc?.endsWith(".ogg") || primarySrc?.endsWith(".ogv")
+        ? "video/ogg"
+        : "video/mp4");
+
+const normalizePoster = (input: PosterInput): PosterInput => {
+  if (!input) return undefined;
+  if (typeof input === "string") return input;
+  if (typeof input === "object" && typeof input.src === "string" && input.src.length > 0) {
+    return input;
+  }
+  return undefined;
+};
+
+let resolvedPoster: PosterInput = normalizePoster(poster) ?? normalizePoster(fallbackPoster);
+if (!resolvedPoster && primarySrc) {
+  const generated = await generateVideoPoster(primarySrc, {
+    timecodeSeconds: generateThumbAt ?? timecodeSeconds,
+    width: posterWidth,
+  });
+  resolvedPoster = generated;
+}
+
+const isImageMetadata = (input: PosterInput): input is ImageMetadata =>
+  Boolean(
+    input &&
+      typeof input === "object" &&
+      "src" in input &&
+      "width" in input &&
+      "height" in input &&
+      "format" in input,
+  );
+
+let posterForVideoClient: PosterInput = resolvedPoster;
+if (isImageMetadata(resolvedPoster)) {
+  const targetWidth = Math.min(
+    resolvedPoster.width ?? POSTER_OPTIMIZATION.desktopMaxWidth,
+    posterWidth,
+    POSTER_OPTIMIZATION.desktopMaxWidth,
+  );
+  const optimizedPoster = await getImage({
+    src: resolvedPoster,
+    width: targetWidth,
+    format: "webp",
+    quality: POSTER_OPTIMIZATION.quality,
+  });
+
+  posterForVideoClient = {
+    src: optimizedPoster.src,
+    width: optimizedPoster.attributes.width as number,
+    height: optimizedPoster.attributes.height as number,
+  };
+}
+
+const resolvedPosterSrc =
+  typeof posterForVideoClient === "string"
+    ? posterForVideoClient
+    : posterForVideoClient && typeof posterForVideoClient === "object"
+      ? posterForVideoClient.src
+      : undefined;
+
+const resolvedPosterWidth =
+  posterForVideoClient && typeof posterForVideoClient === "object"
+    ? posterForVideoClient.width
+    : undefined;
+const resolvedPosterHeight =
+  posterForVideoClient && typeof posterForVideoClient === "object"
+    ? posterForVideoClient.height
+    : undefined;
+
+const hasStaticPoster = Boolean(resolvedPosterSrc);
+const clientContainerClass = hasStaticPoster ? "absolute inset-0 z-10" : "";
+const positionOverridePattern = /(^|\s)!?(static|fixed|absolute|relative|sticky)\b/;
+const hasPositionOverride = positionOverridePattern.test(`${wrapperClass} ${className}`);
+const basePositionClass = hasPositionOverride ? "" : "relative";
+const posterLoading = priority ? "eager" : "lazy";
+const posterFetchPriority = priority ? "high" : "auto";
+const posterDecoding = priority ? "sync" : "async";
+---
+
+<figure
+  class={`hover-play-video-shell overflow-hidden ${basePositionClass} ${wrapperClass} ${className}`.trim()}
+  data-hover-play-video-shell="true"
+>
+  {hasStaticPoster && (
+    <>
+      <img
+        src={resolvedPosterSrc}
+        alt=""
+        aria-hidden="true"
+        width={resolvedPosterWidth}
+        height={resolvedPosterHeight}
+        decoding={posterDecoding}
+        loading={posterLoading}
+        fetchpriority={posterFetchPriority}
+        class={`${mediaClass} opacity-0 pointer-events-none select-none`.trim()}
+      />
+
+      <div class="absolute inset-0 z-20" data-video-poster>
+        <img
+          src={resolvedPosterSrc}
+          alt={ariaHidden ? "" : alt}
+          aria-hidden={ariaHidden ? "true" : undefined}
+          width={resolvedPosterWidth}
+          height={resolvedPosterHeight}
+          decoding={posterDecoding}
+          loading={posterLoading}
+          fetchpriority={posterFetchPriority}
+          class={`${mediaClass} block w-full h-full`.trim()}
+        />
+      </div>
+    </>
+  )}
+
+  <div class={clientContainerClass}>
+    <HoverPlayVideoClient
+      client:visible
+      className={mediaClass}
+      wrapperClass={clientWrapperClass}
+      src={primarySrc}
+      poster={resolvedPosterSrc}
+      muted={resolvedMuted}
+      loop={resolvedLoop}
+      controls={resolvedControls}
+      playsInline={resolvedPlaysInline}
+      lazy={resolvedLazy}
+      preload={preload}
+      sourceType={primaryType}
+      aria-hidden={ariaHidden}
+      {...rest}
+    >
+      {clientSources.map((source) => (
+        <source
+          src={!resolvedLazy ? source.src : undefined}
+          data-video-src={resolvedLazy ? source.src : undefined}
+          type={source.type}
+          media={source.media}
+        />
+      ))}
+    </HoverPlayVideoClient>
+  </div>
+</figure>
+
+<style>
+  .hover-play-video-shell [data-video-poster] {
+    transition: opacity 300ms ease, visibility 300ms ease;
+  }
+
+  .hover-play-video-shell[data-video-loaded="true"] [data-video-poster] {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+</style>

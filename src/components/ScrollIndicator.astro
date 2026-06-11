@@ -1,0 +1,84 @@
+---
+// src/components/ScrollIndicator.astro
+export interface Props {
+  href?: string;
+  className?: string;
+}
+
+const { href = "#about-us", className = "" } = Astro.props;
+---
+
+<a
+  href={href}
+  class={`scroll-indicator absolute bottom-16 lg:bottom-12 left-1/2 -translate-x-1/2 cursor-pointer no-underline z-20 ${className}`}
+  aria-label="Scroll down for more content"
+  data-scroll-indicator
+>
+  <div
+    class="flex items-center justify-center p-1 border border-muted rounded-full shadow-lg transition-all duration-300 ease-in-out"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="text-muted transition-all duration-300 w-4 h-4 md:w-5 md:h-5 hover:translate-y-0.5"
+      aria-hidden="true"
+      role="presentation"
+    >
+      <path d="M12 5v14M19 12l-7 7-7-7"></path>
+    </svg>
+  </div>
+</a>
+
+<style>
+  .scroll-indicator {
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-15px);
+    }
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-indicator {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const indicator = document.querySelector('[data-scroll-indicator]') as HTMLElement;
+  if (indicator) {
+    let ticking = false;
+
+    const updateIndicator = () => {
+      const scrollY = window.scrollY;
+      indicator.style.opacity = scrollY > 50 ? '0' : '1';
+      indicator.style.pointerEvents = scrollY > 50 ? 'none' : 'auto';
+      ticking = false;
+    };
+
+    // Set initial transition
+    indicator.style.transition = 'opacity 0.4s ease';
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(updateIndicator);
+        ticking = true;
+      }
+    }, { passive: true });
+  }
+</script>

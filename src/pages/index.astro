@@ -1,94 +1,51 @@
 ---
 // src/pages/index.astro
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import { siteData } from "@/content/siteData";
-import {
-  query,
-  whereArrayContains,
-  sortByDate,
-  sortByOrder,
-} from "@/utils/query";
 import FrontPageHero from "@/layouts/FrontPageHero.astro";
-import ScrollRevealAboutSection from "@/components/AboutSection/ScrollRevealAboutSection.astro";
+import AboutSection from "@/components/AboutSection/AboutSection.astro";
+import Marquee from "@/components/Marquee.astro";
+import PortfolioSection from "@/components/Portfolio/PortfolioSection.astro";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query } from "@/utils/query";
 ---
 
 <BaseLayout title="Home" description={siteData.description}>
   <main class="flex-1">
-    <FrontPageHero
-      headline="Designed to"
-      headlineLine2="grow your business."
-      ctaText="Start a project"
-      ctaLink="/contact-us"
-      statLabel={`EST. 2019`}
-      statValue="7+ years. $1M+ clients. Dominant results."
-      statDescription="Websites, AI products, and systems built for clarity, scale, and growth."
+    <div class="px-6 md:px-[80px]">
+      <FrontPageHero
+        headline="Designed to"
+        headlineLine2="grow your business."
+        ctaText="Start a project"
+        ctaLink="/contact-us"
+        statLabel={`EST. 2019`}
+        statValue="7+ years. $1M+ clients. Dominant results."
+        statDescription="Websites, AI products, and systems built for clarity, scale, and growth."
+      />
+
+      <!-- About Section (includes both top reveal and bottom content) -->
+      <AboutSection
+        statement="Webmaxers is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology."
+        leftText="We design for longevity, clarity first, craft always, built to scale."
+        rightText="Our mission is to make technology feel human by designing digital products that are intuitive, purposeful, and meaningful to people."
+        ctaText="Explore Our Story"
+        ctaLink="/about-us"
+      />
+    </div>
+
+    <!-- Marquee: full-bleed, manages its own horizontal escape -->
+    <Marquee />
+
+    <PortfolioSection
+      heading={"Selected work\n& explorations"}
+      ctaLink="/projects"
     />
 
-    <!-- About Section with Scroll Reveal -->
-    <ScrollRevealAboutSection
-      statement="Webmaxers is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology."
-      ctaText="Explore Our Story"
-      ctaLink="/about-us"
-    />
-
-    <!-- Services - auto-populates from services meta -->
-    <ContentRenderer
-      query={query("services").orderBy(sortByOrder())}
-      variant="GridVariant"
-      columns={3}
-      gap="lg"
-    />
-
-    <!-- Filtered query - still gets meta from authors -->
-    <ContentRenderer
-      query={query("authors").where(whereArrayContains("tags", "featured"))}
-      variant="GridVariant"
-      columns={3}
-      gap="lg"
-    />
-
-    <!-- Portfolio with sorting -->
-    <ContentRenderer
-      query={query("projects")
-        .orderBy(sortByDate("publishDate", "desc"))
-        .limit(5)}
-      variant="GridVariant"
-    />
-
-    <!-- Testimonials with rating filter -->
-    <ContentRenderer
-      query={query("testimonials").where((entry) => entry.data.rating >= 4)}
-      variant="MasonryVariant"
-    />
-
-    <!-- FAQ ContentRenderer -->
-    <ContentRenderer
-      query={query("faq").orderBy(sortByOrder())}
-      variant="AccordionVariant"
-      allowMultiple={false}
-    />
-
-    <!-- Contact ContentRenderer -->
-    <ContentRenderer
-      query={query("contact-us")}
-      variant="ContactVariant"
-      columns={2}
-    />
-
-    <!-- Blog with limit - auto-populates from blog meta -->
-    <ContentRenderer
-      query={query("blog").limit(2)}
-      variant="BlogVariant"
-      columns={2}
-    />
-
-    <!-- Multi-collection query - requires manual title/description -->
-    <ContentRenderer
-      query={query(["blog", "projects"]).orderBy(sortByDate()).limit(10)}
-      variant="ListVariant"
-      title="Recent Updates"
-      description="Latest from our blog and portfolio"
-    />
+    <div class="px-6 md:px-[80px]">
+      <ContentRenderer
+        query={query("services")}
+        variant="CardVariant"
+      />
+    </div>
   </main>
 </BaseLayout>

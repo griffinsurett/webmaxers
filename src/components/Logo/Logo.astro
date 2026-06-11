@@ -1,0 +1,216 @@
+---
+import LottieLogo from "./LottieLogo";
+import TextLogoStatic from "./TextLogoStatic.astro";
+import { Image } from "astro:assets";
+import POSTER_SRC from "@/assets/GWS-animated.png";
+import { siteData } from "@/content/siteData";
+
+export interface Props {
+  loading?: "lazy" | "eager";
+  trigger?: "auto" | "scroll" | "visible" | "load";
+  hydrate?: "load" | "idle" | "visible" | "scroll";
+  textFadeMs?: number;
+  animateOutText?: boolean;
+  class?: string;
+  useLottie?: boolean;
+  showText?: boolean;
+  logoMediaClass?: string;
+  logoWidths?: number[];
+  logoSizes?: string;
+  titleFirstClass?: string;
+  titleRestClass?: string;
+  loop?: boolean;
+  autoplay?: boolean;
+  altContext?: string;
+  colorMode?: "invert" | "dark" | "light";
+}
+
+const {
+  loading = "eager",
+  trigger = "auto",
+  hydrate,
+  textFadeMs = 1200,
+  animateOutText = false,
+  class: className = "",
+  useLottie = true,
+  showText = true,
+  logoMediaClass,
+  logoWidths,
+  logoSizes,
+  titleFirstClass,
+  titleRestClass,
+  loop = true,
+  autoplay = false,
+  altContext,
+  colorMode = "invert",
+} = Astro.props;
+
+const alt = altContext
+  ? `Web Maxers Logo - ${altContext}`
+  : "Web Maxers Logo";
+
+const shouldUseLottie =
+  useLottie &&
+  (trigger === "scroll" ||
+    trigger === "visible" ||
+    trigger === "load");
+
+const DEFAULT_LOGO_WIDTHS = [42, 48, 54];
+const DEFAULT_LOGO_SIZES = "(min-width: 1024px) 42px, 38px";
+const DEFAULT_LOGO_CLASSES =
+  "block w-[38px] h-[38px] lg:w-[42px] lg:h-[42px] object-contain animate-spin-once";
+
+const LOGO_WIDTHS = logoWidths ?? DEFAULT_LOGO_WIDTHS;
+const LOGO_SIZES = logoSizes ?? DEFAULT_LOGO_SIZES;
+// Filter strategy: wrap the entire logo image (Lottie or static) in a <span>
+// with the filter class. This means the filter is on a parent of both the
+// Lottie SVG and the fallback <Image>, so they always match.
+// logo-class stays on the Lottie container for the a11y selector only —
+// we neutralize its baked-in light:invert with [filter:none] so it never
+// interferes; all filter logic lives solely on the wrapper span.
+//
+// Logo is naturally light (white), so:
+//   "invert": light:invert  — dark on light theme, natural on dark theme
+//   "light":  no filter     — always natural/light
+//   "dark":   invert        — always dark in both themes
+const logoWrapperFilter =
+  colorMode === "dark"
+    ? "invert"
+    : colorMode === "light"
+      ? ""
+      : "light:invert"; // "invert" default
+
+const lottieClassName = "logo-class [filter:none]"; // a11y selector; filter neutralized here
+const logoClasses = logoMediaClass ?? DEFAULT_LOGO_CLASSES;
+const hydrationMode =
+  hydrate ?? (trigger === "scroll" ? "scroll" : trigger === "visible" ? "visible" : "load");
+---
+
+<a
+  href="/"
+  translate="no"
+  class={`notranslate flex justify-center items-center gap-1.5 ${className}`}
+>
+  <span class={logoWrapperFilter || undefined}>
+    {shouldUseLottie ? (
+      hydrationMode === "scroll" ? (
+        <LottieLogo
+          alt={alt}
+          loading={loading}
+          trigger={trigger}
+          className={lottieClassName}
+          mediaClasses={logoClasses}
+          loop={loop}
+          autoplay={autoplay}
+          client:scroll
+        >
+          <Image
+            src={POSTER_SRC}
+            alt=""
+            loading={loading}
+            decoding="async"
+            class={logoClasses}
+            widths={LOGO_WIDTHS}
+            sizes={LOGO_SIZES}
+            fetchpriority={loading === "eager" ? "high" : "low"}
+            aria-hidden="true"
+          />
+        </LottieLogo>
+      ) : hydrationMode === "visible" ? (
+        <LottieLogo
+          alt={alt}
+          loading={loading}
+          trigger={trigger}
+          className={lottieClassName}
+          mediaClasses={logoClasses}
+          loop={loop}
+          autoplay={autoplay}
+          client:visible
+        >
+          <Image
+            src={POSTER_SRC}
+            alt=""
+            loading={loading}
+            decoding="async"
+            class={logoClasses}
+            widths={LOGO_WIDTHS}
+            sizes={LOGO_SIZES}
+            fetchpriority={loading === "eager" ? "high" : "low"}
+            aria-hidden="true"
+          />
+        </LottieLogo>
+      ) : hydrationMode === "idle" ? (
+        <LottieLogo
+          alt={alt}
+          loading={loading}
+          trigger={trigger}
+          className={lottieClassName}
+          mediaClasses={logoClasses}
+          loop={loop}
+          autoplay={autoplay}
+          client:idle
+        >
+          <Image
+            src={POSTER_SRC}
+            alt=""
+            loading={loading}
+            decoding="async"
+            class={logoClasses}
+            widths={LOGO_WIDTHS}
+            sizes={LOGO_SIZES}
+            fetchpriority={loading === "eager" ? "high" : "low"}
+            aria-hidden="true"
+          />
+        </LottieLogo>
+      ) : (
+        <LottieLogo
+          alt={alt}
+          loading={loading}
+          trigger={trigger}
+          className={lottieClassName}
+          mediaClasses={logoClasses}
+          loop={loop}
+          autoplay={autoplay}
+          client:load
+        >
+          <Image
+            src={POSTER_SRC}
+            alt=""
+            loading={loading}
+            decoding="async"
+            class={logoClasses}
+            widths={LOGO_WIDTHS}
+            sizes={LOGO_SIZES}
+            fetchpriority={loading === "eager" ? "high" : "low"}
+            aria-hidden="true"
+          />
+        </LottieLogo>
+      )
+    ) : (
+      <Image
+        src={POSTER_SRC}
+        alt={alt}
+        loading={loading}
+        decoding="async"
+        class={logoClasses}
+        widths={LOGO_WIDTHS}
+        sizes={LOGO_SIZES}
+        fetchpriority={loading === "eager" ? "high" : undefined}
+      />
+    )}
+  </span>
+
+  {showText && (
+    <div>
+      <TextLogoStatic
+        title={siteData.title}
+        className="flex flex-row items-baseline gap-1 p-0 m-0"
+        fadeDuration={textFadeMs}
+        animateOutText={animateOutText}
+        firstClass={titleFirstClass}
+        restClass={titleRestClass}
+        colorMode={colorMode}
+      />
+    </div>
+  )}
+</a>

@@ -1,0 +1,341 @@
+---
+// src/components/ContentRenderer/variants/FilmstripVariant.astro
+/**
+ * Filmstrip Variant — pinned horizontal-scroll portfolio section.
+ *
+ * Scroll mechanics: pure CSS position:sticky + rAF translateX scrub.
+ * No external libraries required.
+ *
+ * Fallbacks:
+ *   - <768px: flex-direction:column, normal vertical scroll
+ *   - prefers-reduced-motion: same vertical fallback, no pinning
+ *
+ * Tokens exposed on [data-filmstrip] let you override per-section
+ * without touching this file.
+ */
+
+import type { BaseVariantProps } from "../ContentRenderer.types";
+import FilmstripCard from "@/components/LoopComponents/FilmstripCard.astro";
+import { shouldShowCollectionCTA } from "../utils/helpers";
+import Button from "@/components/Button/Button";
+
+type Props = BaseVariantProps;
+
+const {
+  items = [],
+  title = "Selected work\n& explorations",
+  description,
+  collectionUrl,
+  collectionTitle,
+  id,
+} = Astro.props as Props;
+
+// intro + project panels + outro
+const totalPanels = items.length + 2;
+---
+
+<section
+  id={id}
+  class="fs-section"
+  style={`--fs-total-panels: ${totalPanels};`}
+  data-filmstrip
+  aria-label={title?.replace?.("\n", " ") ?? "Selected work"}
+>
+  <div class="fs-sticky">
+    <div class="fs-track" data-filmstrip-track>
+
+      <!-- Panel 0: Intro -->
+      <div class="fs-panel fs-panel--intro">
+        <div class="fs-rule" aria-hidden="true"></div>
+        <div class="fs-panel-inner">
+          <p class="fs-eyebrow">Work</p>
+          <h2 class="fs-heading">
+            {title.split("\n").map((line: string, i: number) => (
+              <span class:list={["fs-heading-line", i > 0 && "fs-heading-line--indent"]}>{line}</span>
+            ))}
+          </h2>
+          {collectionUrl && (
+            <Button variant="underline" href={collectionUrl} size="sm" client:load>
+              View all {collectionTitle?.toLowerCase() ?? "projects"}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <!-- Project panels -->
+      {items.map((item, i) => (
+        <div class="fs-panel fs-panel--project" data-slide-index={i + 1} data-filmstrip-card>
+          <div class="fs-rule" aria-hidden="true"></div>
+          <div class="fs-panel-inner fs-panel-inner--project">
+            <div class="fs-card-rise" style="transform:translateY(100%)">
+              <FilmstripCard
+                title={item.title}
+                description={item.description}
+                url={item.url}
+                featuredVideo={item.featuredVideo}
+                fullSiteImage={item.fullSiteImage}
+                bannerImage={item.bannerImage}
+                featuredImage={item.featuredImage}
+                industry={item.industry}
+                client={item.client}
+                technologies={item.technologies}
+                link={item.link}
+                projectUrl={item.projectUrl}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <!-- Outro panel — participates in the track scroll like all others -->
+      {shouldShowCollectionCTA(collectionUrl, items.length) && (
+        <div class="fs-panel fs-panel--outro" data-filmstrip-outro>
+          <div class="fs-rule" aria-hidden="true"></div>
+          <div class="fs-panel-inner">
+            <p class="fs-outro-text">
+              {description ?? "Discover our complete collection of digital experiences, brands, and platforms."}
+            </p>
+            <Button variant="underline" href={collectionUrl} size="sm" client:load>
+              View all {collectionTitle?.toLowerCase() ?? "projects"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Design tokens ────────────────────────────────────────────── */
+  [data-filmstrip] {
+    --fs-heading-col: currentColor;
+    --fs-text-col:    currentColor;
+    --fs-muted-col:   color-mix(in srgb, currentColor 45%, transparent);
+    --fs-rule-col:    color-mix(in srgb, currentColor 10%, transparent);
+    --fs-border-col:  color-mix(in srgb, currentColor 12%, transparent);
+    --fs-link-col:    currentColor;
+    --fs-panel-w:     50vw;
+    --fs-pad-x:       clamp(2.5rem, 5vw, 6rem);
+    --fs-pad-y:       clamp(2.5rem, 5vh, 5rem);
+  }
+
+  /* ── Outer section: tall enough to drive horizontal travel ───── */
+  .fs-section {
+    position: relative;
+    height: calc((var(--fs-total-panels) - 1) * var(--fs-panel-w) + 100vh + 50vw);
+    border-top: 1px solid var(--fs-border-col);
+  }
+
+  /* ── Sticky viewport ─────────────────────────────────────────── */
+  .fs-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  /* ── Horizontal track ────────────────────────────────────────── */
+  .fs-track {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    width: calc(var(--fs-total-panels) * var(--fs-panel-w));
+    will-change: transform;
+  }
+
+  /* ── Panel ───────────────────────────────────────────────────── */
+  .fs-panel {
+    position: relative;
+    width: var(--fs-panel-w);
+    flex-shrink: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Hairline vertical rule + crosshair at right edge of each panel */
+  .fs-rule {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 1px;
+    background: var(--fs-rule-col);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* ── Panel inner ─────────────────────────────────────────────── */
+  .fs-panel-inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--fs-pad-y) var(--fs-pad-x);
+  }
+
+  .fs-panel-inner--project {
+    padding: var(--fs-pad-y) calc(var(--fs-pad-x) * 0.85);
+    overflow: hidden;
+  }
+
+  /* ── Intro text ──────────────────────────────────────────────── */
+  .fs-eyebrow {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--fs-muted-col);
+    margin-bottom: 1.25rem;
+  }
+
+  .fs-heading {
+    display: flex;
+    flex-direction: column;
+    font-size: clamp(2.4rem, 5.5vw, 4.25rem);
+    font-weight: 300;
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    color: var(--fs-heading-col);
+    margin-bottom: 2.5rem;
+  }
+
+  .fs-heading-line        { display: block; }
+  .fs-heading-line--indent { margin-left: 0.04em; }
+
+  /* ── Outro text ──────────────────────────────────────────────── */
+  .fs-outro-text {
+    font-size: clamp(1.5rem, 3.2vw, 2.6rem);
+    font-weight: 300;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--fs-heading-col);
+    margin-bottom: 2.5rem;
+  }
+
+  /* ── Card rise animation ─────────────────────────────────────── */
+  /* transform and opacity are set directly via JS style — no custom property needed */
+  .fs-card-rise {
+    will-change: transform, opacity;
+  }
+
+  /* ── Mobile: vertical stack, no pinning ─────────────────────── */
+  @media (max-width: 767px) {
+    .fs-section  { height: auto; }
+    .fs-sticky   { position: static; height: auto; overflow: visible; }
+    .fs-track    { flex-direction: column; width: 100%; transform: none !important; transition: none !important; }
+    .fs-panel    { width: 100%; height: auto; }
+    .fs-panel-inner,
+    .fs-panel-inner--project { padding: 3rem 1.5rem; height: auto; }
+    .fs-panel--intro,
+    .fs-panel--outro { min-height: 60vh; }
+    .fs-rule     { display: none; }
+    .fs-card-rise { transform: none !important; opacity: 1 !important; }
+  }
+
+  /* ── Reduced motion: same vertical fallback ──────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .fs-section  { height: auto; }
+    .fs-sticky   { position: static; height: auto; overflow: visible; }
+    .fs-track    { flex-direction: column; width: 100%; transform: none !important; transition: none !important; }
+    .fs-panel    { width: 100%; height: auto; }
+    .fs-panel-inner { height: auto; }
+    .fs-panel--intro,
+    .fs-panel--outro { min-height: 50vh; }
+    .fs-arrow    { transition: none; }
+    /* Cards fully visible, no rise animation */
+    .fs-card-rise { --_rise: 1 !important; transform: none !important; opacity: 1 !important; }
+  }
+</style>
+
+<script is:inline>
+(function () {
+  function isMobile() { return window.innerWidth < 768; }
+  function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function clamp(v, lo, hi) {
+    return v < lo ? lo : v > hi ? hi : v;
+  }
+
+  function initSection(section) {
+    if (!section || isMobile() || prefersReducedMotion()) return;
+
+    const track = section.querySelector("[data-filmstrip-track]");
+    const cards = section.querySelectorAll("[data-filmstrip-card] .fs-card-rise");
+    if (!track) return;
+
+    if (section._fsCleanup) { section._fsCleanup(); section._fsCleanup = null; }
+
+    let rafId = null;
+    let lastScrollY = -1;
+
+    function update() {
+      rafId = null;
+      const scrollY = window.scrollY;
+      if (scrollY === lastScrollY) return;
+      lastScrollY = scrollY;
+
+      const vw = window.innerWidth;
+      const sectionTop = section.getBoundingClientRect().top + scrollY;
+      const maxScroll = Math.max(1, section.offsetHeight - window.innerHeight);
+      const progress = Math.max(0, (scrollY - sectionTop) / maxScroll);
+      const maxX = track.scrollWidth - vw + vw * 0.5;
+      const currentX = progress * maxX;
+
+      track.style.transform = "translateX(" + (-currentX).toFixed(2) + "px)";
+
+      cards.forEach(function (rise) {
+        var panel = rise.closest("[data-filmstrip-card]");
+        if (!panel) return;
+
+        var panelW = panel.offsetWidth;
+        var panelH = panel.offsetHeight;
+        // Left edge of this panel in viewport space
+        var panelLeft = panel.offsetLeft - currentX;
+
+        // Entry: 0→1 as panel travels from 1vw right to 0.1vw right
+        var entry = easeOutCubic(clamp((vw - panelLeft) / (vw * 0.9), 0, 1));
+
+        // Exit: 1→0 as panel left edge travels from 0 to -30% of panel width
+        var exit = 1 - clamp(panelLeft / (-panelW * 0.3), 0, 1);
+
+        var v = Math.min(entry, exit);
+        rise.style.transform = "translateY(" + ((1 - v) * panelH).toFixed(2) + "px)";
+        rise.style.opacity = v.toFixed(3);
+      });
+    }
+
+    function onScroll() { if (!rafId) rafId = requestAnimationFrame(update); }
+    function onResize() { lastScrollY = -1; update(); }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
+    update();
+
+    section._fsCleanup = function () {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-filmstrip]").forEach(initSection);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAll);
+  } else {
+    initAll();
+  }
+
+  document.addEventListener("astro:page-load", initAll);
+})();
+</script>
