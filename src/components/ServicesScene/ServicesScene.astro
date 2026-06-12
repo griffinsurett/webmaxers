@@ -4,7 +4,7 @@
  * ServicesScene — a pinned, scroll-scrubbed services reveal over a fixed fire
  * background.
  *
- * Phases (driven by scroll, or by CurtainReveal when used as its underlay):
+ * Phases (a single GSAP-scrubbed timeline while the section is pinned):
  *   Phase 1  the fire background un-dims (barely visible → fully visible) via a
  *            dim overlay whose opacity is scrubbed from 1 → 0 while the intro
  *            label stack reads "Websites / Branding / Ai Agents".
@@ -13,39 +13,40 @@
  *   Phase 3  the card list scrolls vertically through the pin so all cards are
  *            reachable while the section + background stay fixed.
  *
- * DRIVEN MODE: when placed inside a <CurtainReveal underlay>, the scene stops
- * self-pinning and registers `el.__curtainUnderlay` so the curtain's single
- * scroll timeline drives the phases (no dueling pins). Standalone, it
- * self-pins with its own rAF controller.
+ * The section owns its own pin (GSAP ScrollTrigger). On the homepage it's
+ * stacked directly behind the filmstrip (see index.astro) so the filmstrip
+ * peels off-left to reveal it already in place. Below 768px / reduced-motion
+ * GSAP registers nothing and the CSS flattens to a static vertical layout.
  */
 
-import BackgroundMedia from "@/components/BackgroundMedia.astro";
 import Icon from "@/components/Icon";
 import { query, sortByOrder } from "@/utils/query";
 import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
+import { getImage } from "astro:assets";
 import servicesBg from "@/assets/fire-pic.jpg";
 
+// Optimized responsive sources for the fixed fire background. Rendered as a real
+// <img> (i75 FixedViewportBackground pattern) — NOT background-attachment:fixed,
+// which iOS ignores. The layer is pinned to the viewport via the scroll system
+// on desktop and position:sticky on mobile, so it stays put on touch too.
+const [bgMobile, bgTablet, bgDesktop] = await Promise.all([
+  getImage({ src: servicesBg, format: "webp", quality: 68, width: 768 }),
+  getImage({ src: servicesBg, format: "webp", quality: 72, width: 1280 }),
+  getImage({ src: servicesBg, format: "webp", quality: 74, width: 1920 }),
+]);
+
 interface Props {
-  /** Height of the pinned scroll region when standalone. */
+  /** Outer box height. GSAP's pin-spacer provides the scroll budget, so this
+   *  is just the in-flow footprint — one viewport. */
   sceneHeight?: string;
 }
 
-const { sceneHeight = "440svh" } = Astro.props;
+const { sceneHeight = "100vh" } = Astro.props;
 
 // Load the 6 services.
 const meta = getCollectionMeta("services");
 const result = await query("services").orderBy(sortByOrder()).get();
 const services = await prepareCollectionEntries(result.entries, "services", meta);
-
-const backgroundMedia = {
-  image: {
-    src: servicesBg,
-    imageClass: "bg-cover bg-center", // centered
-  },
-  // Light residual overlay only — the scroll-driven .services-dim layer does
-  // the dim → un-dim. Keeps cards readable once the image is fully visible.
-  overlayClass: "bg-black/30",
-};
 
 const introLines = ["Websites", "Branding", "Ai Agents"];
 ---
@@ -57,8 +58,21 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
   aria-label="Our services"
 >
   <div class="services-pin">
-    {/* Fixed fire background behind every phase */}
-    <BackgroundMedia backgroundMedia={backgroundMedia} />
+    {/* Fire background behind every phase. A real <img> layer (i75
+        FixedViewportBackground pattern) — locked to the viewport by GSAP's pin
+        on desktop and by position:sticky on mobile, so it stays fixed while the
+        content scrolls over it on touch devices too (background-attachment:fixed
+        is ignored on iOS, so we don't use it). */}
+    <div class="services-bg" aria-hidden="true">
+      <picture>
+        <source media="(max-width: 640px)" srcset={bgMobile.src} type="image/webp" />
+        <source media="(min-width: 641px) and (max-width: 1024px)" srcset={bgTablet.src} type="image/webp" />
+        <source media="(min-width: 1025px)" srcset={bgDesktop.src} type="image/webp" />
+        <img src={bgDesktop.src} alt="" class="h-full w-full object-cover object-center" loading="lazy" decoding="async" fetchpriority="low" />
+      </picture>
+      {/* Light residual overlay — the scroll-driven .services-dim does the rest. */}
+      <div class="absolute inset-0 bg-black/30"></div>
+    </div>
 
     {/* Phase 1 — dim layer over the fire. Starts opaque (image barely visible)
         and fades to transparent on scroll (image fully visible). */}
@@ -110,26 +124,29 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     height: var(--scene-height);
   }
 
-  /* Driven mode: inside a CurtainReveal underlay. The curtain owns the pin and
-     the scroll budget, so the scene is a static full-height box. */
-  .services-scene[data-driven] {
-    height: 100%;
-  }
-  .services-scene[data-driven] .services-pin {
-    position: absolute;
-    inset: 0;
-    height: 100%;
-  }
-
   .services-pin {
-    position: sticky;
-    top: 0;
+    position: relative;
     height: 100vh;
     width: 100%;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: center;
+  }
+
+  /* Fire background layer. Desktop: fills the GSAP-pinned .services-pin (the pin
+     keeps it fixed to the viewport during the scrubbed sequence). The inner
+     <picture>/<img> covers the box. */
+  .services-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .services-bg picture,
+  .services-bg img {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   /* ── Dim layer (phase 1) ─────────────────────────────────────────
@@ -272,7 +289,20 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     .services-scene { height: auto; }
     .services-pin { position: static; height: auto; overflow: visible; display: block; padding: 5rem 0; }
     .services-dim { display: none; }
-    .services-intro { position: relative; inset: auto; opacity: 1; transform: none; padding: 0 1.5rem 2rem; }
+    /* Fixed-to-viewport fire background on touch (i75 pattern, sticky variant):
+       the layer sticks to the viewport top through the whole section while the
+       content scrolls over it. The negative margin removes it from flow so it
+       doesn't push the content down. Content sits above via z-index. */
+    .services-bg {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      margin-bottom: -100vh;
+      z-index: 0;
+    }
+    .services-intro,
+    .services-cards-wrap { position: relative; z-index: 1; }
+    .services-intro { inset: auto; opacity: 1; transform: none; padding: 0 1.5rem 2rem; }
     .services-intro-inner {
       padding: 0;
       display: flex;
@@ -315,135 +345,108 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
   }
 </style>
 
-<script is:inline>
-(function () {
-  if (typeof window === "undefined") return;
-  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
-  function isFlat() {
-    return window.innerWidth < 768 ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  function clamp(v: number, lo: number, hi: number) {
+    return v < lo ? lo : v > hi ? hi : v;
   }
 
-  // Apply the phases for a given normalized progress p (0→1).
-  function applyPhases(scene, p) {
-    var dim = scene.querySelector("[data-services-dim]");
-    var intro = scene.querySelector("[data-services-intro]");
-    var introCopy = scene.querySelector("[data-services-intro-copy]");
-    var cardsWrap = scene.querySelector("[data-services-cards]");
-    var cardsScroll = scene.querySelector("[data-services-cards-scroll]");
-    var cards = scene.querySelectorAll("[data-svc-card]");
+  // Apply all three phases for a given normalized progress p (0→1). Same phase
+  // boundaries and math as the original — only the driver changed (GSAP instead
+  // of a hand-rolled rAF loop).
+  function applyPhases(scene: HTMLElement, p: number) {
+    const dim = scene.querySelector<HTMLElement>("[data-services-dim]");
+    const introCopy = scene.querySelector<HTMLElement>("[data-services-intro-copy]");
+    const cardsWrap = scene.querySelector<HTMLElement>("[data-services-cards]");
+    const cardsScroll = scene.querySelector<HTMLElement>("[data-services-cards-scroll]");
+    const cards = scene.querySelectorAll<HTMLElement>("[data-svc-card]");
 
-    // Phase boundaries.
-    var REVEAL_END = 0.3;    // background fully un-dimmed
-    var INTRO_END = 0.22;    // intro stack exits first
-    var CARDS_START = 0.30;  // cards begin after the intro has cleared
-    var CARDS_IN_END = 0.55; // cards finished sliding in
+    // Phase boundaries (fractions of the pinned scroll budget).
+    const REVEAL_END = 0.3;    // background fully un-dimmed
+    const INTRO_END = 0.22;    // intro stack exits first
+    const CARDS_START = 0.30;  // cards begin after the intro has cleared
+    const CARDS_IN_END = 0.55; // cards finished sliding in
     // CARDS_IN_END → 1.0 = vertical scroll through the cards.
 
     // Phase 1 — fire background un-dims (1 → 0).
-    var revealP = clamp(p / REVEAL_END, 0, 1);
-    if (dim instanceof HTMLElement) {
-      dim.style.setProperty("--dim", (1 - revealP).toFixed(4));
-    }
+    const revealP = clamp(p / REVEAL_END, 0, 1);
+    if (dim) dim.style.setProperty("--dim", (1 - revealP).toFixed(4));
 
-    if (introCopy instanceof HTMLElement) {
-      var introP = clamp(p / INTRO_END, 0, 1);
+    if (introCopy) {
+      const introP = clamp(p / INTRO_END, 0, 1);
       introCopy.style.setProperty("--intro-shift", (introP * 44).toFixed(4) + "vh");
       introCopy.style.setProperty("--intro-opacity", (1 - introP).toFixed(4));
     }
 
-    // Phase 2 — cards slide in from the sides.
-    var cardsP = clamp((p - CARDS_START) / (CARDS_IN_END - CARDS_START), 0, 1);
-    cards.forEach(function (c, i) {
-      var stagger = i * 0.08;
-      var cp = clamp((cardsP - stagger) / (1 - stagger || 1), 0, 1);
+    // Phase 2 — cards slide in from alternating sides with a stagger.
+    const cardsP = clamp((p - CARDS_START) / (CARDS_IN_END - CARDS_START), 0, 1);
+    cards.forEach((c, i) => {
+      const stagger = i * 0.08;
+      let cp = clamp((cardsP - stagger) / (1 - stagger || 1), 0, 1);
       cp = 1 - Math.pow(1 - cp, 3); // ease out for a soft landing
       c.style.setProperty("--card-progress", cp.toFixed(4));
     });
 
-    // Phase 3 — scroll the card list vertically until ALL cards are out of the
-    // top of the frame, so the section only releases once they've fully exited.
-    // Travel = entire content height (moves the whole list up past the top).
-    if (cardsScroll instanceof HTMLElement && cardsWrap instanceof HTMLElement) {
-      var travel = cardsScroll.scrollHeight;
-      var scrollP = clamp((p - CARDS_IN_END) / (1 - CARDS_IN_END), 0, 1);
+    // Phase 3 — scroll the card list vertically until every card has cleared
+    // the top of the frame, so the section only releases once they've exited.
+    if (cardsScroll && cardsWrap) {
+      const travel = cardsScroll.scrollHeight;
+      const scrollP = clamp((p - CARDS_IN_END) / (1 - CARDS_IN_END), 0, 1);
       cardsScroll.style.setProperty("--cards-scroll", (-scrollP * travel).toFixed(1) + "px");
       cardsWrap.style.pointerEvents = cardsP > 0.9 ? "auto" : "none";
     }
   }
 
-  function applyFlat(scene) {
-    var dim = scene.querySelector("[data-services-dim]");
-    var intro = scene.querySelector("[data-services-intro]");
-    var introCopy = scene.querySelector("[data-services-intro-copy]");
-    var cardsWrap = scene.querySelector("[data-services-cards]");
-    var cardsScroll = scene.querySelector("[data-services-cards-scroll]");
-    if (dim) dim.style.setProperty("--dim", "0");
-    if (intro) intro.style.setProperty("--intro-shift", "0vh");
-    if (introCopy) {
-      introCopy.style.setProperty("--intro-shift", "0vh");
-      introCopy.style.setProperty("--intro-opacity", "1");
-    }
-    scene.querySelectorAll("[data-svc-card]").forEach(function (c) { c.style.setProperty("--card-progress", "1"); });
-    if (cardsScroll) cardsScroll.style.setProperty("--cards-scroll", "0px"); 
-    if (cardsWrap) cardsWrap.style.pointerEvents = "auto";
+  // Extra scroll the phases need, in viewport multiples. Phase 3 scrolls every
+  // card fully out of frame before releasing, so the budget is generous.
+  const PHASE_VH = 4.5;
+
+  // Standalone (not inside a CurtainStack): self-pin and run the phases.
+  function buildStandalone(scene: HTMLElement) {
+    const pin = scene.querySelector<HTMLElement>(".services-pin") ?? scene;
+
+    ScrollTrigger.create({
+      trigger: scene,
+      start: "top top",
+      end: () => "+=" + PHASE_VH * window.innerHeight,
+      pin,
+      scrub: true,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => applyPhases(scene, self.progress),
+    });
   }
 
-  // How much extra scroll the phases need, as viewport multiples. Higher now
-  // because phase 3 scrolls every card fully out of frame before releasing.
-  var PHASE_VH = 4.5;
+  function init() {
+    const scenes = document.querySelectorAll<HTMLElement>("[data-services-scene]");
+    if (!scenes.length) return;
 
-  function initScene(scene) {
-    if (!(scene instanceof HTMLElement)) return;
+    scenes.forEach((scene) => {
+      // Inside a CurtainStack: the scene is already pinned full-screen by that
+      // orchestrator (it stays put while the layer above peels off to expose
+      // it). We expose the uniform layer contract — its internal scrub is the
+      // phase budget; the stack adds the move-off (slide-up) budget on top.
+      const stack = scene.closest("[data-curtain-stack]");
+      if (stack) {
+        (scene as any).__curtainLayer = {
+          getScrubPx: () => PHASE_VH * window.innerHeight,
+          setProgress: (p: number) => applyPhases(scene, p),
+        };
+        return;
+      }
 
-    // DRIVEN MODE: inside a CurtainReveal → register an underlay contract.
-    if (scene.closest("[data-curtain-stage]")) {
-      scene.setAttribute("data-driven", "");
-      scene.__curtainUnderlay = {
-        getPhasePx: function (vp) { return PHASE_VH * vp.vh; },
-        onProgress: function (p) {
-          if (isFlat()) { applyFlat(scene); return; }
-          applyPhases(scene, p);
+      // Standalone — desktop only; CSS flattens below 768px / reduced-motion.
+      ScrollTrigger.matchMedia({
+        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () => {
+          buildStandalone(scene);
         },
-        reset: function () { applyFlat(scene); },
-      };
-      if (window.__curtainReveal) window.__curtainReveal.onResize();
-      return;
-    }
-
-    // STANDALONE MODE: self-pinning scroll controller.
-    scene.style.setProperty("--scene-height", (PHASE_VH + 1) * 100 + "svh");
-    var ctrl = {
-      ticking: false,
-      schedule: function () {
-        if (this.ticking) return;
-        this.ticking = true;
-        requestAnimationFrame(function () { ctrl.ticking = false; ctrl.update(); });
-      },
-      update: function () {
-        if (isFlat()) { applyFlat(scene); return; }
-        var vh = window.innerHeight;
-        var maxScroll = Math.max(1, scene.offsetHeight - vh);
-        var top = scene.getBoundingClientRect().top + window.scrollY;
-        var p = clamp((window.scrollY - top) / maxScroll, 0, 1);
-        applyPhases(scene, p);
-      },
-    };
-    window.addEventListener("scroll", function () { ctrl.schedule(); }, { passive: true });
-    window.addEventListener("resize", function () { ctrl.schedule(); });
-    document.addEventListener("astro:page-load", function () { ctrl.schedule(); });
-    ctrl.schedule();
+      });
+    });
   }
 
-  function initAll() {
-    document.querySelectorAll("[data-services-scene]").forEach(initScene);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initAll);
-  } else {
-    initAll();
-  }
-  document.addEventListener("astro:page-load", initAll);
-})();
+  init();
+  document.addEventListener("astro:page-load", init);
 </script>

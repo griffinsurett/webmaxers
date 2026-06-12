@@ -38,11 +38,11 @@ const repeated = [...items, ...items];
     style={`--marquee-speed: ${speed}s`}
   >
     {repeated.map((item) => (
-      <span class="marquee-item inline-flex items-center gap-12 px-12">
-        <span class="text-heading font-light text-[clamp(4rem,9vw,8rem)] tracking-tight uppercase leading-none">
+      <span class="marquee-item inline-flex items-center gap-6 px-6 md:gap-12 md:px-12">
+        <span class="text-heading font-light text-[clamp(2.25rem,9vw,8rem)] tracking-tight uppercase leading-none">
           {item}
         </span>
-        <LogoMark size={logoSize} loading="lazy" />
+        <LogoMark size={logoSize} loading="lazy" imgClass="block w-6 h-6 md:w-10 md:h-10" />
       </span>
     ))}
   </div>

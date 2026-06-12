@@ -3,12 +3,18 @@
 /**
  * Filmstrip Variant — pinned horizontal-scroll portfolio section.
  *
- * Scroll mechanics: pure CSS position:sticky + rAF translateX scrub.
- * No external libraries required.
+ * Scroll mechanics: GSAP ScrollTrigger. The section owns its own pin (no shared
+ * curtain primitive). On scroll it runs two phases on a single scrubbed
+ * timeline:
+ *   1. track scrub — the horizontal row translates left by its full overflow.
+ *   2. curtain slide — the whole pinned section slides off-left over ~1vh,
+ *      revealing whatever section follows it in the document (e.g. ServicesScene).
+ * Each project card rises in / out as its panel crosses the viewport.
  *
  * Fallbacks:
  *   - <768px: flex-direction:column, normal vertical scroll
  *   - prefers-reduced-motion: same vertical fallback, no pinning
+ * GSAP's matchMedia skips all setup in those cases; the CSS below flattens.
  *
  * Tokens exposed on [data-filmstrip] let you override per-section
  * without touching this file.
@@ -35,10 +41,9 @@ const totalPanels = items.length + 2;
 ---
 
 {/*
-  Flat horizontal filmstrip. It does NOT pin or listen to scroll itself — it
-  registers a `__curtainOverlay` contract (see the script below) and is driven
-  by the CurtainReveal primitive that wraps it. Render it as the `overlay` slot
-  of <CurtainReveal>; an `underlay` slot there turns it into a curtain.
+  Horizontal filmstrip. The section pins itself and is scrubbed by GSAP (see the
+  script below): the inner track slides left, then the whole section slides off
+  to reveal the next section in flow. Drop it directly into the page — no wrapper.
 */}
 <section
   id={id}
@@ -125,15 +130,18 @@ const totalPanels = items.length + 2;
   }
 
   /* ── Filmstrip surface ───────────────────────────────────────────
-     Fills the pinned viewport provided by CurtainReveal (the overlay layer is
-     100vh). The filmstrip no longer pins itself — CurtainReveal owns the pin
-     and drives the horizontal scrub via the __curtainOverlay contract. */
+     Fills the viewport while pinned. GSAP pins this element and scrubs the
+     inner track left, then slides this whole element off-left to reveal the
+     section behind it. Opaque background = it acts as a curtain. */
   .fs-section {
     position: relative;
-    height: 100%;
+    height: 100vh;
     width: 100%;
     overflow: hidden;
     border-top: 1px solid var(--fs-border-col);
+    /* bg-gradient (in markup) keeps this opaque so it curtains the section
+       behind it during the slide-off. */
+    will-change: transform;
   }
 
   /* ── Horizontal track ────────────────────────────────────────── */
@@ -225,16 +233,18 @@ const totalPanels = items.length + 2;
   }
 
   /* ── Mobile: vertical stack, no pinning ───────────────────────
-     CurtainReveal flattens its own pin/layer; here we flatten the filmstrip's
-     internals (track → column, cards visible). */
+     GSAP registers no ScrollTrigger here; this flattens the filmstrip's
+     internals (track → column, all cards visible, no transforms). */
   @media (max-width: 767px) {
     .fs-section  { height: auto; overflow: visible; }
     .fs-track    { flex-direction: column; width: 100%; transform: none !important; transition: none !important; }
     .fs-panel    { width: 100%; height: auto; }
     .fs-panel-inner,
     .fs-panel-inner--project { padding: 3rem 1.5rem; height: auto; }
-    .fs-panel--intro,
-    .fs-panel--outro { min-height: 60vh; }
+    /* Intro/outro size to their content — no forced viewport height, so no
+       large empty gap above/below the centred text on small screens. */
+    .fs-panel--intro .fs-panel-inner,
+    .fs-panel--outro .fs-panel-inner { align-items: flex-start; text-align: left; }
     .fs-rule     { display: none; }
     .fs-card-rise { transform: none !important; opacity: 1 !important; }
   }
@@ -245,85 +255,135 @@ const totalPanels = items.length + 2;
     .fs-track    { flex-direction: column; width: 100%; transform: none !important; transition: none !important; }
     .fs-panel    { width: 100%; height: auto; }
     .fs-panel-inner { height: auto; }
-    .fs-panel--intro,
-    .fs-panel--outro { min-height: 50vh; }
+    .fs-panel--intro .fs-panel-inner,
+    .fs-panel--outro .fs-panel-inner { align-items: flex-start; text-align: left; }
     .fs-arrow    { transition: none; }
     /* Cards fully visible, no rise animation */
     .fs-card-rise { --_rise: 1 !important; transform: none !important; opacity: 1 !important; }
   }
 </style>
 
-<script is:inline>
-(function () {
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
 
-  // Register each filmstrip as a CurtainReveal overlay. The filmstrip no longer
-  // pins or listens to scroll — CurtainReveal owns the pin + the single scroll
-  // loop and calls these hooks. The scrub-px the filmstrip declares IS its
-  // horizontal travel distance, so 1 scroll px == 1px of track travel (the
-  // constant-rate property is structural).
-  function register(section) {
-    var track = section.querySelector("[data-filmstrip-track]");
-    if (!track) return;
-    var cards = section.querySelectorAll("[data-filmstrip-card] .fs-card-rise");
+  function easeOutCubic(t: number) { return 1 - Math.pow(1 - t, 3); }
+  function clamp(v: number, lo: number, hi: number) {
+    return v < lo ? lo : v > hi ? hi : v;
+  }
 
-    // Cached horizontal travel; getScrubPx refreshes it (init + every resize).
-    var maxX = 0;
+  // Drive every project card's rise/fall from the track's current X. Mirrors
+  // the original math exactly: a card rises in from below as its panel sweeps
+  // toward centre (ease-out), and exits upward as the panel clears the left
+  // edge (ease-in via the exit term). Panel clips the card so it's never
+  // visible outside the panel.
+  function applyCardRise(
+    cards: NodeListOf<HTMLElement>,
+    currentX: number,
+    vw: number,
+  ) {
+    cards.forEach((rise) => {
+      const panel = rise.closest<HTMLElement>("[data-filmstrip-card]");
+      if (!panel) return;
+      const panelW = panel.offsetWidth;
+      const panelH = panel.offsetHeight;
+      // Left edge of this panel in viewport space.
+      const panelLeft = panel.offsetLeft - currentX;
+      // Entry: 0→1 as the panel travels from 1vw right to ~0.1vw right.
+      const entry = easeOutCubic(clamp((vw - panelLeft) / (vw * 0.9), 0, 1));
+      // Exit: 1→0 as the panel's left edge travels from 0 to -30% of its width.
+      const exit = 1 - clamp(panelLeft / (-panelW * 0.3), 0, 1);
+      const v = Math.min(entry, exit);
+      rise.style.transform = `translateY(${((1 - v) * panelH).toFixed(2)}px)`;
+      rise.style.opacity = v.toFixed(3);
+    });
+  }
 
-    section.__curtainOverlay = {
-      getScrubPx: function (vp) {
-        // Inside a curtain → land exactly on the last panel (no trailing gap).
-        // Standalone (no underlay) → keep a half-viewport of breathing room.
-        var inCurtain = !!section.closest("[data-curtain-has-underlay='true']");
-        var trailing = inCurtain ? 0 : vp.vw * 0.5;
-        maxX = Math.max(0, track.scrollWidth - vp.vw + trailing);
+  // Phase 1 driver: translate the track to a given scrub progress (0→1) and
+  // update the card rises. Shared by both the standalone pin and the
+  // CurtainStack orchestrator so the horizontal motion is identical either way.
+  function makeTrackDriver(section: HTMLElement) {
+    const track = section.querySelector<HTMLElement>("[data-filmstrip-track]");
+    const cards = section.querySelectorAll<HTMLElement>(
+      "[data-filmstrip-card] .fs-card-rise",
+    );
+    let maxX = 0;
+
+    return {
+      // Horizontal travel = full track overflow, landing exactly on the last
+      // panel (no trailing gap — the filmstrip curtains the scene behind it).
+      measure() {
+        if (!track) return 0;
+        maxX = Math.max(0, track.scrollWidth - window.innerWidth);
         return maxX;
       },
-
-      onProgress: function (scrub /*, slide, vp */) {
-        var currentX = scrub * maxX;
-        track.style.transform = "translateX(" + (-currentX).toFixed(2) + "px)";
-
-        var vw = window.innerWidth;
-        cards.forEach(function (rise) {
-          var panel = rise.closest("[data-filmstrip-card]");
-          if (!panel) return;
-          var panelW = panel.offsetWidth;
-          var panelH = panel.offsetHeight;
-          // Left edge of this panel in viewport space.
-          var panelLeft = panel.offsetLeft - currentX;
-          // Entry: 0→1 as panel travels from 1vw right to 0.1vw right.
-          var entry = easeOutCubic(clamp((vw - panelLeft) / (vw * 0.9), 0, 1));
-          // Exit: 1→0 as panel left edge travels from 0 to -30% of panel width.
-          var exit = 1 - clamp(panelLeft / (-panelW * 0.3), 0, 1);
-          var v = Math.min(entry, exit);
-          rise.style.transform = "translateY(" + ((1 - v) * panelH).toFixed(2) + "px)";
-          rise.style.opacity = v.toFixed(3);
-        });
-      },
-
-      reset: function () {
-        track.style.transform = "";
-        cards.forEach(function (rise) {
-          rise.style.transform = "";
-          rise.style.opacity = "";
-        });
+      setProgress(p: number) {
+        if (!track) return;
+        const x = clamp(p, 0, 1) * maxX;
+        track.style.transform = `translateX(${(-x).toFixed(2)}px)`;
+        applyCardRise(cards, x, window.innerWidth);
       },
     };
   }
 
-  function registerAll() {
-    document.querySelectorAll("[data-filmstrip]").forEach(register);
-    // Nudge the curtain controller to re-measure now that overlays exist.
-    if (window.__curtainReveal) window.__curtainReveal.onResize();
+  // Standalone (not inside a CurtainStack): the filmstrip self-pins and runs
+  // its own track-scrub → peel timeline, revealing whatever follows it in flow.
+  function buildStandalone(section: HTMLElement) {
+    const driver = makeTrackDriver(section);
+    const maxX = driver.measure();
+    const slidePx = window.innerHeight; // peel takes one viewport of scroll
+    const total = maxX + slidePx;
+    const scrubFrac = total > 0 ? maxX / total : 1;
+
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: "top top",
+        end: "+=" + total,
+        pin: true,
+        scrub: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          driver.setProgress(scrubFrac > 0 ? self.progress / scrubFrac : 1);
+        },
+      },
+    })
+      .to({}, { duration: scrubFrac }) // phase 1 budget (driven via onUpdate)
+      .to(section, { xPercent: -100, ease: "none", duration: 1 - scrubFrac });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", registerAll);
-  } else {
-    registerAll();
+  function init() {
+    const sections = document.querySelectorAll<HTMLElement>("[data-filmstrip]");
+    if (!sections.length) return;
+
+    sections.forEach((section) => {
+      // Inside a CurtainStack: that orchestrator owns the pin and drives this
+      // filmstrip's track scrub as one leg of its shared timeline (then slides
+      // the whole layer off). Expose the uniform layer contract it reads;
+      // register no ScrollTrigger of our own.
+      const stack = section.closest("[data-curtain-stack]");
+      if (stack) {
+        const driver = makeTrackDriver(section);
+        (section as any).__curtainLayer = {
+          // Internal scrub px = the track's horizontal travel. The stack adds
+          // its own move-off budget on top.
+          getScrubPx: () => driver.measure(),
+          setProgress: (p: number) => driver.setProgress(p),
+        };
+        return;
+      }
+
+      // Standalone — desktop only; CSS flattens below 768px / reduced-motion.
+      ScrollTrigger.matchMedia({
+        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () => {
+          buildStandalone(section);
+        },
+      });
+    });
   }
-  document.addEventListener("astro:page-load", registerAll);
-})();
+
+  init();
+  document.addEventListener("astro:page-load", init);
 </script>

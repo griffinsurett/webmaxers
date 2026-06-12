@@ -1,0 +1,46 @@
+---
+// src/layouts/HeroStatBlock.astro
+// The hero's stat box (EST. label + stat value) plus the body/description line.
+// Extracted so it can be rendered once in the headline column on mobile and
+// once pinned bottom-right on desktop without duplicating the markup.
+
+interface Props {
+  statLabel: string;
+  statValue: string;
+  statDescription: string;
+  bodyText?: string;
+  class?: string;
+}
+
+const {
+  statLabel,
+  statValue,
+  statDescription,
+  bodyText,
+  class: className = "",
+} = Astro.props;
+---
+
+<div class:list={["flex flex-col items-end text-right lg:items-start lg:text-left gap-4", className]}>
+  <!-- Stat box -->
+  <div class="bg-gradient border border-text/20 rounded-sm flex items-stretch overflow-hidden">
+    <div class="flex flex-col items-center justify-center px-5 py-5 border-r border-text/20 min-w-[90px]">
+      <!-- Globe icon -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-text">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+      </svg>
+      <span class="text-[10px] text-text font-medium mt-2 tracking-widest">{statLabel}</span>
+    </div>
+    <div class="flex items-center justify-center px-6 py-5">
+      <span class="text-[13px] font-semibold tracking-widest text-heading uppercase leading-snug max-w-[180px]">{statValue}</span>
+    </div>
+  </div>
+
+  <!-- Body text -->
+  {bodyText ? (
+    <p class="text-base text-text leading-relaxed">{bodyText}</p>
+  ) : (
+    <p class="text-lg text-text leading-relaxed">{statDescription}</p>
+  )}
+</div>

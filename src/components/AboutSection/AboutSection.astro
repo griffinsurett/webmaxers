@@ -37,9 +37,9 @@ const words = splitTextIntoAnimatedWords(statement);
   >
     <div class="about-sticky-pin" data-about-sticky-inner>
       <section class="relative w-full">
-        <div class="flex gap-12 md:gap-16 w-full">
-          <!-- Left: Label -->
-          <div class="shrink-0 pt-2">
+        <div class="flex flex-col md:flex-row gap-4 md:gap-16 w-full">
+          <!-- Label: stacks on top on mobile, sits in a left column from md up -->
+          <div class="shrink-0 md:pt-2">
             <p class="text-[11px] font-medium tracking-[0.18em] uppercase text-text">
               About
             </p>
@@ -87,11 +87,12 @@ const words = splitTextIntoAnimatedWords(statement);
 
   <!-- About Bottom Section -->
   <section class="about-bottom section-container">
-    <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 0;">
+    <!-- Mobile: single column stack. md+: leftText | spacer | rightText+CTA -->
+    <div class="grid grid-cols-1 gap-10 md:gap-0 md:grid-cols-[1fr_2fr_1fr]">
       <p class="text-base font-light leading-relaxed text-text">
         {leftText}
       </p>
-      <div></div>
+      <div class="hidden md:block"></div>
       <div class="flex flex-col justify-between gap-8">
         <p class="text-base font-light leading-relaxed text-text">
           {rightText}
@@ -234,77 +235,40 @@ const words = splitTextIntoAnimatedWords(statement);
   }
 </style>
 
-<script is:inline>
-  (() => {
-    if (typeof window === "undefined") return;
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
 
-    const KEY = "__aboutStickyController";
-    if (window[KEY]) { window[KEY].register(); return; }
-
-    const ctrl = {
-      ticking: false,
-      started: false,
-      register() { this.update(); },
-      start() {
-        if (this.started) { this.schedule(); return; }
-        this.started = true;
-        window.addEventListener("scroll", () => ctrl.schedule(), { passive: true });
-        window.addEventListener("resize", () => ctrl.schedule());
-        document.addEventListener("astro:page-load", () => ctrl.schedule());
-        this.schedule();
-      },
-      schedule() {
-        if (this.ticking) return;
-        this.ticking = true;
-        requestAnimationFrame(() => { this.ticking = false; this.update(); });
-      },
-      update() {
-        const sections = document.querySelectorAll("[data-about-sticky='true']");
-        if (!sections.length) return;
-
-        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-        sections.forEach((section) => {
-          if (!(section instanceof HTMLElement)) return;
-
-          if (reduced) {
-            section.querySelectorAll("[data-about-word-progress]").forEach((w) => {
-              if (w instanceof HTMLElement) w.style.setProperty("--word-progress", "1");
-            });
-            return;
-          }
-
-          const inner = section.querySelector("[data-about-sticky-inner]");
-          if (!(inner instanceof HTMLElement)) return;
-
-          const stickyTop = parseFloat(getComputedStyle(inner).top) || 0;
-          const scrollSpan = Math.max(section.offsetHeight - inner.offsetHeight, 1);
-          const sectionTop = section.getBoundingClientRect().top;
-          const progress = Math.max(0, Math.min((stickyTop - sectionTop) / scrollSpan, 1));
-
-          const wordNodes = section.querySelectorAll("[data-about-word-progress]");
-          const total = wordNodes.length || 1;
-
-          wordNodes.forEach((node, i) => {
-            if (!(node instanceof HTMLElement)) return;
-            const wp = Math.max(0, Math.min(progress * total - i, 1));
-            node.style.setProperty("--word-progress", wp.toFixed(4));
-          });
-        });
-      },
-    };
-
-    window[KEY] = ctrl;
-
-    const sections = document.querySelectorAll("[data-about-sticky='true']");
+  function init() {
+    const sections = document.querySelectorAll<HTMLElement>("[data-about-sticky='true']");
     if (!sections.length) return;
 
-    if (!("IntersectionObserver" in window)) { ctrl.start(); return; }
+    sections.forEach((section) => {
+      const words = section.querySelectorAll<HTMLElement>("[data-about-word-progress]");
+      if (!words.length) return;
 
-    const obs = new IntersectionObserver((entries, o) => {
-      if (entries.some((e) => e.isIntersecting)) { ctrl.start(); o.disconnect(); }
-    }, { rootMargin: "300px 0px", threshold: 0 });
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        words.forEach((w) => w.style.setProperty("--word-progress", "1"));
+        return;
+      }
 
-    sections.forEach((s) => obs.observe(s));
-  })();
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        onUpdate(self) {
+          const total = words.length || 1;
+          words.forEach((node, i) => {
+            const wp = Math.max(0, Math.min(self.progress * total - i, 1));
+            node.style.setProperty("--word-progress", wp.toFixed(4));
+          });
+        },
+      });
+    });
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
 </script>
+

@@ -7,8 +7,8 @@ import AboutSection from "@/components/AboutSection/AboutSection.astro";
 import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
 import Marquee from "@/components/Marquee.astro";
 import PortfolioSection from "@/components/Portfolio/PortfolioSection.astro";
-import CurtainReveal from "@/components/CurtainReveal.astro";
 import ServicesScene from "@/components/ServicesScene/ServicesScene.astro";
+import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
 ---
 
 <BaseLayout title="Home" description={siteData.description}>
@@ -37,19 +37,36 @@ import ServicesScene from "@/components/ServicesScene/ServicesScene.astro";
     <!-- Marquee: full-bleed, manages its own horizontal escape -->
     <Marquee />
 
-    <!--
-      Portfolio curtain: the filmstrip (overlay) slides off-left to reveal the
-      ServicesScene (underlay) — fire bg un-dims, then the cards slide in.
-    -->
-    <CurtainReveal>
-      <PortfolioSection
-        slot="overlay"
-        heading={"Selected work\n& explorations"}
-        ctaLink="/projects"
-      />
-      <ServicesScene slot="underlay" />
-    </CurtainReveal>
-
-    <TestimonialCarousel />
+    {/*
+      Curtain reveal chain — three full-bleed layers stacked on one pinned
+      timeline (top → bottom):
+        1. filmstrip   panels glide left, then the whole layer peels off-LEFT
+        2. services    revealed in place; runs its phases, then slides UP away
+        3. testimonials revealed in place underneath — the final resting layer
+      Each layer covers the next and moves off to uncover it; nothing scrolls
+      up into view. Edit/reorder layers here — CurtainStack sequences them.
+    */}
+    <CurtainStack>
+      <div data-curtain-layer data-move="left">
+        <PortfolioSection ctaLink="/projects" />
+      </div>
+      <div data-curtain-layer data-move="up">
+        <ServicesScene />
+      </div>
+      <div data-curtain-layer data-move="none" class="curtain-layer--testimonials">
+        <TestimonialCarousel />
+      </div>
+    </CurtainStack>
   </main>
 </BaseLayout>
+
+<style>
+  /* The testimonials layer is a padded block, not full-bleed — centre it in the
+     pinned viewport so it reads well while it's the revealed bottom layer. On
+     mobile / reduced motion the stack flattens and this is a no-op. */
+  .curtain-layer--testimonials {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+</style>

@@ -1,0 +1,199 @@
+---
+// src/components/CurtainStack/CurtainStack.astro
+/**
+ * CurtainStack — orchestrates a "curtain reveal" chain of stacked full-bleed
+ * layers on a single shared pin.
+ *
+ * Layout (desktop): one pinned full-viewport container. Every child marked
+ * `data-curtain-layer` is stacked absolutely inside it. The FIRST layer sits on
+ * top (covers everything); the LAST sits at the bottom (revealed last and left
+ * in place as the final state). One GSAP timeline runs each layer in turn:
+ *
+ *   for each layer (top → bottom):
+ *     1. internal scrub  — if the layer exposes a __curtainLayer contract, the
+ *                          stack drives its own animation (filmstrip track
+ *                          slides; services runs its dim/intro/cards phases).
+ *     2. move off         — the whole layer slides out of frame in its declared
+ *                          `data-move` direction, uncovering the layer beneath:
+ *                            "left" → xPercent: -100 (filmstrip peel)
+ *                            "up"   → yPercent: -100 (services lifts away)
+ *                            "none" → never moves (the bottom layer; final state)
+ *
+ * Because layers are stacked and revealed by the one above moving off, every
+ * reveal is "in place": the layer beneath was already pinned full-screen and
+ * stationary — it does not scroll up into view.
+ *
+ * Each layer's animation logic lives in its own component (which also runs
+ * standalone, self-pinning, outside a stack). The stack only sequences them.
+ * Add or reorder layers by editing the markup — no code change here.
+ *
+ * Below 768px / reduced-motion: no pin, no overlay. Layers render in normal
+ * flow and each flattens itself (their own CSS fallbacks handle it).
+ */
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+---
+
+<div class:list={["curtain-stack", className]} data-curtain-stack>
+  <slot />
+</div>
+
+<style>
+  /* Desktop: a single pinned viewport. GSAP pins .curtain-stack and provides
+     the scroll budget via its pin-spacer; layers are absolutely stacked
+     inside it (z-index assigned by JS in DOM order: first = top). */
+  .curtain-stack {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .curtain-stack :global([data-curtain-layer]) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    will-change: transform;
+  }
+
+  /* Mobile + reduced motion: drop the stack entirely — normal vertical flow,
+     each layer flattens itself. */
+  @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+    .curtain-stack {
+      height: auto;
+      overflow: visible;
+    }
+    .curtain-stack :global([data-curtain-layer]) {
+      position: static;
+      inset: auto;
+      height: auto;
+      will-change: auto;
+    }
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  function clamp(v: number, lo: number, hi: number) {
+    return v < lo ? lo : v > hi ? hi : v;
+  }
+
+  interface LayerContract {
+    getScrubPx: () => number;
+    setProgress: (p: number) => void;
+  }
+
+  // Find a layer's animation contract — set on the layer wrapper or any of its
+  // animated descendants (filmstrip / services attach it to their own root).
+  function contractOf(layer: HTMLElement): LayerContract | null {
+    if ((layer as any).__curtainLayer) return (layer as any).__curtainLayer;
+    const inner = layer.querySelector<HTMLElement>("[data-filmstrip], [data-services-scene]");
+    return inner ? ((inner as any).__curtainLayer ?? null) : null;
+  }
+
+  function buildStack(stack: HTMLElement) {
+    const layers = Array.from(
+      stack.querySelectorAll<HTMLElement>(":scope > [data-curtain-layer]"),
+    );
+    if (!layers.length) return;
+
+    const vh = window.innerHeight;
+
+    // Per-layer plan: contract (optional), move-off direction + distance, and
+    // the scroll budget each leg consumes. The last layer never moves off.
+    const plan = layers.map((layer, i) => {
+      const isLast = i === layers.length - 1;
+      const move = isLast ? "none" : layer.getAttribute("data-move") ?? "up";
+      const contract = contractOf(layer);
+      const scrubPx = contract ? Math.max(0, contract.getScrubPx()) : 0;
+      const movePx = move === "none" ? 0 : vh; // one viewport to clear the frame
+      return { layer, contract, move, scrubPx, movePx };
+    });
+
+    // Stack order: first layer on top. Higher z-index = earlier in DOM.
+    layers.forEach((layer, i) => {
+      layer.style.zIndex = String(layers.length - i);
+    });
+
+    const total = plan.reduce((sum, p) => sum + p.scrubPx + p.movePx, 0);
+    if (total <= 0) return;
+
+    // Reset every layer to its initial state (progress 0).
+    plan.forEach((p) => p.contract?.setProgress(0));
+
+    // Precompute each leg's start/end as fractions of total progress so the
+    // single onUpdate can drive the right layer's contract at any scroll point.
+    let acc = 0;
+    const legs = plan.map((p) => {
+      const scrubStart = acc / total;
+      acc += p.scrubPx;
+      const scrubEnd = acc / total;
+      acc += p.movePx;
+      const moveEnd = acc / total;
+      return { ...p, scrubStart, scrubEnd, moveEnd };
+    });
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: stack,
+        start: "top top",
+        end: "+=" + total,
+        pin: true,
+        scrub: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          const p = self.progress;
+          // Drive each layer's internal scrub across its own scrub window.
+          legs.forEach((leg) => {
+            if (!leg.contract) return;
+            const span = leg.scrubEnd - leg.scrubStart;
+            const lp = span > 0 ? clamp((p - leg.scrubStart) / span, 0, 1) : 1;
+            leg.contract.setProgress(lp);
+          });
+        },
+      },
+    });
+
+    // Build the move-off tweens in sequence (internal scrub budget is held by a
+    // spacer tween since the scrub itself is applied imperatively in onUpdate).
+    legs.forEach((leg) => {
+      const scrubDur = leg.scrubEnd - leg.scrubStart;
+      if (scrubDur > 0) tl.to({}, { duration: scrubDur });
+
+      const moveDur = leg.moveEnd - leg.scrubEnd;
+      if (moveDur > 0 && leg.move !== "none") {
+        const vars: gsap.TweenVars =
+          leg.move === "left" ? { xPercent: -100 } : { yPercent: -100 };
+        tl.to(leg.layer, { ...vars, ease: "none", duration: moveDur });
+      }
+    });
+  }
+
+  function init() {
+    const stacks = document.querySelectorAll<HTMLElement>("[data-curtain-stack]");
+    if (!stacks.length) return;
+
+    // Desktop only. Layers attach their __curtainLayer contracts in their own
+    // init() — bundled module-script order isn't guaranteed, so defer one frame
+    // to be sure they've all run before we read them.
+    requestAnimationFrame(() => {
+      ScrollTrigger.matchMedia({
+        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () => {
+          stacks.forEach(buildStack);
+        },
+      });
+    });
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>
