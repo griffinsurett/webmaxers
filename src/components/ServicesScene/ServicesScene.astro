@@ -1,0 +1,449 @@
+---
+// src/components/ServicesScene/ServicesScene.astro
+/**
+ * ServicesScene — a pinned, scroll-scrubbed services reveal over a fixed fire
+ * background.
+ *
+ * Phases (driven by scroll, or by CurtainReveal when used as its underlay):
+ *   Phase 1  the fire background un-dims (barely visible → fully visible) via a
+ *            dim overlay whose opacity is scrubbed from 1 → 0 while the intro
+ *            label stack reads "Websites / Branding / Ai Agents".
+ *   Phase 2  the intro scrolls out of frame and then the service cards slide IN
+ *            from alternating sides.
+ *   Phase 3  the card list scrolls vertically through the pin so all cards are
+ *            reachable while the section + background stay fixed.
+ *
+ * DRIVEN MODE: when placed inside a <CurtainReveal underlay>, the scene stops
+ * self-pinning and registers `el.__curtainUnderlay` so the curtain's single
+ * scroll timeline drives the phases (no dueling pins). Standalone, it
+ * self-pins with its own rAF controller.
+ */
+
+import BackgroundMedia from "@/components/BackgroundMedia.astro";
+import Icon from "@/components/Icon";
+import { query, sortByOrder } from "@/utils/query";
+import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
+import servicesBg from "@/assets/fire-pic.jpg";
+
+interface Props {
+  /** Height of the pinned scroll region when standalone. */
+  sceneHeight?: string;
+}
+
+const { sceneHeight = "440svh" } = Astro.props;
+
+// Load the 6 services.
+const meta = getCollectionMeta("services");
+const result = await query("services").orderBy(sortByOrder()).get();
+const services = await prepareCollectionEntries(result.entries, "services", meta);
+
+const backgroundMedia = {
+  image: {
+    src: servicesBg,
+    imageClass: "bg-cover bg-center", // centered
+  },
+  // Light residual overlay only — the scroll-driven .services-dim layer does
+  // the dim → un-dim. Keeps cards readable once the image is fully visible.
+  overlayClass: "bg-black/30",
+};
+
+const introLines = ["Websites", "Branding", "Ai Agents"];
+---
+
+<section
+  class="services-scene"
+  data-services-scene
+  style={`--scene-height:${sceneHeight};`}
+  aria-label="Our services"
+>
+  <div class="services-pin">
+    {/* Fixed fire background behind every phase */}
+    <BackgroundMedia backgroundMedia={backgroundMedia} />
+
+    {/* Phase 1 — dim layer over the fire. Starts opaque (image barely visible)
+        and fades to transparent on scroll (image fully visible). */}
+    <div class="services-dim" data-services-dim aria-hidden="true"></div>
+
+    {/* Intro stack — shown before the cards arrive, then fades out as the
+        cards begin to enter. */}
+    <div class="services-intro" data-services-intro aria-hidden="true">
+      <div class="services-intro-inner">
+        <div class="services-intro-copy" data-services-intro-copy>
+          <p class="services-intro-eyebrow">OUR SERVICES</p>
+          <div class="services-intro-stack">
+            {introLines.map((line) => (
+              <span class="services-intro-line">{line}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Phase 2 — service cards slide in from alternating sides */}
+    <div class="services-cards-wrap" data-services-cards>
+      {/* Inner scroller — scrubbed vertically by the tail of the scroll so all
+          cards are reachable while the section + bg stay pinned. */}
+      <div class="services-cards-scroll" data-services-cards-scroll>
+        <ul class="services-cards-grid list-none">
+          {services.map((item, i) => (
+            <li
+              class="svc-card"
+              data-svc-card
+              style={`--card-from:${i % 2 === 0 ? "-1" : "1"};`}
+            >
+              {item.icon && (
+                <Icon icon={item.icon} size="lg" className="text-primary-light/80" />
+              )}
+              <h3 class="svc-card-title">{item.title}</h3>
+              {item.description && <p class="svc-card-desc">{item.description}</p>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .services-scene {
+    position: relative;
+    height: var(--scene-height);
+  }
+
+  /* Driven mode: inside a CurtainReveal underlay. The curtain owns the pin and
+     the scroll budget, so the scene is a static full-height box. */
+  .services-scene[data-driven] {
+    height: 100%;
+  }
+  .services-scene[data-driven] .services-pin {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+  }
+
+  .services-pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* ── Dim layer (phase 1) ─────────────────────────────────────────
+     Over the fire image, under the cards. Opacity driven by JS: starts
+     near-opaque (image barely visible) → fades to 0 (fully visible). */
+  .services-dim {
+    --dim: 1; /* 1 = fully dimmed, 0 = fully visible; set by JS */
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000;
+    /* Start partially dimmed (not near-black) so the fire is visible coming out
+       of the container above, then fully clears as you scroll. */
+    opacity: calc(var(--dim) * 0.5);
+    will-change: opacity;
+    pointer-events: none;
+  }
+
+  /* ── Intro stack (pre-card state) ─────────────────────────────── */
+  .services-intro {
+    --intro-shift: 0vh;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 1;
+  }
+
+  .services-intro-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 6vw, 6rem);
+  }
+
+  .services-intro-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.5rem, 1.2vw, 0.85rem);
+    text-align: center;
+    opacity: var(--intro-opacity, 1);
+    transform: translateY(calc(-2.5vh - var(--intro-shift, 0vh)));
+    will-change: transform, opacity;
+  }
+
+  .services-intro-eyebrow {
+    font-size: 0.9rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-primary-light) 72%, transparent);
+  }
+
+  .services-intro-stack {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.35rem, 0.8vw, 0.65rem);
+    align-self: center;
+    justify-self: center;
+    text-align: center;
+    color: var(--color-primary-light);
+    text-transform: uppercase;
+    letter-spacing: -0.09em;
+    font-weight: 300;
+    line-height: 0.8;
+  }
+
+  .services-intro-line {
+    font-size: clamp(3.5rem, 8.6vw, 9.2rem);
+    text-wrap: balance;
+  }
+
+  /* ── Cards (phase 2 + 3) ─────────────────────────────────────────
+     The wrap is a fixed-height clipping viewport; the inner scroller is
+     translated vertically by the tail of the scroll so every card is reachable
+     while the section + background stay pinned. */
+  .services-cards-wrap {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    overflow: hidden;
+    pointer-events: none; /* enabled by JS once cards are in */
+  }
+
+  .services-cards-scroll {
+    --cards-scroll: 0px; /* set by JS in the scroll sub-phase */
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2.5rem;
+    padding: clamp(3rem, 8vh, 6rem) clamp(1.5rem, 6vw, 6rem);
+    transform: translateY(var(--cards-scroll));
+    will-change: transform;
+  }
+
+  .services-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.5rem 4rem;
+  }
+
+  .svc-card {
+    --card-progress: 0; /* 0 → 1 set by JS in phase 2 */
+    --card-from: -1;    /* -1 = enters from left, 1 = from right */
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    /* Faded glass panel behind each card */
+    padding: clamp(1.5rem, 2.5vw, 2.25rem);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--color-primary-light) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary-light) 12%, transparent);
+    backdrop-filter: blur(6px);
+    transform: translateX(calc(var(--card-from) * (1 - var(--card-progress)) * 60vw));
+    opacity: var(--card-progress);
+    will-change: transform, opacity;
+  }
+
+  .svc-card-title {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--color-primary-light);
+  }
+  .svc-card-desc {
+    color: color-mix(in srgb, var(--color-primary-light) 75%, transparent);
+    line-height: 1.6;
+    max-width: 42ch;
+  }
+
+  /* ── Flatten: mobile + reduced motion ────────────────────────── */
+  @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+    .services-scene { height: auto; }
+    .services-pin { position: static; height: auto; overflow: visible; display: block; padding: 5rem 0; }
+    .services-dim { display: none; }
+    .services-intro { position: relative; inset: auto; opacity: 1; transform: none; padding: 0 1.5rem 2rem; }
+    .services-intro-inner {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .services-intro-copy {
+      transform: none !important;
+      opacity: 1 !important;
+      gap: 0.35rem;
+    }
+    .services-intro-stack {
+      gap: 0.25rem;
+    }
+    .services-intro-line {
+      font-size: clamp(2.8rem, 10vw, 4.8rem);
+    }
+    .services-cards-wrap {
+      position: relative;
+      inset: auto;
+      overflow: visible;
+      pointer-events: auto;
+      opacity: 1;
+    }
+    .services-cards-scroll {
+      transform: none !important;
+      padding: 0 1.5rem;
+      will-change: auto;
+    }
+    .services-cards-grid {
+      grid-template-columns: 1fr;
+    }
+    .svc-card {
+      transform: none !important;
+      opacity: 1 !important;
+      transition: none !important;
+    }
+  }
+</style>
+
+<script is:inline>
+(function () {
+  if (typeof window === "undefined") return;
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+  function isFlat() {
+    return window.innerWidth < 768 ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  // Apply the phases for a given normalized progress p (0→1).
+  function applyPhases(scene, p) {
+    var dim = scene.querySelector("[data-services-dim]");
+    var intro = scene.querySelector("[data-services-intro]");
+    var introCopy = scene.querySelector("[data-services-intro-copy]");
+    var cardsWrap = scene.querySelector("[data-services-cards]");
+    var cardsScroll = scene.querySelector("[data-services-cards-scroll]");
+    var cards = scene.querySelectorAll("[data-svc-card]");
+
+    // Phase boundaries.
+    var REVEAL_END = 0.3;    // background fully un-dimmed
+    var INTRO_END = 0.22;    // intro stack exits first
+    var CARDS_START = 0.30;  // cards begin after the intro has cleared
+    var CARDS_IN_END = 0.55; // cards finished sliding in
+    // CARDS_IN_END → 1.0 = vertical scroll through the cards.
+
+    // Phase 1 — fire background un-dims (1 → 0).
+    var revealP = clamp(p / REVEAL_END, 0, 1);
+    if (dim instanceof HTMLElement) {
+      dim.style.setProperty("--dim", (1 - revealP).toFixed(4));
+    }
+
+    if (introCopy instanceof HTMLElement) {
+      var introP = clamp(p / INTRO_END, 0, 1);
+      introCopy.style.setProperty("--intro-shift", (introP * 44).toFixed(4) + "vh");
+      introCopy.style.setProperty("--intro-opacity", (1 - introP).toFixed(4));
+    }
+
+    // Phase 2 — cards slide in from the sides.
+    var cardsP = clamp((p - CARDS_START) / (CARDS_IN_END - CARDS_START), 0, 1);
+    cards.forEach(function (c, i) {
+      var stagger = i * 0.08;
+      var cp = clamp((cardsP - stagger) / (1 - stagger || 1), 0, 1);
+      cp = 1 - Math.pow(1 - cp, 3); // ease out for a soft landing
+      c.style.setProperty("--card-progress", cp.toFixed(4));
+    });
+
+    // Phase 3 — scroll the card list vertically until ALL cards are out of the
+    // top of the frame, so the section only releases once they've fully exited.
+    // Travel = entire content height (moves the whole list up past the top).
+    if (cardsScroll instanceof HTMLElement && cardsWrap instanceof HTMLElement) {
+      var travel = cardsScroll.scrollHeight;
+      var scrollP = clamp((p - CARDS_IN_END) / (1 - CARDS_IN_END), 0, 1);
+      cardsScroll.style.setProperty("--cards-scroll", (-scrollP * travel).toFixed(1) + "px");
+      cardsWrap.style.pointerEvents = cardsP > 0.9 ? "auto" : "none";
+    }
+  }
+
+  function applyFlat(scene) {
+    var dim = scene.querySelector("[data-services-dim]");
+    var intro = scene.querySelector("[data-services-intro]");
+    var introCopy = scene.querySelector("[data-services-intro-copy]");
+    var cardsWrap = scene.querySelector("[data-services-cards]");
+    var cardsScroll = scene.querySelector("[data-services-cards-scroll]");
+    if (dim) dim.style.setProperty("--dim", "0");
+    if (intro) intro.style.setProperty("--intro-shift", "0vh");
+    if (introCopy) {
+      introCopy.style.setProperty("--intro-shift", "0vh");
+      introCopy.style.setProperty("--intro-opacity", "1");
+    }
+    scene.querySelectorAll("[data-svc-card]").forEach(function (c) { c.style.setProperty("--card-progress", "1"); });
+    if (cardsScroll) cardsScroll.style.setProperty("--cards-scroll", "0px"); 
+    if (cardsWrap) cardsWrap.style.pointerEvents = "auto";
+  }
+
+  // How much extra scroll the phases need, as viewport multiples. Higher now
+  // because phase 3 scrolls every card fully out of frame before releasing.
+  var PHASE_VH = 4.5;
+
+  function initScene(scene) {
+    if (!(scene instanceof HTMLElement)) return;
+
+    // DRIVEN MODE: inside a CurtainReveal → register an underlay contract.
+    if (scene.closest("[data-curtain-stage]")) {
+      scene.setAttribute("data-driven", "");
+      scene.__curtainUnderlay = {
+        getPhasePx: function (vp) { return PHASE_VH * vp.vh; },
+        onProgress: function (p) {
+          if (isFlat()) { applyFlat(scene); return; }
+          applyPhases(scene, p);
+        },
+        reset: function () { applyFlat(scene); },
+      };
+      if (window.__curtainReveal) window.__curtainReveal.onResize();
+      return;
+    }
+
+    // STANDALONE MODE: self-pinning scroll controller.
+    scene.style.setProperty("--scene-height", (PHASE_VH + 1) * 100 + "svh");
+    var ctrl = {
+      ticking: false,
+      schedule: function () {
+        if (this.ticking) return;
+        this.ticking = true;
+        requestAnimationFrame(function () { ctrl.ticking = false; ctrl.update(); });
+      },
+      update: function () {
+        if (isFlat()) { applyFlat(scene); return; }
+        var vh = window.innerHeight;
+        var maxScroll = Math.max(1, scene.offsetHeight - vh);
+        var top = scene.getBoundingClientRect().top + window.scrollY;
+        var p = clamp((window.scrollY - top) / maxScroll, 0, 1);
+        applyPhases(scene, p);
+      },
+    };
+    window.addEventListener("scroll", function () { ctrl.schedule(); }, { passive: true });
+    window.addEventListener("resize", function () { ctrl.schedule(); });
+    document.addEventListener("astro:page-load", function () { ctrl.schedule(); });
+    ctrl.schedule();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-services-scene]").forEach(initScene);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAll);
+  } else {
+    initAll();
+  }
+  document.addEventListener("astro:page-load", initAll);
+})();
+</script>

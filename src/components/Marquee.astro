@@ -20,7 +20,7 @@ const {
     "SCALE",
     "RESULTS",
   ],
-  speed = 28,
+  speed = 20,
   logoSize = 40,
   class: className = "",
 } = Astro.props;
@@ -55,7 +55,7 @@ const repeated = [...items, ...items];
   }
 
   .marquee-track {
-    animation: marquee var(--marquee-speed, 28s) linear infinite;
+    animation: marquee var(--marquee-speed, 20s) linear infinite;
     will-change: transform;
   }
 

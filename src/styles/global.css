@@ -184,6 +184,11 @@
   @apply bg-bg3 faded-accent-border transition-all main-duration;
 }
 
+/* Lighter left-to-right surface gradient (matches griffinswebservices). */
+@utility bg-gradient {
+  @apply bg-linear-to-r from-bg3 to-bg;
+}
+
 @utility input-bg {
   @apply dark:bg-primary-light/3 light:bg-primary-dark/3 transition-all main-duration;
 }

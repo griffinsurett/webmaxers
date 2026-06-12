@@ -1,0 +1,301 @@
+---
+import { getImage } from "astro:assets";
+import TestimonialCarouselClient from "./TestimonialCarousel";
+import { getCollection } from "astro:content";
+import { resolveImageMetadata, getImageAlt } from "@/utils/images";
+
+const raw = await getCollection("testimonials");
+
+const sorted = raw
+  .filter((e) => !e.data.draft)
+  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+
+interface SerializedItem {
+  id: string;
+  quote: string;
+  author: string;
+  role: string;
+  company?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+}
+
+const items: SerializedItem[] = await Promise.all(
+  sorted.map(async (entry) => {
+    const meta = resolveImageMetadata(entry.data.featuredImage);
+    let imageSrc: string | undefined;
+
+    if (meta) {
+      const optimised = await getImage({
+        src: meta,
+        width: 288,
+        height: 288,
+        format: "webp",
+        quality: 85,
+      });
+      imageSrc = optimised.src;
+    }
+
+    return {
+      id: entry.id,
+      quote: entry.data.description ?? "",
+      author: entry.data.author ?? entry.data.title,
+      role: entry.data.role ?? "",
+      company: entry.data.company,
+      imageSrc,
+      imageAlt: getImageAlt(entry.data.featuredImage, entry.data.author ?? entry.data.title),
+    };
+  }),
+);
+---
+
+<TestimonialCarouselClient items={items} client:visible />
+
+<style>
+  /* ── Root ── */
+  :global(.tc-root) {
+    width: 100%;
+    padding-block: clamp(4rem, 8vw, 7rem);
+    background: var(--color-bg);
+    outline: none;
+  }
+
+:global(.tc-inner) {
+    padding-inline: clamp(1.5rem, 5vw, 5rem);
+    max-width: 1400px;
+    margin-inline: auto;
+  }
+
+  /* ── Float layout ── */
+  :global(.tc-quote-wrap) {
+    /* overflow:hidden creates a block formatting context — contains the float */
+    overflow: hidden;
+    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  /*
+   * The square image floats left. Its size is tied to two line-heights of the
+   * quote text so it occupies exactly the first two lines, matching the reference.
+   * line-height 1.18 × font-size × 2 lines ≈ the magic number.
+   * We use a CSS custom property computed from the quote font-size for precision.
+   */
+  :global(.tc-float-img),
+  :global(.tc-float-initials) {
+    float: left;
+    /* 2 lines × line-height — matches quote font metrics exactly */
+    --tc-img-size: calc(clamp(2rem, 4.5vw, 3.75rem) * 1.18 * 1.7);
+    width: var(--tc-img-size);
+    height: var(--tc-img-size);
+    object-fit: cover;
+    /* gap between image and text */
+    margin-right: clamp(0.9rem, 1.8vw, 1.5rem);
+    /* nudge down slightly so image baseline aligns with first text line */
+    margin-top: 0.08em;
+    flex-shrink: 0;
+    /* square — no border-radius, matches reference exactly */
+    border-radius: 0;
+  }
+
+  :global(.tc-float-initials) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-accent);
+    color: #fff;
+    font-size: calc(var(--tc-img-size, 5rem) * 0.4);
+    font-weight: 300;
+  }
+
+  :global(.tc-quote) {
+    margin: 0;
+    font-size: clamp(2rem, 4.5vw, 3.75rem);
+    font-weight: 300;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    color: var(--color-heading);
+    /* display:block so text wraps around the float naturally */
+    display: block;
+  }
+
+/* clearfix element */
+  :global(.tc-clear) {
+    clear: both;
+  }
+
+  /* ── Footer ── */
+  :global(.tc-footer) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ── Attribution ── */
+  :global(.tc-attribution) {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  :global(.tc-author) {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--color-heading);
+    text-transform: uppercase;
+  }
+
+  :global(.tc-sep) {
+    display: inline-block;
+    width: 1px;
+    height: 0.8em;
+    background: var(--color-border-strong);
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  :global(.tc-role) {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  :global(.tc-dot) {
+    color: var(--color-border-strong);
+    font-size: 0.85rem;
+  }
+
+  :global(.tc-company) {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* ── Nav ── */
+  :global(.tc-nav) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  :global(.tc-arrow) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-muted);
+    transition: color 200ms, border-color 200ms;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  :global(.tc-arrow:hover:not(:disabled)) {
+    color: var(--color-heading);
+    border-color: var(--color-border-strong);
+  }
+  :global(.tc-arrow:disabled) {
+    opacity: 0.35;
+    cursor: default;
+  }
+  :global(.tc-arrow:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  :global(.tc-dots) {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  :global(.tc-dot-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding-inline: 0.35rem;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid transparent;
+    margin-bottom: -1px;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color 200ms;
+  }
+  :global(.tc-dot-btn:hover:not(:disabled)) {
+    color: var(--color-text);
+  }
+  :global(.tc-dot-btn--active) {
+    color: var(--color-heading);
+    border-bottom-color: var(--color-accent);
+  }
+  :global(.tc-dot-btn:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* ── Transition animations ── */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.tc-quote-wrap--in),
+    :global(.tc-attribution--in) {
+      animation: tc-fade-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    :global(.tc-quote-wrap--out-next),
+    :global(.tc-attribution--out-next) {
+      animation: tc-out-next 380ms cubic-bezier(0.55, 0, 1, 0.45) both;
+    }
+    :global(.tc-quote-wrap--out-prev),
+    :global(.tc-attribution--out-prev) {
+      animation: tc-out-prev 380ms cubic-bezier(0.55, 0, 1, 0.45) both;
+    }
+
+    @keyframes tc-fade-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes tc-out-next {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-10px); }
+    }
+    @keyframes tc-out-prev {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(10px); }
+    }
+  }
+
+  /* ── Mobile: unfloat, stack vertically ── */
+  @media (max-width: 640px) {
+    :global(.tc-float-img),
+    :global(.tc-float-initials) {
+      float: none;
+      width: clamp(52px, 14vw, 72px);
+      height: clamp(52px, 14vw, 72px);
+      margin-right: 0;
+      margin-bottom: 1.25rem;
+    }
+
+    :global(.tc-footer) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.25rem;
+    }
+  }
+</style>

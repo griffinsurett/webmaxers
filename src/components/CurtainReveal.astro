@@ -1,0 +1,260 @@
+---
+// src/components/CurtainReveal.astro
+/**
+ * CurtainReveal — reusable "curtain opening" scroll primitive.
+ *
+ * Two named slots:
+ *   overlay  → the section that pins and slides off-left (e.g. the filmstrip).
+ *   underlay → the "next scene", pinned underneath in final position from the
+ *              start; it never scrolls in — the overlay slides off to reveal it.
+ *
+ * SINGLE SOURCE OF SCROLL TRUTH
+ * CurtainReveal owns the one pinned stage and the one rAF scroll loop. The
+ * overlay does NOT pin or listen to scroll itself; instead it registers a small
+ * imperative contract on its root element and CurtainReveal drives it:
+ *
+ *   el.__curtainOverlay = {
+ *     getScrubPx({vw, vh}) -> number   // scroll px the overlay needs to "scrub"
+ *                                       // (0 = static, no scrub). Also the
+ *                                       // resize re-measure hook.
+ *     onProgress(scrub, slide, {vw,vh})// driven every frame; scrub/slide are 0→1
+ *     reset()                          // clear inline transforms on flatten
+ *   }
+ *
+ * Timeline (pixel-sliced so each phase keeps its own constant rate):
+ *   scrubPx = overlay.getScrubPx()          slidePx = hasUnderlay ? vh : 0
+ *   scrolled in [0 .. scrubPx]  -> scrub 0→1 (overlay animates)
+ *   scrolled in [scrubPx .. +vh]-> slide 0→1 (curtain layer slides off-left)
+ *
+ * Degenerate modes fall out for free:
+ *   - no overlay contract  -> scrubPx 0 -> pure slide-off (any static overlay)
+ *   - no underlay slot      -> slidePx 0 -> scrub-only pin (overlay alone)
+ *
+ * Controller shape mirrors the project's existing singleton scroll pattern in
+ * AboutSection.astro (window.__aboutStickyController).
+ */
+
+interface Props {
+  class?: string;
+  id?: string;
+}
+
+const { class: className = "", id } = Astro.props;
+
+const hasUnderlay = Astro.slots.has("underlay");
+---
+
+<div
+  id={id}
+  class:list={["curtain-stage", className]}
+  data-curtain-stage
+  data-curtain-has-underlay={hasUnderlay ? "true" : undefined}
+>
+  <div class="curtain-pin">
+    {/* Underlay — pinned underneath, in final position from frame 0. */}
+    {hasUnderlay && (
+      <div class="curtain-underlay" data-curtain-underlay>
+        <slot name="underlay" />
+      </div>
+    )}
+
+    {/* Overlay layer — opaque, sits over the underlay, slides off-left. The
+        slotted overlay registers el.__curtainOverlay on its own root. */}
+    <div class="curtain-overlay-layer" data-curtain-overlay-layer data-curtain="true">
+      <slot name="overlay" />
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Outer stage — tall scroll region. Real height is set in JS from the
+     overlay's declared scrub px + slide viewport; this is the pre-JS fallback. */
+  .curtain-stage {
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Pinned viewport — the single pin for the whole effect. */
+  .curtain-pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  /* Underlay — the next scene, behind the overlay layer. Pinned and static:
+     it must NOT scroll on its own (the overlay slides off to reveal it). */
+  .curtain-underlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  /* Overlay layer — opaque so the underlay stays hidden until it slides off.
+     translateX driven by JS during the slide phase. */
+  .curtain-overlay-layer {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    width: 100%;
+    background: var(--color-bg);
+    will-change: transform;
+  }
+
+  /* ── Flatten: mobile + reduced motion ──────────────────────────
+     No pin, no slide — overlay then underlay stacked in normal flow. The
+     overlay's own internals (track/cards) flatten in its own stylesheet. */
+  @media (max-width: 767px) {
+    .curtain-stage { min-height: 0; height: auto !important; }
+    .curtain-pin { position: static; height: auto; overflow: visible; }
+    .curtain-overlay-layer { height: auto; transform: none !important; }
+    .curtain-underlay { position: static; inset: auto; height: auto; overflow: visible; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .curtain-stage { min-height: 0; height: auto !important; }
+    .curtain-pin { position: static; height: auto; overflow: visible; }
+    .curtain-overlay-layer { height: auto; transform: none !important; }
+    .curtain-underlay { position: static; inset: auto; height: auto; overflow: visible; }
+  }
+</style>
+
+<script is:inline>
+(function () {
+  if (typeof window === "undefined") return;
+
+  function isFlat() {
+    return (
+      window.innerWidth < 768 ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+  var KEY = "__curtainReveal";
+  if (window[KEY]) { window[KEY].register(); }
+  else {
+    var ctrl = {
+      started: false,
+      ticking: false,
+
+      register: function () { this.update(); },
+
+      start: function () {
+        if (this.started) { this.schedule(); return; }
+        this.started = true;
+        window.addEventListener("scroll", function () { ctrl.schedule(); }, { passive: true });
+        window.addEventListener("resize", function () { ctrl.onResize(); });
+        document.addEventListener("astro:page-load", function () { ctrl.schedule(); });
+        this.schedule();
+      },
+
+      schedule: function () {
+        if (this.ticking) return;
+        this.ticking = true;
+        requestAnimationFrame(function () { ctrl.ticking = false; ctrl.update(); });
+      },
+
+      onResize: function () { this._lastH = null; this.update(); },
+
+      // Resolve a registered contract (set on the slotted root or a child).
+      contractOf: function (el, key) {
+        if (el[key]) return el[key];
+        var kids = el.children;
+        for (var i = 0; i < kids.length; i++) {
+          if (kids[i][key]) return kids[i][key];
+        }
+        return null;
+      },
+      overlayOf: function (layer) {
+        return this.contractOf(layer, "__curtainOverlay");
+      },
+
+      update: function () {
+        var stages = document.querySelectorAll("[data-curtain-stage]");
+        if (!stages.length) return;
+
+        var flat = isFlat();
+        var scrollY = window.scrollY;
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+
+        for (var s = 0; s < stages.length; s++) {
+          var stage = stages[s];
+          if (!(stage instanceof HTMLElement)) continue;
+
+          var layer = stage.querySelector("[data-curtain-overlay-layer]");
+          var overlay = layer ? this.overlayOf(layer) : null;
+          var underlayEl = stage.querySelector("[data-curtain-underlay]");
+          var underlay = underlayEl ? this.contractOf(underlayEl, "__curtainUnderlay") : null;
+          var hasUnderlay = stage.getAttribute("data-curtain-has-underlay") === "true";
+
+          if (flat) {
+            stage.style.height = "";
+            if (layer) layer.style.transform = "";
+            if (overlay && overlay.reset) overlay.reset();
+            if (underlay && underlay.reset) underlay.reset();
+            continue;
+          }
+
+          var scrubPx = overlay && overlay.getScrubPx
+            ? Math.max(0, overlay.getScrubPx({ vw: vw, vh: vh }))
+            : 0;
+          var slidePx = hasUnderlay ? vh : 0;
+          // Extra scroll the underlay needs to run its OWN phases after the
+          // curtain has opened (e.g. ServicesScene's reveal → slide → cards).
+          var underlayPx = underlay && underlay.getPhasePx
+            ? Math.max(0, underlay.getPhasePx({ vw: vw, vh: vh }))
+            : 0;
+
+          // Own the stage height: scrub + slide + underlay phases + the pinned vh.
+          stage.style.height = (scrubPx + slidePx + underlayPx + vh) + "px";
+
+          var maxScroll = Math.max(1, stage.offsetHeight - vh);
+          var sectionTop = stage.getBoundingClientRect().top + scrollY;
+          var scrolled = clamp(scrollY - sectionTop, 0, maxScroll);
+
+          var scrub = scrubPx > 0 ? clamp(scrolled / scrubPx, 0, 1) : 1;
+          var slide = slidePx > 0 ? clamp((scrolled - scrubPx) / slidePx, 0, 1) : 0;
+
+          if (layer) layer.style.transform = "translateX(" + (-slide * 100).toFixed(3) + "%)";
+          stage.style.setProperty("--curtain-scrub", scrub.toFixed(4));
+          stage.style.setProperty("--curtain-slide", slide.toFixed(4));
+
+          if (overlay && overlay.onProgress) {
+            overlay.onProgress(scrub, slide, { vw: vw, vh: vh });
+          }
+
+          // Underlay phases run on the scroll AFTER the slide finishes.
+          if (underlay && underlay.onProgress) {
+            var phaseP = underlayPx > 0
+              ? clamp((scrolled - scrubPx - slidePx) / underlayPx, 0, 1)
+              : 0;
+            underlay.onProgress(phaseP, { vw: vw, vh: vh });
+          }
+        }
+      },
+    };
+
+    window[KEY] = ctrl;
+  }
+
+  // Lazy-start when any stage nears the viewport (matches AboutSection).
+  var stages = document.querySelectorAll("[data-curtain-stage]");
+  if (!stages.length) return;
+
+  var c = window[KEY];
+  if (!("IntersectionObserver" in window)) { c.start(); return; }
+
+  var obs = new IntersectionObserver(function (entries, o) {
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting) { c.start(); o.disconnect(); return; }
+    }
+  }, { rootMargin: "300px 0px", threshold: 0 });
+
+  for (var j = 0; j < stages.length; j++) obs.observe(stages[j]);
+})();
+</script>

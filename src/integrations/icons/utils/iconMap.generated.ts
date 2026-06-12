@@ -3,15 +3,17 @@
 
 import type { IconType } from 'react-icons';
 import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGithub, LuGlobe, LuImage, LuLinkedin, LuMail, LuPhone, LuSettings, LuTwitter } from 'react-icons/lu';
-import { FaArrowRight, FaArrowsUpDownLeftRight, FaBullseye, FaClockRotateLeft, FaCompass, FaDroplet, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
-import { FaBullhorn, FaCode } from 'react-icons/fa';
+import { FaArrowRight, FaArrowsUpDownLeftRight, FaBolt, FaBullseye, FaCartShopping, FaClockRotateLeft, FaCode, FaCompass, FaDroplet, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMagnifyingGlassChart, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
 import { SiFacebook } from 'react-icons/si';
 
 export const iconMap = {
   'fa6:arrow-right': FaArrowRight,
   'fa6:arrows-up-down-left-right': FaArrowsUpDownLeftRight,
+  'fa6:bolt': FaBolt,
   'fa6:bullseye': FaBullseye,
+  'fa6:cart-shopping': FaCartShopping,
   'fa6:clock-rotate-left': FaClockRotateLeft,
+  'fa6:code': FaCode,
   'fa6:compass': FaCompass,
   'fa6:droplet': FaDroplet,
   'fa6:eye': FaEye,
@@ -21,6 +23,7 @@ export const iconMap = {
   'fa6:layer-group': FaLayerGroup,
   'fa6:life-ring': FaLifeRing,
   'fa6:link': FaLink,
+  'fa6:magnifying-glass-chart': FaMagnifyingGlassChart,
   'fa6:moon': FaMoon,
   'fa6:palette': FaPalette,
   'fa6:robot': FaRobot,
@@ -31,8 +34,6 @@ export const iconMap = {
   'fa6:universal-access': FaUniversalAccess,
   'fa6:wand-magic-sparkles': FaWandMagicSparkles,
   'fa6:xmark': FaXmark,
-  'fa:bullhorn': FaBullhorn,
-  'fa:code': FaCode,
   'lu:arrow-right': LuArrowRight,
   'lu:arrow-up-right': LuArrowUpRight,
   'lu:book-open': LuBookOpen,

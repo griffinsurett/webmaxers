@@ -1,0 +1,142 @@
+---
+// src/components/ContentRenderer/variants/CardBackgroundVariant.astro
+/**
+ * Card Background Variant
+ *
+ * Same card grid as CardVariant, but rendered on top of an optimized
+ * background image (the GrEastro BackgroundMedia component — the same one the
+ * heroes use). Pass a `backgroundImage` (imported Astro asset or public path)
+ * via ContentRenderer and it sits behind the content; no slot wiring needed.
+ *
+ *   <ContentRenderer
+ *     query={query("services")}
+ *     variant="CardBackgroundVariant"
+ *     backgroundImage={servicesBg}
+ *   />
+ */
+
+import type { BaseVariantProps } from "../ContentRenderer.types";
+import Icon from "@/components/Icon";
+import Button from "@/components/Button/Button";
+import BackgroundMedia from "@/components/BackgroundMedia.astro";
+import { shouldShowCollectionCTA } from "../utils/helpers";
+
+interface Props extends BaseVariantProps {
+  columns?: 1 | 2 | 3 | 4;
+  /** Imported Astro image asset or public path used as the section background. */
+  backgroundImage?: any;
+  /** Optional background video src (takes precedence over image in BackgroundMedia). */
+  backgroundVideo?: string;
+  /** Tailwind classes for the readability overlay over the media. */
+  overlayClass?: string;
+  /** Marks the image as above-the-fold (eager + LCP-tuned). Default false. */
+  aboveTheFold?: boolean;
+  /** Min height of the section so the background reads as a full surface. */
+  minHeight?: string;
+}
+
+const {
+  items = [],
+  title,
+  description,
+  className = "",
+  columns = 2,
+  collectionUrl,
+  collectionTitle,
+  id,
+  backgroundImage,
+  backgroundVideo,
+  overlayClass = "bg-gradient-to-b from-black/60 via-black/55 to-black/70",
+  aboveTheFold = false,
+  minHeight = "100vh",
+} = Astro.props as Props;
+
+const viewAllText = `Explore All ${collectionTitle || ""}`.trim();
+
+const columnClasses = {
+  1: "grid-cols-1",
+  2: "grid-cols-1 md:grid-cols-2",
+  3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+  4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+};
+
+// Assemble the BackgroundMedia config from the simple props above.
+const backgroundMedia =
+  backgroundVideo || backgroundImage
+    ? {
+        ...(backgroundImage && {
+          image: {
+            src: backgroundImage,
+            imageClass: "bg-cover bg-center",
+            aboveTheFold,
+          },
+        }),
+        ...(backgroundVideo && { video: { src: backgroundVideo } }),
+        overlayClass,
+      }
+    : null;
+---
+
+<section
+  id={id}
+  class={`relative flex w-full flex-col justify-center overflow-hidden ${className}`}
+  style={`min-height: ${minHeight};`}
+>
+  {/* Optimized background image/video + readability overlay (behind content) */}
+  {backgroundMedia && <BackgroundMedia backgroundMedia={backgroundMedia} />}
+
+  {/* Content sits above the background */}
+  <div class="relative z-10 px-6 py-16 md:px-[80px]">
+    {
+      (title || description) && (
+        <div class="text-center mb-12">
+          {title && (
+            <h2 class="text-4xl text-primary-light font-bold mb-4 drop-shadow-lg">{title}</h2>
+          )}
+          {description && (
+            <p class="text-lg text-primary-light/90 max-w-2xl mx-auto drop-shadow-md">
+              {description}
+            </p>
+          )}
+        </div>
+      )
+    }
+
+    {
+      items.length > 0 && (
+        <ul class={`grid ${columnClasses[columns]} gap-x-16 gap-y-14 list-none`}>
+          {items.map((item) => (
+            <li class="flex flex-col gap-5">
+              {item.icon && (
+                <Icon icon={item.icon} size="lg" className="text-primary-light/80" />
+              )}
+              <h3 class="text-3xl md:text-4xl font-light leading-tight text-primary-light">
+                {item.title}
+              </h3>
+              {item.description && (
+                <p class="text-primary-light/75 leading-relaxed max-w-md">
+                  {item.description}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      shouldShowCollectionCTA(collectionUrl, items.length) && (
+        <div class="mt-14 flex justify-end">
+          <Button
+            href={collectionUrl}
+            rightIcon="lu:arrow-right"
+            variant="underline"
+            size="md"
+          >
+            {viewAllText}
+          </Button>
+        </div>
+      )
+    }
+  </div>
+</section>
