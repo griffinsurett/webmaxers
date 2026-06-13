@@ -1,0 +1,51 @@
+---
+// src/layouts/EyebrowSection.astro
+/**
+ * EyebrowSection — shared text layout: a small uppercase eyebrow label in a left
+ * column and the main content in a right column (default slot). Optional CTA
+ * pinned to the bottom-right of the content column.
+ *
+ * This is the TEXT layout only — it owns no section background, height, or
+ * padding beyond its internal column gap. Callers (About, Services, …) wrap it
+ * in whatever section/background/pin they need and drop their heading markup
+ * into the default slot.
+ *
+ * Mobile: the eyebrow stacks on top of the content (matches the About section).
+ * md+: eyebrow sits in a narrow left column beside the content.
+ */
+import Button from "@/components/Button/Button";
+
+interface Props {
+  /** Small uppercase label shown in the left column. */
+  eyebrow: string;
+  /** Optional CTA — rendered bottom-right of the content column when present. */
+  buttonText?: string;
+  buttonLink?: string;
+  /** Extra classes for the root flex row. */
+  class?: string;
+}
+
+const { eyebrow, buttonText, buttonLink, class: className = "" } = Astro.props;
+const hasButton = Boolean(buttonText && buttonLink);
+---
+
+<div class:list={["flex flex-col md:flex-row gap-4 md:gap-16 w-full", className]}>
+  {/* Eyebrow — stacks on top on mobile, left column from md up. */}
+  <div class="shrink-0 md:pt-2">
+    <p class="text-[11px] font-medium tracking-[0.18em] uppercase text-text">
+      {eyebrow}
+    </p>
+  </div>
+
+  {/* Content column — caller's heading/markup, with optional CTA bottom-right. */}
+  <div class="flex-1 flex flex-col gap-8">
+    <slot />
+    {hasButton && (
+      <div class="flex justify-end">
+        <Button variant="underline" href={buttonLink} client:load>
+          {buttonText}
+        </Button>
+      </div>
+    )}
+  </div>
+</div>

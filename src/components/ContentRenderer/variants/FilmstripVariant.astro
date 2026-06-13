@@ -307,6 +307,10 @@ const totalPanels = items.length + 2;
     );
     let maxX = 0;
 
+    // On small screens we skip the per-card rise/fall ("sling") and just scrub
+    // the track straight off the page — cards sit statically in place.
+    const noRise = () => window.innerWidth < 768;
+
     return {
       // Horizontal travel = full track overflow, landing exactly on the last
       // panel (no trailing gap — the filmstrip curtains the scene behind it).
@@ -319,7 +323,15 @@ const totalPanels = items.length + 2;
         if (!track) return;
         const x = clamp(p, 0, 1) * maxX;
         track.style.transform = `translateX(${(-x).toFixed(2)}px)`;
-        applyCardRise(cards, x, window.innerWidth);
+        if (noRise()) {
+          // Cards visible and in place — no rise animation on mobile.
+          cards.forEach((rise) => {
+            rise.style.transform = "translateY(0)";
+            rise.style.opacity = "1";
+          });
+        } else {
+          applyCardRise(cards, x, window.innerWidth);
+        }
       },
     };
   }

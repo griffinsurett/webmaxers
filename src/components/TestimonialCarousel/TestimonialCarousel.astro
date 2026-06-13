@@ -1,6 +1,7 @@
 ---
 import { getImage } from "astro:assets";
 import TestimonialCarouselClient from "./TestimonialCarousel";
+import EyebrowSection from "@/layouts/EyebrowSection.astro";
 import { getCollection } from "astro:content";
 import { resolveImageMetadata, getImageAlt } from "@/utils/images";
 
@@ -49,21 +50,29 @@ const items: SerializedItem[] = await Promise.all(
 );
 ---
 
-<TestimonialCarouselClient items={items} client:visible />
+<div class="tc-section section-container">
+  <EyebrowSection eyebrow="Testimonials">
+    <TestimonialCarouselClient items={items} client:visible />
+  </EyebrowSection>
+</div>
 
 <style>
-  /* ── Root ── */
-  :global(.tc-root) {
+  /* Outer section padding (the EyebrowSection owns the eyebrow/content columns;
+     the background comes from the parent curtain layer). */
+  .tc-section {
     width: 100%;
     padding-block: clamp(4rem, 8vw, 7rem);
-    background: var(--color-bg);
+  }
+
+  /* ── Root ── EyebrowSection's slot column drives width now, so the carousel
+     fills it (no own max-width / centering / padding / background). */
+  :global(.tc-root) {
+    width: 100%;
     outline: none;
   }
 
-:global(.tc-inner) {
-    padding-inline: clamp(1.5rem, 5vw, 5rem);
-    max-width: 1400px;
-    margin-inline: auto;
+  :global(.tc-inner) {
+    width: 100%;
   }
 
   /* ── Float layout ── */

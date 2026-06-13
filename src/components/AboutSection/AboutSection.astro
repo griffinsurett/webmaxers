@@ -2,6 +2,7 @@
 import { splitTextIntoAnimatedWords } from "@/utils/animatedText";
 import LogoMark from "@/components/Logo/LogoMark.astro";
 import Button from "@/components/Button/Button";
+import EyebrowSection from "@/layouts/EyebrowSection.astro";
 
 interface Props {
   statement?: string;
@@ -37,36 +38,27 @@ const words = splitTextIntoAnimatedWords(statement);
   >
     <div class="about-sticky-pin" data-about-sticky-inner>
       <section class="relative w-full">
-        <div class="flex flex-col md:flex-row gap-4 md:gap-16 w-full">
-          <!-- Label: stacks on top on mobile, sits in a left column from md up -->
-          <div class="shrink-0 md:pt-2">
-            <p class="text-[11px] font-medium tracking-[0.18em] uppercase text-text">
-              About
-            </p>
-          </div>
-
-          <!-- Right: Animated statement -->
-          <div class="flex-1 max-w-4xl">
-            <h2
-              class="about-statement text-[clamp(2.5rem,7vw,4.5rem)] font-light leading-[1.1]"
-              aria-label={statement}
-            >
-              {words.map((word) => (
-                <>
-                  <span
-                    class="about-word"
-                    aria-hidden="true"
-                    data-about-word-progress
-                  >
-                    <span class="about-word-layer about-word-layer--base">{word.word}</span>
-                    <span class="about-word-layer about-word-layer--overlay">{word.word}</span>
-                  </span>
-                  {!word.isLast && <span class="about-space" aria-hidden="true"> </span>}
-                </>
-              ))}
-            </h2>
-          </div>
-        </div>
+        <EyebrowSection eyebrow="About">
+          <!-- Animated statement -->
+          <h2
+            class="about-statement max-w-4xl text-[clamp(2.5rem,7vw,4.5rem)] font-light leading-[1.1]"
+            aria-label={statement}
+          >
+            {words.map((word) => (
+              <>
+                <span
+                  class="about-word"
+                  aria-hidden="true"
+                  data-about-word-progress
+                >
+                  <span class="about-word-layer about-word-layer--base">{word.word}</span>
+                  <span class="about-word-layer about-word-layer--overlay">{word.word}</span>
+                </span>
+                {!word.isLast && <span class="about-space" aria-hidden="true"> </span>}
+              </>
+            ))}
+          </h2>
+        </EyebrowSection>
       </section>
     </div>
   </aside>

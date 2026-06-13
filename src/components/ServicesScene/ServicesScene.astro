@@ -20,6 +20,7 @@
  */
 
 import Icon from "@/components/Icon";
+import EyebrowSection from "@/layouts/EyebrowSection.astro";
 import { query, sortByOrder } from "@/utils/query";
 import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
 import { getImage } from "astro:assets";
@@ -39,9 +40,16 @@ interface Props {
   /** Outer box height. GSAP's pin-spacer provides the scroll budget, so this
    *  is just the in-flow footprint — one viewport. */
   sceneHeight?: string;
+  /** Intro CTA (shown bottom-right of the intro via EyebrowSection). */
+  ctaText?: string;
+  ctaLink?: string;
 }
 
-const { sceneHeight = "100vh" } = Astro.props;
+const {
+  sceneHeight = "100vh",
+  ctaText = "View all services",
+  ctaLink = "/services",
+} = Astro.props;
 
 // Load the 6 services.
 const meta = getCollectionMeta("services");
@@ -76,17 +84,23 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
         and fades to transparent on scroll (image fully visible). */}
     <div class="services-dim" data-services-dim aria-hidden="true"></div>
 
-    {/* Intro stack — shown before the cards arrive, then fades out as the
-        cards begin to enter. */}
-    <div class="services-intro" data-services-intro aria-hidden="true">
+    {/* Intro — shown before the cards arrive, then fades out as the cards begin
+        to enter. Uses the shared EyebrowSection layout (eyebrow left, stacked
+        lines in the slot, CTA bottom-right). */}
+    <div class="services-intro" data-services-intro>
       <div class="services-intro-inner">
         <div class="services-intro-copy" data-services-intro-copy>
-          <p class="services-intro-eyebrow">OUR SERVICES</p>
-          <div class="services-intro-stack">
-            {introLines.map((line) => (
-              <span class="services-intro-line">{line}</span>
-            ))}
-          </div>
+          <EyebrowSection
+            eyebrow="Our Services"
+            buttonText={ctaText}
+            buttonLink={ctaLink}
+          >
+            <div class="services-intro-stack">
+              {introLines.map((line) => (
+                <span class="services-intro-line">{line}</span>
+              ))}
+            </div>
+          </EyebrowSection>
         </div>
       </div>
     </div>
@@ -180,37 +194,31 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     position: relative;
     width: 100%;
     height: 100%;
-    display: grid;
-    place-items: center;
+    /* Vertically centre the EyebrowSection; it handles its own left layout. */
+    display: flex;
+    align-items: center;
     padding: clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 6vw, 6rem);
   }
 
+  /* GSAP scroll hook — drives the intro's exit shift + fade. Layout is owned by
+     the EyebrowSection inside it. */
   .services-intro-copy {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(0.5rem, 1.2vw, 0.85rem);
-    text-align: center;
+    width: 100%;
     opacity: var(--intro-opacity, 1);
     transform: translateY(calc(-2.5vh - var(--intro-shift, 0vh)));
     will-change: transform, opacity;
   }
 
-  .services-intro-eyebrow {
-    font-size: 0.9rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--color-primary-light) 72%, transparent);
+  /* The intro layer is pointer-events:none so the faded-out intro never blocks
+     the cards; re-enable just its interactive elements (the CTA). */
+  .services-intro :where(a, button) {
+    pointer-events: auto;
   }
 
   .services-intro-stack {
     display: flex;
     flex-direction: column;
     gap: clamp(0.35rem, 0.8vw, 0.65rem);
-    align-self: center;
-    justify-self: center;
-    text-align: center;
     color: var(--color-primary-light);
     text-transform: uppercase;
     letter-spacing: -0.09em;

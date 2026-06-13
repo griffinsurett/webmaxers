@@ -62,11 +62,13 @@ import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
 
 <style>
   /* The testimonials layer is a padded block, not full-bleed — centre it in the
-     pinned viewport so it reads well while it's the revealed bottom layer. On
-     mobile / reduced motion the stack flattens and this is a no-op. */
+     pinned viewport so it reads well while it's the revealed bottom layer. The
+     component carries its own solid background. On mobile / reduced motion the
+     stack flattens and the centring is a no-op. */
   .curtain-layer--testimonials {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    background: var(--color-bg);
   }
 </style>
