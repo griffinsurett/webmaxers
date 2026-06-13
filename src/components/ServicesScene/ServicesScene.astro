@@ -56,6 +56,9 @@ const meta = getCollectionMeta("services");
 const result = await query("services").orderBy(sortByOrder()).get();
 const services = await prepareCollectionEntries(result.entries, "services", meta);
 
+// Eyebrow comes from the collection's _meta title (falls back to a label).
+const eyebrow = meta.title ?? "Our Services";
+
 const introLines = ["Websites", "Branding", "Ai Agents"];
 ---
 
@@ -76,8 +79,6 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
         <source media="(min-width: 1025px)" srcset={bgDesktop.src} type="image/webp" />
         <img src={bgDesktop.src} alt="" class="h-full w-full object-cover object-center" loading="lazy" decoding="async" fetchpriority="low" />
       </picture>
-      {/* Light residual overlay — the scroll-driven .services-dim does the rest. */}
-      <div class="absolute inset-0 bg-black/30"></div>
     </div>
 
     {/* Phase 1 — dim layer over the fire. Starts opaque (image barely visible)
@@ -85,23 +86,19 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     <div class="services-dim" data-services-dim aria-hidden="true"></div>
 
     {/* Intro — shown before the cards arrive, then fades out as the cards begin
-        to enter. Uses the shared EyebrowSection layout (eyebrow left, stacked
-        lines in the slot, CTA bottom-right). */}
+        to enter. Uses the shared EyebrowSection in `center` mode: eyebrow pinned
+        top-left at the shared inset (same spot as About), the stack dead-centred,
+        and the CTA bottom-right — all owned by EyebrowSection, no per-section
+        positioning here. The wrapper carries the GSAP fade/shift hook. */}
     <div class="services-intro" data-services-intro>
-      <div class="services-intro-inner">
-        <div class="services-intro-copy" data-services-intro-copy>
-          <EyebrowSection
-            eyebrow="Our Services"
-            buttonText={ctaText}
-            buttonLink={ctaLink}
-          >
-            <div class="services-intro-stack">
-              {introLines.map((line) => (
-                <span class="services-intro-line">{line}</span>
-              ))}
-            </div>
-          </EyebrowSection>
-        </div>
+      <div class="services-intro-copy" data-services-intro-copy>
+        <EyebrowSection eyebrow={eyebrow} buttonText={ctaText} buttonLink={ctaLink} center>
+          <div class="services-intro-stack">
+            {introLines.map((line) => (
+              <span class="services-intro-line">{line}</span>
+            ))}
+          </div>
+        </EyebrowSection>
       </div>
     </div>
 
@@ -177,44 +174,41 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     pointer-events: none;
   }
 
-  /* ── Intro stack (pre-card state) ─────────────────────────────── */
+  /* ── Intro (pre-card state) ─────────────────────────────────────
+     Sits above the fire bg + dim (z-2) so the text is never covered by the
+     background media. Full-bleed; children are positioned individually. */
   .services-intro {
     --intro-shift: 0vh;
     position: absolute;
     inset: 0;
     z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     pointer-events: none;
     opacity: 1;
   }
 
-  .services-intro-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    /* Vertically centre the EyebrowSection; it handles its own left layout. */
-    display: flex;
-    align-items: center;
-    padding: clamp(1.5rem, 4vw, 3rem) clamp(1.5rem, 6vw, 6rem);
-  }
-
-  /* GSAP scroll hook — drives the intro's exit shift + fade. Layout is owned by
-     the EyebrowSection inside it. */
+  /* GSAP scroll hook — drives the intro's exit shift + fade. Full-bleed so the
+     EyebrowSection (center mode) fills it: eyebrow top-left, stack centred,
+     CTA bottom-right — all positioned by EyebrowSection, not here. */
   .services-intro-copy {
-    width: 100%;
+    position: absolute;
+    inset: 0;
     opacity: var(--intro-opacity, 1);
-    transform: translateY(calc(-2.5vh - var(--intro-shift, 0vh)));
+    transform: translateY(calc(-1 * var(--intro-shift, 0vh)));
     will-change: transform, opacity;
   }
 
-  /* The intro layer is pointer-events:none so the faded-out intro never blocks
-     the cards; re-enable just its interactive elements (the CTA). */
-  .services-intro :where(a, button) {
+  /* The full-bleed intro layer never captures pointers (so empty areas don't
+     block the cards beneath). The actual content (.services-intro-copy) IS
+     interactive — text selectable, CTA clickable — and JS switches it OFF once
+     the intro has faded out, so the invisible intro can't block the cards. */
+  .services-intro {
+    pointer-events: none;
+  }
+  .services-intro-copy {
     pointer-events: auto;
   }
 
+  /* Stack — visual styling only; EyebrowSection (center) handles the centring. */
   .services-intro-stack {
     display: flex;
     flex-direction: column;
@@ -224,6 +218,7 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     letter-spacing: -0.09em;
     font-weight: 300;
     line-height: 0.8;
+    text-align: center;
   }
 
   .services-intro-line {
@@ -300,14 +295,18 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
   }
 
   /* ── Reduced motion: static, fully-visible fallback ───────────
-     GSAP registers nothing for these users, so flatten to a readable stack. */
+     GSAP registers nothing for these users, so flatten to a readable vertical
+     stack. The fire bg fills the whole (now auto-height) section behind the
+     content; everything else returns to normal flow. */
   @media (prefers-reduced-motion: reduce) {
     .services-scene { height: auto; }
-    .services-pin { position: static; height: auto; overflow: visible; display: block; padding: 5rem 0; }
-    .services-bg { position: absolute; }
+    .services-pin { position: relative; height: auto; overflow: hidden; display: block; padding: 5rem 0; }
+    .services-bg { position: absolute; inset: 0; }
     .services-dim { display: none; }
-    .services-intro { position: relative; inset: auto; opacity: 1; transform: none; padding: 0 1.5rem 2rem; }
-    .services-intro-copy { transform: none !important; opacity: 1 !important; }
+    /* Intro becomes a normal-flow block; the EyebrowSection (center mode) keeps
+       its eyebrow-top-left / centred-stack layout inside this min-height box. */
+    .services-intro { position: relative; inset: auto; opacity: 1; transform: none; }
+    .services-intro-copy { position: relative; inset: auto; transform: none !important; opacity: 1 !important; min-height: 80vh; }
     .services-cards-wrap { position: relative; inset: auto; overflow: visible; pointer-events: auto; }
     .services-cards-scroll { transform: none !important; will-change: auto; }
     .svc-card { transform: none !important; opacity: 1 !important; }
@@ -348,6 +347,9 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
       const introP = clamp(p / INTRO_END, 0, 1);
       introCopy.style.setProperty("--intro-shift", (introP * 44).toFixed(4) + "vh");
       introCopy.style.setProperty("--intro-opacity", (1 - introP).toFixed(4));
+      // Stop the (now invisible) intro from capturing pointer/selection once it
+      // has faded, so it can't block the cards beneath.
+      introCopy.style.pointerEvents = introP >= 1 ? "none" : "auto";
     }
 
     // Phase 2 — cards slide in from alternating sides with a stagger.

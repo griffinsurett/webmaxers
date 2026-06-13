@@ -152,12 +152,20 @@ const { class: className = "" } = Astro.props;
         invalidateOnRefresh: true,
         onUpdate: (self) => {
           const p = self.progress;
-          // Drive each layer's internal scrub across its own scrub window.
           legs.forEach((leg) => {
-            if (!leg.contract) return;
-            const span = leg.scrubEnd - leg.scrubStart;
-            const lp = span > 0 ? clamp((p - leg.scrubStart) / span, 0, 1) : 1;
-            leg.contract.setProgress(lp);
+            // Drive each layer's internal scrub across its own scrub window.
+            if (leg.contract) {
+              const span = leg.scrubEnd - leg.scrubStart;
+              const lp = span > 0 ? clamp((p - leg.scrubStart) / span, 0, 1) : 1;
+              leg.contract.setProgress(lp);
+            }
+            // A layer that has begun moving off-screen must stop capturing
+            // pointers — otherwise the peeled/lifted layer (still in the DOM at
+            // the top z-index) intercepts clicks/selection on the layer beneath
+            // it (e.g. the filmstrip lingering over the services eyebrow).
+            if (leg.move !== "none") {
+              leg.layer.style.pointerEvents = p > leg.scrubEnd ? "none" : "auto";
+            }
           });
         },
       },

@@ -3,9 +3,14 @@ import { getImage } from "astro:assets";
 import TestimonialCarouselClient from "./TestimonialCarousel";
 import EyebrowSection from "@/layouts/EyebrowSection.astro";
 import { getCollection } from "astro:content";
+import { getCollectionMeta } from "@/utils/collections";
 import { resolveImageMetadata, getImageAlt } from "@/utils/images";
 
 const raw = await getCollection("testimonials");
+
+// Eyebrow comes from the collection's _meta title.
+const meta = getCollectionMeta("testimonials");
+const eyebrow = meta.title ?? "Testimonials";
 
 const sorted = raw
   .filter((e) => !e.data.draft)
@@ -51,7 +56,7 @@ const items: SerializedItem[] = await Promise.all(
 ---
 
 <div class="tc-section section-container">
-  <EyebrowSection eyebrow="Testimonials">
+  <EyebrowSection eyebrow={eyebrow}>
     <TestimonialCarouselClient items={items} client:visible />
   </EyebrowSection>
 </div>

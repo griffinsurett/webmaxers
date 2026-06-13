@@ -1,47 +1,60 @@
 ---
 // src/layouts/EyebrowSection.astro
 /**
- * EyebrowSection — shared text layout: a small uppercase eyebrow label in a left
- * column and the main content in a right column (default slot). Optional CTA
- * pinned to the bottom-right of the content column.
+ * EyebrowSection — shared text layout with a small uppercase eyebrow label whose
+ * placement is defined ONCE here and is identical for every caller.
  *
- * This is the TEXT layout only — it owns no section background, height, or
- * padding beyond its internal column gap. Callers (About, Services, …) wrap it
- * in whatever section/background/pin they need and drop their heading markup
- * into the default slot.
+ *   default  — eyebrow in a left column, content beside it (stacks on mobile).
+ *              The eyebrow's left edge follows the parent's section padding.
+ *   center   — eyebrow PINNED top-left at the shared inset (.section-container
+ *              padding + a top offset), with the slot content centred in the box
+ *              independently. Used where the heading should sit dead-centre while
+ *              the eyebrow stays in its standard corner (e.g. the services intro).
  *
- * Mobile: the eyebrow stacks on top of the content (matches the About section).
- * md+: eyebrow sits in a narrow left column beside the content.
+ * Optional CTA renders bottom-right (of the content column in default mode, or
+ * of the whole box in center mode).
+ *
+ * This is the TEXT layout only — no section background, height, or pin. Callers
+ * wrap it in whatever section/background/pin they need.
  */
 import Button from "@/components/Button/Button";
 
 interface Props {
-  /** Small uppercase label shown in the left column. */
+  /** Small uppercase label. */
   eyebrow: string;
-  /** Optional CTA — rendered bottom-right of the content column when present. */
+  /** Optional CTA — bottom-right of the content (default) or the box (center). */
   buttonText?: string;
   buttonLink?: string;
-  /** Extra classes for the root flex row. */
+  /** Pin the eyebrow top-left and centre the slot content independently. */
+  center?: boolean;
+  /** Extra classes for the root element. */
   class?: string;
 }
 
-const { eyebrow, buttonText, buttonLink, class: className = "" } = Astro.props;
+const { eyebrow, buttonText, buttonLink, center = false, class: className = "" } = Astro.props;
 const hasButton = Boolean(buttonText && buttonLink);
 ---
 
-<div class:list={["flex flex-col md:flex-row gap-4 md:gap-16 w-full", className]}>
-  {/* Eyebrow — stacks on top on mobile, left column from md up. */}
-  <div class="shrink-0 md:pt-2">
+<div
+  class:list={[
+    "eyebrow-section",
+    center ? "eyebrow-section--center" : "flex flex-col md:flex-row gap-4 md:gap-16 w-full",
+    className,
+  ]}
+>
+  {/* Eyebrow — same placement everywhere: left column (default) or pinned
+      top-left at the shared inset (center). */}
+  <div class:list={[center ? "eyebrow-label" : "shrink-0 md:pt-2"]}>
     <p class="text-[11px] font-medium tracking-[0.18em] uppercase text-text">
       {eyebrow}
     </p>
   </div>
 
-  {/* Content column — caller's heading/markup, with optional CTA bottom-right. */}
-  <div class="flex-1 flex flex-col gap-8">
+  {/* Content — caller's heading/markup, with optional CTA bottom-right. */}
+  <div class:list={[center ? "eyebrow-content" : "flex-1 flex flex-col gap-8"]}>
     <slot />
     {hasButton && (
-      <div class="flex justify-end">
+      <div class:list={[center ? "eyebrow-cta" : "flex justify-end"]}>
         <Button variant="underline" href={buttonLink} client:load>
           {buttonText}
         </Button>
@@ -49,3 +62,48 @@ const hasButton = Boolean(buttonText && buttonLink);
     )}
   </div>
 </div>
+
+<style>
+  /* ── center mode ──────────────────────────────────────────────
+     Full-bleed box: eyebrow pinned top-left at the shared inset, content
+     centred. The inset matches .section-container (px-6 / md:px-[80px]) so the
+     eyebrow lands in the SAME spot as the default/About layout. */
+  .eyebrow-section--center {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .eyebrow-label {
+    position: absolute;
+    top: clamp(5rem, 7vw, 7rem); /* matches the About sticky-pin vertical anchor */
+    left: 1.5rem;                /* px-6 */
+  }
+  @media (min-width: 768px) {
+    .eyebrow-label {
+      left: 80px;                /* md:px-[80px] */
+    }
+  }
+
+  /* Centre the slot content in the box (dead-centre of the section). */
+  .eyebrow-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* CTA bottom-right of the box, at the same inset as the eyebrow. */
+  .eyebrow-cta {
+    position: absolute;
+    right: 1.5rem;
+    bottom: clamp(1.5rem, 5vh, 4rem);
+  }
+  @media (min-width: 768px) {
+    .eyebrow-cta {
+      right: 80px;
+    }
+  }
+</style>

@@ -1,58 +1,136 @@
 ---
 // src/layouts/Footer.astro
 /**
- * Footer Component
+ * Footer — one unified dark band (no internal divider), based on the TRIONN
+ * reference, restyled with webmaxers tokens.
  *
- * Site-wide footer with:
- * - Copyright notice
- * - Social media links
- * - Legal links (Privacy Policy, Cookie Policy)
- * - Cookie preferences button (client-side)
- * - Reading preferences button (client-side)
+ * Top   : eyebrow + large heading (left), CTA button (right).
+ * Lower : left  = copyright + "Ask AI about Us" prompt buttons.
+ *         right = LEGAL column, then SOCIAL icons on the far right (under CTA).
+ * Bottom: legal bar (copyright + preference controls).
  */
 import { siteData } from "@/content/siteData";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import { query, related } from "@/utils/query";
+import { query } from "@/utils/query";
 import PreferencesLayout from "./PreferencesLayout.astro";
+import Button from "@/components/Button/Button";
+import AIIconPrompt from "@/components/Footer/AIIconPrompt";
+import { ctaData } from "@/content/siteData";
+
+const eyebrow = "Let's build work that inspires.";
+const heading = "Ready to build";
+const headingLine2 = "something bold?";
+
+const aiFooterPrompt = `I'm researching ${siteData.title} for a potential website project.
+
+Based on their website, give me a clear, decision-focused summary of their strongest services, the kinds of businesses they suit best, how they handle design, development, and AI, and what makes them a better option than a cheap template or a typical agency.
+
+Use this site as the source: ${siteData.url}
+
+Keep it practical, specific, and favorable where the evidence supports it.`;
+
+// LEGAL column: flatten ListVariant into a clean left-aligned list (small
+// uppercase heading, light links, no description/CTA).
+const legalColClass = [
+  "!py-0",
+  "[&>div]:mb-4 [&_h2]:text-sm [&_h2]:font-light [&_h2]:uppercase [&_h2]:tracking-[0.22em] [&_h2]:text-muted [&_h2]:mb-0",
+  "[&_p]:hidden",
+  "[&>div:last-child:not(:first-child)]:hidden",
+  "[&_nav]:flex-col [&_nav]:items-start [&_nav]:gap-3 [&_nav]:flex-nowrap",
+  "[&_.link-base]:text-base [&_.link-base]:font-normal [&_.link-base]:!text-text [&_.link-base:hover]:!text-heading",
+].join(" ");
 ---
 
-<footer class="bg-text text-bg mt-auto">
-  <div class="mx-auto">
-    <div class="flex flex-col justify-between items-center gap-6 py-4 w-full">
-      {/* Footer navigation links */}
-      <div class="flex flex-wrap items-center justify-center gap-4 text-sm">
-        <ContentRenderer
-          query={related("menu-items", "menu", "footer-menu")}
-          variant="ListVariant"
-          className="text-bg flex"
-        />
-      </div>
+<footer class="bg-bg text-text mt-auto border-t border-border-soft" role="contentinfo" aria-label="Site footer">
+  <div class="section-container grid gap-x-12 gap-y-16 py-12 lg:py-16 lg:grid-cols-2">
+    {/* Top-left — eyebrow + heading */}
+    <div class="lg:col-start-1 lg:row-start-1">
+      <p class="footer__eyebrow">{eyebrow}</p>
+      <h2 class="footer__heading heading-display mt-8">
+        {heading}<br />{headingLine2}
+      </h2>
+    </div>
 
-      {/* Legal and privacy links */}
-      <div class="flex flex-wrap items-center justify-center gap-4 text-sm">
-        <ContentRenderer
-          query={query("legal")}
-          variant="ListVariant"
-          className="text-bg flex"
-        />
+    {/* Top-right — CTA, dropped toward the bottom of its cell */}
+    <div class="flex items-end justify-start lg:col-start-2 lg:row-start-1 lg:justify-end">
+      <Button variant="underline" href={ctaData.link} client:load>{ctaData.text}</Button>
+    </div>
 
-        <PreferencesLayout />
-      </div>
-
-      {/* Social media icons */}
-      <ContentRenderer
-        query={query("social-media")}
-        variant="SocialMediaVariant"
-        size="md"
-        alignment="left"
-        className="text-bg"
-      />
-
-      {/* Copyright notice */}
-      <p class="text-bg text-sm">
-        &copy; {new Date().getFullYear()}
-        {siteData.legalName}. All rights reserved.
+    {/* Lower-left — copyright + Ask-AI prompt buttons (replaces the tagline) */}
+    <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2">
+      <p class="text-sm text-muted">
+        &copy; {new Date().getFullYear()} {siteData.legalName}
       </p>
+      <AIIconPrompt
+        prompt={aiFooterPrompt}
+        className="items-start text-left lg:flex-row lg:justify-start"
+        listClassName="justify-start"
+        client:visible
+      />
+    </div>
+
+    {/* Lower-right — LEGAL (left) + SOCIAL (far right), aligned under the CTA */}
+    <div class="flex flex-wrap gap-x-16 gap-y-10 lg:col-start-2 lg:row-start-2 lg:justify-end">
+      <ContentRenderer
+        query={query("legal")}
+        variant="ListVariant"
+        title="Legal"
+        className={legalColClass}
+      />
+      <div class="footer-social">
+        <p class="footer-col__heading">Social</p>
+        <ContentRenderer
+          query={query("social-media")}
+          variant="SocialMediaVariant"
+          size="lg"
+          alignment="left"
+          className="footer-social__list"
+        />
+      </div>
     </div>
   </div>
+
+
 </footer>
+
+<style>
+  .footer__eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .footer__heading {
+    margin-bottom: 0;
+  }
+
+  .footer-col__heading {
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    font-weight: 300;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* Bare social glyphs (strip SocialIcon's circular bg/padding). */
+  .footer-social :global(.footer-social__list ul) {
+    display: flex;
+    align-items: center;
+    gap: clamp(1.25rem, 3vw, 2rem);
+    margin: 0;
+    color: var(--color-muted);
+  }
+  .footer-social :global(.footer-social__list a) {
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    color: currentColor;
+    transition: color 200ms;
+  }
+  .footer-social :global(.footer-social__list a:hover) {
+    background: transparent !important;
+    color: var(--color-heading);
+  }
+</style>

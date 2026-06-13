@@ -138,6 +138,12 @@
   @apply px-6 md:px-[80px];
 }
 
+/* Large display heading — the hero/footer "Ready to build…" scale. Single
+   source of truth so the hero and footer-top stay in sync. */
+@utility heading-display {
+  @apply text-[clamp(2.8rem,6.5vw,6rem)] font-light leading-[0.9] tracking-tight text-heading;
+}
+
 @utility logo-class {
   @apply light:invert;
 }

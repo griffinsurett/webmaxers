@@ -1,0 +1,85 @@
+---
+// src/layouts/FooterTop.astro
+/**
+ * FooterTop — large CTA band above the footer.
+ *   eyebrow (top-left) → large headline (left) → CTA button pinned bottom-right.
+ */
+import Button from "@/components/Button/Button";
+import { ctaData } from "@/content/siteData";
+
+interface Props {
+  eyebrow?: string;
+  heading?: string;
+  headingLine2?: string;
+  ctaText?: string;
+  ctaLink?: string;
+}
+
+const {
+  eyebrow = "Let's build work that inspires.",
+  heading = "Ready to build",
+  headingLine2 = "something bold?",
+  ctaText = ctaData.text,
+  ctaLink = ctaData.link,
+} = Astro.props;
+---
+
+<div class="footer-top section-container">
+  <p class="footer-top__eyebrow">{eyebrow}</p>
+
+  <div class="footer-top__row">
+    <h2 class="footer-top__heading heading-display">
+      {heading}<br />{headingLine2}
+    </h2>
+    <div class="footer-top__cta">
+      <Button variant="underline" href={ctaLink} client:load>{ctaText}</Button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .footer-top {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2rem, 5vw, 3.5rem);
+    padding-block: clamp(3.5rem, 8vw, 7rem);
+  }
+
+  .footer-top__eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .footer-top__row {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* Size/weight/leading come from the shared .heading-display utility. */
+  .footer-top__heading {
+    margin: 0;
+  }
+
+  .footer-top__cta {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* lg: heading left, CTA dropped to the bottom-right on the heading's baseline. */
+  @media (min-width: 768px) {
+    .footer-top__row {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 3rem;
+    }
+    .footer-top__cta {
+      flex-shrink: 0;
+      padding-bottom: 0.35rem;
+    }
+  }
+</style>
