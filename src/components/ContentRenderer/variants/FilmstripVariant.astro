@@ -129,6 +129,16 @@ const totalPanels = items.length + 2;
     --fs-pad-y:       clamp(2.5rem, 5vh, 5rem);
   }
 
+  /* On small screens each panel is full-viewport-width, so one project fills the
+     screen at a time as the track scrubs (50vw is too cramped on a phone). The
+     track width + scrub distance derive from this token, so they auto-adjust. */
+  @media (max-width: 767px) {
+    [data-filmstrip] {
+      --fs-panel-w: 100vw;
+      --fs-pad-x: clamp(1.5rem, 6vw, 2.5rem);
+    }
+  }
+
   /* ── Filmstrip surface ───────────────────────────────────────────
      Fills the viewport while pinned. GSAP pins this element and scrubs the
      inner track left, then slides this whole element off-left to reveal the
@@ -232,24 +242,11 @@ const totalPanels = items.length + 2;
     will-change: transform, opacity;
   }
 
-  /* ── Mobile: vertical stack, no pinning ───────────────────────
-     GSAP registers no ScrollTrigger here; this flattens the filmstrip's
-     internals (track → column, all cards visible, no transforms). */
-  @media (max-width: 767px) {
-    .fs-section  { height: auto; overflow: visible; }
-    .fs-track    { flex-direction: column; width: 100%; transform: none !important; transition: none !important; }
-    .fs-panel    { width: 100%; height: auto; }
-    .fs-panel-inner,
-    .fs-panel-inner--project { padding: 3rem 1.5rem; height: auto; }
-    /* Intro/outro size to their content — no forced viewport height, so no
-       large empty gap above/below the centred text on small screens. */
-    .fs-panel--intro .fs-panel-inner,
-    .fs-panel--outro .fs-panel-inner { align-items: flex-start; text-align: left; }
-    .fs-rule     { display: none; }
-    .fs-card-rise { transform: none !important; opacity: 1 !important; }
-  }
+  /* The horizontal filmstrip scrub runs on all screen sizes (same pinned
+     timeline as desktop). Only reduced-motion users get the static vertical
+     fallback below. */
 
-  /* ── Reduced motion: same vertical fallback ──────────────────── */
+  /* ── Reduced motion: vertical stack, no pinning ──────────────── */
   @media (prefers-reduced-motion: reduce) {
     .fs-section  { height: auto; overflow: visible; }
     .fs-track    { flex-direction: column; width: 100%; transform: none !important; transition: none !important; }
@@ -375,9 +372,10 @@ const totalPanels = items.length + 2;
         return;
       }
 
-      // Standalone — desktop only; CSS flattens below 768px / reduced-motion.
+      // Standalone — runs on all screen sizes; only reduced-motion users get
+      // the static CSS fallback (no ScrollTrigger registered for them).
       ScrollTrigger.matchMedia({
-        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () => {
+        "(prefers-reduced-motion: no-preference)": () => {
           buildStandalone(section);
         },
       });

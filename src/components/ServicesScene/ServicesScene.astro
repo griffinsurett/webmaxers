@@ -59,10 +59,8 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
 >
   <div class="services-pin">
     {/* Fire background behind every phase. A real <img> layer (i75
-        FixedViewportBackground pattern) — locked to the viewport by GSAP's pin
-        on desktop and by position:sticky on mobile, so it stays fixed while the
-        content scrolls over it on touch devices too (background-attachment:fixed
-        is ignored on iOS, so we don't use it). */}
+        FixedViewportBackground pattern) filling the pinned viewport — the pin
+        keeps it locked while the scrubbed phases run, on every screen size. */}
     <div class="services-bg" aria-hidden="true">
       <picture>
         <source media="(max-width: 640px)" srcset={bgMobile.src} type="image/webp" />
@@ -134,9 +132,9 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     justify-content: center;
   }
 
-  /* Fire background layer. Desktop: fills the GSAP-pinned .services-pin (the pin
-     keeps it fixed to the viewport during the scrubbed sequence). The inner
-     <picture>/<img> covers the box. */
+  /* Fire background layer — fills the GSAP-pinned .services-pin so the pin keeps
+     it fixed to the viewport during the scrubbed sequence (all screen sizes).
+     The inner <picture>/<img> covers the box. */
   .services-bg {
     position: absolute;
     inset: 0;
@@ -284,64 +282,27 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     max-width: 42ch;
   }
 
-  /* ── Flatten: mobile + reduced motion ────────────────────────── */
-  @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+  /* ── Mobile sizing ────────────────────────────────────────────
+     The curtain animation runs on mobile too (same pinned timeline as desktop),
+     so we only adjust sizing here — no positional flattening. */
+  @media (max-width: 767px) {
+    .services-intro-line { font-size: clamp(2.8rem, 10vw, 4.8rem); }
+    .services-cards-grid { grid-template-columns: 1fr; }
+    .services-cards-scroll { padding: clamp(3rem, 8vh, 6rem) 1.5rem; }
+  }
+
+  /* ── Reduced motion: static, fully-visible fallback ───────────
+     GSAP registers nothing for these users, so flatten to a readable stack. */
+  @media (prefers-reduced-motion: reduce) {
     .services-scene { height: auto; }
     .services-pin { position: static; height: auto; overflow: visible; display: block; padding: 5rem 0; }
+    .services-bg { position: absolute; }
     .services-dim { display: none; }
-    /* Fixed-to-viewport fire background on touch (i75 pattern, sticky variant):
-       the layer sticks to the viewport top through the whole section while the
-       content scrolls over it. The negative margin removes it from flow so it
-       doesn't push the content down. Content sits above via z-index. */
-    .services-bg {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      margin-bottom: -100vh;
-      z-index: 0;
-    }
-    .services-intro,
-    .services-cards-wrap { position: relative; z-index: 1; }
-    .services-intro { inset: auto; opacity: 1; transform: none; padding: 0 1.5rem 2rem; }
-    .services-intro-inner {
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 1.5rem;
-    }
-    .services-intro-copy {
-      transform: none !important;
-      opacity: 1 !important;
-      gap: 0.35rem;
-    }
-    .services-intro-stack {
-      gap: 0.25rem;
-    }
-    .services-intro-line {
-      font-size: clamp(2.8rem, 10vw, 4.8rem);
-    }
-    .services-cards-wrap {
-      position: relative;
-      inset: auto;
-      overflow: visible;
-      pointer-events: auto;
-      opacity: 1;
-    }
-    .services-cards-scroll {
-      transform: none !important;
-      padding: 0 1.5rem;
-      will-change: auto;
-    }
-    .services-cards-grid {
-      grid-template-columns: 1fr;
-    }
-    .svc-card {
-      transform: none !important;
-      opacity: 1 !important;
-      transition: none !important;
-    }
+    .services-intro { position: relative; inset: auto; opacity: 1; transform: none; padding: 0 1.5rem 2rem; }
+    .services-intro-copy { transform: none !important; opacity: 1 !important; }
+    .services-cards-wrap { position: relative; inset: auto; overflow: visible; pointer-events: auto; }
+    .services-cards-scroll { transform: none !important; will-change: auto; }
+    .svc-card { transform: none !important; opacity: 1 !important; }
   }
 </style>
 
@@ -438,9 +399,10 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
         return;
       }
 
-      // Standalone — desktop only; CSS flattens below 768px / reduced-motion.
+      // Standalone — runs on all screen sizes; only reduced-motion users get
+      // the static CSS fallback (no ScrollTrigger registered for them).
       ScrollTrigger.matchMedia({
-        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () => {
+        "(prefers-reduced-motion: no-preference)": () => {
           buildStandalone(scene);
         },
       });

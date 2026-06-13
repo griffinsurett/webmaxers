@@ -61,9 +61,9 @@ const { class: className = "" } = Astro.props;
     will-change: transform;
   }
 
-  /* Mobile + reduced motion: drop the stack entirely — normal vertical flow,
-     each layer flattens itself. */
-  @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+  /* Reduced motion only: drop the stack — normal vertical flow, each layer
+     flattens itself. The curtain runs on every screen size otherwise. */
+  @media (prefers-reduced-motion: reduce) {
     .curtain-stack {
       height: auto;
       overflow: visible;
@@ -182,12 +182,13 @@ const { class: className = "" } = Astro.props;
     const stacks = document.querySelectorAll<HTMLElement>("[data-curtain-stack]");
     if (!stacks.length) return;
 
-    // Desktop only. Layers attach their __curtainLayer contracts in their own
-    // init() — bundled module-script order isn't guaranteed, so defer one frame
-    // to be sure they've all run before we read them.
+    // Runs on every screen size (reduced-motion users get the static flatten).
+    // Layers attach their __curtainLayer contracts in their own init() — bundled
+    // module-script order isn't guaranteed, so defer one frame to be sure they've
+    // all run before we read them.
     requestAnimationFrame(() => {
       ScrollTrigger.matchMedia({
-        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () => {
+        "(prefers-reduced-motion: no-preference)": () => {
           stacks.forEach(buildStack);
         },
       });
