@@ -1,0 +1,184 @@
+---
+// src/components/LogoScene/LogoScene.astro
+/**
+ * LogoScene — a pinned section with the brand logo (New_Logo_Circle lottie)
+ * centred large, its playhead scrubbed by scroll: scrolling down advances the
+ * animation, scrolling up reverses it — locked to the pin, exactly like the
+ * header logo but driven by scroll position instead of wheel events.
+ *
+ * On the homepage it's a CurtainStack layer sitting directly behind ServicesScene
+ * (which lifts off-up to reveal it) and in front of the testimonials layer (it
+ * peels off-up in turn to reveal those). It exposes the uniform __curtainLayer
+ * contract so the stack drives its scrub; standalone it self-pins. Below 768px /
+ * reduced-motion the lottie isn't loaded — a static first-frame poster shows and
+ * the section flattens to normal flow.
+ */
+
+const { sceneHeight = "100vh" } = Astro.props as { sceneHeight?: string };
+
+// Hosted lottie (already in public/). Wide circular logo, frames 0→121 @ 60fps.
+const ANIMATION_URL = "/lotties/New_Logo_Circle.json";
+---
+
+<section
+  class="logo-scene"
+  data-logo-scene
+  data-logo-src={ANIMATION_URL}
+  style={`--scene-height:${sceneHeight};`}
+  aria-label="Web Maxers"
+>
+  <div class="logo-pin">
+    {/* The lottie mounts here. logo-class carries the light-mode invert used
+        everywhere else for the mark. */}
+    <div class="logo-stage logo-class" data-logo-stage aria-hidden="true"></div>
+  </div>
+</section>
+
+<style>
+  .logo-scene {
+    position: relative;
+    height: var(--scene-height);
+    background: var(--color-bg);
+  }
+
+  .logo-pin {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg);
+  }
+
+  /* The lottie container — sized to a comfortable share of the viewport while
+     keeping the wide logo's aspect ratio. lottie-web injects an <svg> that
+     fills this box. */
+  .logo-stage {
+    width: min(72vw, 980px);
+    aspect-ratio: 4426 / 1722;
+    will-change: contents;
+  }
+  .logo-stage :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  @media (max-width: 767px) {
+    .logo-stage { width: 86vw; }
+  }
+
+  /* Reduced motion: static, fully-visible fallback (no lottie loaded by JS).
+     The stage stays centred at its first frame's footprint. */
+  @media (prefers-reduced-motion: reduce) {
+    .logo-scene { height: auto; }
+    .logo-pin { height: auto; padding: clamp(4rem, 14vh, 9rem) 0; }
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  function clamp(v: number, lo: number, hi: number) {
+    return v < lo ? lo : v > hi ? hi : v;
+  }
+
+  // Scroll budget for the standalone scrub, in viewport multiples.
+  const PHASE_VH = 2;
+
+  const prefersReduced = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  // A logo controller. setProgress(p) maps 0→1 onto the animation's full frame
+  // range — the frame follows scroll position directly, so scrubbing up plays
+  // it backwards. The lottie loads asynchronously; calls before it's ready are
+  // buffered (lastP) and applied once mounted, so consumers (CurtainStack) can
+  // wire up the contract synchronously without waiting on the fetch.
+  function makeLogo(scene: HTMLElement) {
+    const stage = scene.querySelector<HTMLElement>("[data-logo-stage]");
+    const url = scene.dataset.logoSrc;
+
+    let anim: any = null;
+    let totalFrames = 0;
+    let ready = false;
+    let lastP = 0;
+
+    const apply = (p: number) => {
+      if (ready && totalFrames > 0) anim.goToAndStop(clamp(p, 0, 1) * totalFrames, true);
+    };
+
+    if (stage && url) {
+      Promise.all([
+        import("lottie-web/build/player/lottie_light"),
+        fetch(url).then((r) => r.json()),
+      ])
+        .then(([{ default: lottie }, data]) => {
+          totalFrames = (data.op ?? 0) - (data.ip ?? 0);
+          anim = lottie.loadAnimation({
+            container: stage,
+            renderer: "svg",
+            loop: false,
+            autoplay: false,
+            animationData: data,
+          });
+          anim.addEventListener("DOMLoaded", () => {
+            ready = true;
+            apply(lastP); // catch up to wherever the scroll already is
+          });
+        })
+        .catch((err) => console.error("LogoScene: failed to load logo lottie:", err));
+    }
+
+    return {
+      setProgress(p: number) {
+        lastP = p;
+        apply(p);
+      },
+    };
+  }
+
+  function init() {
+    const scenes = document.querySelectorAll<HTMLElement>("[data-logo-scene]");
+    if (!scenes.length || prefersReduced()) return;
+
+    scenes.forEach((scene) => {
+      const logo = makeLogo(scene);
+      const stack = scene.closest("[data-curtain-stack]");
+
+      // Inside a CurtainStack: expose the uniform layer contract synchronously.
+      // The stack already pins the scene full-screen and drives our scrub via
+      // setProgress (buffered until the lottie finishes loading).
+      if (stack) {
+        (scene as any).__curtainLayer = {
+          getScrubPx: () => PHASE_VH * window.innerHeight,
+          setProgress: (p: number) => logo.setProgress(p),
+        };
+        return;
+      }
+
+      // Standalone — self-pin and scrub the playhead with scroll position.
+      ScrollTrigger.matchMedia({
+        "(prefers-reduced-motion: no-preference)": () => {
+          ScrollTrigger.create({
+            trigger: scene,
+            start: "top top",
+            end: () => "+=" + PHASE_VH * window.innerHeight,
+            pin: scene.querySelector<HTMLElement>(".logo-pin") ?? scene,
+            scrub: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => logo.setProgress(self.progress),
+          });
+        },
+      });
+    });
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>
