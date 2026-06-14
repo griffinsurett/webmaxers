@@ -1,0 +1,44 @@
+---
+// src/components/SolutionsScroll/SolutionsScroll.astro
+/**
+ * SolutionsScroll — queries the `solutions` collection and renders it as the
+ * pinned stacking-card deck (see SolutionsDeckVariant). No section heading;
+ * the only copy is each solution's title + description inside its card.
+ */
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query, sortByOrder } from "@/utils/query";
+
+const solutions = query("solutions").orderBy(sortByOrder());
+---
+
+<ContentRenderer
+  query={solutions}
+  variant="SolutionsDeckVariant"
+  showHeadingSection={false}
+/>
+
+<script>
+  /**
+   * This deck is a tall section inserted high in the page. Other components
+   * (About word-reveal, HeroLogo3D, CurtainStack) create their ScrollTriggers in
+   * their own init() at first script run — before this deck's sticky layout has
+   * settled — so they can cache stale start/end positions and fire early (e.g.
+   * About appearing pre-animated). ScrollTrigger only auto-refreshes on
+   * window.load + resize, which can race the deck's layout. We force one refresh
+   * after layout is committed so every trigger re-measures against final
+   * positions. Cheap, idempotent, and keeps the deck from desyncing the page.
+   */
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  function refreshAfterLayout() {
+    // Two rAFs → after style + layout flush for this frame.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => ScrollTrigger.refresh()),
+    );
+  }
+
+  refreshAfterLayout();
+  // Re-run after web fonts settle (font swap changes card/section heights).
+  (document as any).fonts?.ready?.then(refreshAfterLayout);
+  document.addEventListener("astro:page-load", refreshAfterLayout);
+</script>

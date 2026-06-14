@@ -10,10 +10,16 @@ import PortfolioSection from "@/components/Portfolio/PortfolioSection.astro";
 import ServicesScene from "@/components/ServicesScene/ServicesScene.astro";
 import LogoScene from "@/components/LogoScene/LogoScene.astro";
 import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
+import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
+import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro";
 ---
 
 <BaseLayout title="Home" description={siteData.description}>
-  <main class="flex-1">
+  {/* Fixed WebGL fracturing logo behind the hero→portfolio range. Decorative,
+      desktop-only; mounts behind the content (z-0) while sections sit at z-10. */}
+  <HeroLogo3D from="#hero" to="[data-curtain-stack]" />
+
+  <main class="flex-1 relative z-10">
     <!-- <div class="px-6 md:px-[80px]"> -->
       <FrontPageHero
         headline="Designed to"
@@ -24,6 +30,9 @@ import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
         statValue="7+ years. $1M+ clients. Dominant results."
         statDescription="Websites, AI products, and systems built for clarity, scale, and growth."
       />
+
+      <!-- Solutions: pinned stacking-card deck (cards fold up on scroll). -->
+      <SolutionsScroll />
 
       <!-- About Section (includes both top reveal and bottom content) -->
       <AboutSection

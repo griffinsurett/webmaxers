@@ -1,0 +1,139 @@
+---
+// src/components/ContentRenderer/variants/SolutionsDeckVariant.astro
+/**
+ * Solutions Deck Variant — a simple full-width 3-across card row, one card per
+ * solution (from the `solutions` collection). No heading; the only copy is each
+ * card's title + description. Each card links to its solution page.
+ *
+ * Static layout — no scroll animation. 3 columns on desktop, 1 column on mobile.
+ * Cards use the shared `card-bg-2` utility so they stay theme-aware (dark/light).
+ */
+
+import type { BaseVariantProps } from "../ContentRenderer.types";
+
+type Props = BaseVariantProps;
+
+const { items = [], id, className = "" } = Astro.props as Props;
+---
+
+<section
+  id={id}
+  class:list={["solutions-row section-container", className]}
+  aria-label="Our solutions"
+>
+  <ul class="solutions-grid list-none">
+    {
+      items.map((item) => {
+        const Tag = item.url ? "a" : "div";
+        return (
+          <li>
+            <Tag
+              {...(item.url ? { href: item.url } : {})}
+              class="solutions-card card-bg-2"
+            >
+              <header class="solutions-card-head">
+                <h3 class="solutions-card-title">{item.title}</h3>
+                <span class="solutions-card-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                    <path
+                      d="M7 17L17 7M17 7H8M17 7V16"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </header>
+
+              {item.description && (
+                <p class="solutions-card-text">{item.description}</p>
+              )}
+            </Tag>
+          </li>
+        );
+      })
+    }
+  </ul>
+</section>
+
+<style>
+  /* Full-viewport section; the card grid is centred within it. */
+  .solutions-row {
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .solutions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .solutions-card {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.5rem, 4vh, 3rem);
+    height: 100%;
+    border-radius: 1.5rem;
+    padding: clamp(1.75rem, 2.5vw, 2.5rem);
+    min-height: clamp(18rem, 24vw, 24rem);
+    text-decoration: none;
+  }
+
+  .solutions-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .solutions-card-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    color: var(--color-heading);
+    background: color-mix(in srgb, var(--color-heading) 8%, transparent);
+    transition:
+      background var(--main-duration, 0.3s) ease,
+      transform var(--main-duration, 0.3s) ease;
+    flex-shrink: 0;
+  }
+
+  a.solutions-card:hover .solutions-card-arrow {
+    background: color-mix(in srgb, var(--color-heading) 16%, transparent);
+    transform: translate(2px, -2px);
+  }
+
+  .solutions-card-title {
+    color: var(--color-heading);
+    font-size: clamp(1.6rem, 2.4vw, 2.25rem);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  .solutions-card-text {
+    color: var(--color-text);
+    font-size: clamp(1rem, 1.1vw, 1.0625rem);
+    font-weight: 300;
+    line-height: 1.6;
+    margin-top: auto; /* push description to the bottom of the card */
+  }
+
+  /* 3 across on desktop. */
+  @media (min-width: 768px) {
+    .solutions-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(1.25rem, 2vw, 2rem);
+    }
+  }
+</style>

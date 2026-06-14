@@ -3,7 +3,7 @@
 
 import type { IconType } from 'react-icons';
 import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGlobe, LuImage, LuMail, LuPhone, LuSettings } from 'react-icons/lu';
-import { FaArrowRight, FaArrowsUpDownLeftRight, FaBolt, FaBullseye, FaCartShopping, FaClockRotateLeft, FaCode, FaCompass, FaDroplet, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMagnifyingGlassChart, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
+import { FaArrowRight, FaArrowsUpDownLeftRight, FaBolt, FaBullseye, FaCartShopping, FaClockRotateLeft, FaCode, FaCompass, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMagnifyingGlassChart, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
 import { SiFacebook, SiGithub, SiLinkedin, SiX } from 'react-icons/si';
 
 export const iconMap = {
@@ -15,7 +15,6 @@ export const iconMap = {
   'fa6:clock-rotate-left': FaClockRotateLeft,
   'fa6:code': FaCode,
   'fa6:compass': FaCompass,
-  'fa6:droplet': FaDroplet,
   'fa6:eye': FaEye,
   'fa6:feather': FaFeather,
   'fa6:file-lines': FaFileLines,

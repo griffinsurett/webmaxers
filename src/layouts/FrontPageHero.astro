@@ -53,12 +53,13 @@ const {
           {ctaText}
         </Button>
 
+        <!-- Mobile only: circles sit under the CTA (unchanged on small screens). -->
         <ContentRenderer
           query={query("testimonials")
             .where((entry) => entry.data.featured === true)
             .limit(3)}
           variant="TestimonialCirclesVariant"
-          className="mt-6"
+          className="mt-6 lg:hidden"
           counterStart={10}
           counterEnd={100}
           counterDuration={1800}
@@ -72,8 +73,20 @@ const {
          justify-between. Mobile: stat block stacked above the scroll arrow.
          lg+: [spacer] [scroll arrow centred] [stat box right]. -->
     <div class="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between w-full">
-      <!-- Left spacer (mirrors stat box width) — desktop only -->
-      <div class="hidden lg:block shrink-0 w-[340px]"></div>
+      <!-- Desktop only: testimonial circles pinned bottom-left, mirroring the
+           stat box's bottom-right placement. (Mobile keeps them under the CTA.) -->
+      <ContentRenderer
+        query={query("testimonials")
+          .where((entry) => entry.data.featured === true)
+          .limit(3)}
+        variant="TestimonialCirclesVariant"
+        className="hidden lg:flex shrink-0 lg:w-[340px]"
+        counterStart={10}
+        counterEnd={100}
+        counterDuration={1800}
+        counterSuffix="+"
+        counterLabel="Happy Clients"
+      />
 
       <!-- Scroll indicator: centred in the row on desktop, below the stat on mobile -->
       <ScrollIndicator className="order-last lg:order-none self-center lg:self-auto relative bottom-auto left-auto translate-x-0 static-in-row" />

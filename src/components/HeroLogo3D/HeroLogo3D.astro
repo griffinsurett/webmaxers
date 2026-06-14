@@ -1,0 +1,367 @@
+---
+// src/components/HeroLogo3D/HeroLogo3D.astro
+/**
+ * HeroLogo3D — a fixed, full-screen WebGL canvas sitting BEHIND the page
+ * content (hero + about), showing the brand mark as a fracturing 3D logo.
+ *
+ * Behaviour (ported from the freelancer's `scroll-affected-lottie-that-breaks`
+ * reference, rebuilt on three + GSAP ScrollTrigger):
+ *   • The GLB is split per-face; each face gets a random offset/delay/strength.
+ *     A break amount 0→1 displaces faces along their offsets (0 = whole mark,
+ *     1 = shattered). `Tg` in the reference.
+ *   • Scroll scrubs the break: whole at the top of the hero → fully broken by
+ *     the time the portfolio (curtain stack) reaches the top. Scrolling up
+ *     reassembles it.
+ *   • Mouse movement adds parallax — the group eases its X-rotation toward the
+ *     pointer's Y; it also auto-spins slowly on Y.
+ *   • An intro plays on load: fully broken → reassembled (power3.out).
+ *   • Canvas opacity fades out over the last stretch so it's gone before the
+ *     portfolio is fully in view.
+ *
+ * Desktop / no-reduced-motion only — the canvas isn't created otherwise (it's
+ * purely decorative, aria-hidden, so there's no fallback to show).
+ *
+ * Scroll range is bounded by `data-from` (start element) → `data-to` (end
+ * element), defaulting to #hero → the curtain stack.
+ */
+
+interface Props {
+  /** Selector whose top edge starts the scroll range. */
+  from?: string;
+  /** Selector whose top edge ends the scroll range (logo fully broken/faded). */
+  to?: string;
+  modelUrl?: string;
+}
+
+const {
+  from = "#hero",
+  to = "[data-curtain-stack]",
+  modelUrl = "/lotties/scroll-affected-lottie-that-breaks/logo.glb",
+} = Astro.props;
+---
+
+<div
+  class="hero-logo3d"
+  data-hero-logo3d
+  data-model={modelUrl}
+  data-from={from}
+  data-to={to}
+  aria-hidden="true"
+>
+</div>
+
+<style>
+  /* Fixed full-screen layer behind all page content. The page sections sit at
+     a higher stacking context (the hero text is z-10); this stays at the bottom
+     of the main flow. pointer-events:none so it never eats clicks. */
+  .hero-logo3d {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    /* logo-class flips the mark for light mode like the rest of the brand. */
+  }
+  .hero-logo3d :global(canvas) {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Decorative only — never shown when motion is reduced. */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-logo3d { display: none; }
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  const prefersReduced = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  // Don't run the WebGL scene on small screens (decorative + costly).
+  const isDesktop = () =>
+    typeof window !== "undefined" && window.matchMedia?.("(min-width: 1024px)").matches;
+
+  type Faces = {
+    position: any; // THREE.BufferAttribute
+    original: Float32Array;
+    offsets: Float32Array;
+    delays: Float32Array;
+    strengths: Float32Array;
+    faceCount: number;
+  };
+
+  async function mount(host: HTMLElement) {
+    const THREE = await import("three");
+    const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+    const { DRACOLoader } = await import("three/examples/jsm/loaders/DRACOLoader.js");
+
+    const modelUrl = host.dataset.model!;
+    const fromSel = host.dataset.from!;
+    const toSel = host.dataset.to!;
+
+    // ---- Renderer / scene / camera (transparent, sits behind content) -------
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setClearColor(0x000000, 0); // fully transparent
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    host.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 5;
+
+    const key = new THREE.DirectionalLight(0xffffff, 1.2);
+    key.position.set(3, 5, 5);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0xffffff, 0.25);
+    fill.position.set(-3, -2, -3);
+    scene.add(fill);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+
+    // group → solid (fractured) + wire (whole) subgroups, matching reference.
+    const group = new THREE.Group();
+    const solid = new THREE.Group();
+    const wire = new THREE.Group();
+    group.add(solid);
+    group.add(wire);
+    scene.add(group);
+
+    // Theme-aware palette — tonal, never a solid silhouette. The mark stays a
+    // low-contrast shape *of* its background: whitish on the dark bg, blackish
+    // on the light bg, faded enough to live behind the content without fighting
+    // the text. `opacity` keeps it translucent (the canvas-level scroll fade
+    // multiplies on top via host opacity). Materials swap live on theme toggle.
+    const isLightTheme = () =>
+      document.documentElement.getAttribute("data-theme") === "light";
+
+    // Materials stay essentially OPAQUE — the faint, see-through look is done at
+    // the CANVAS level (host opacity), not per-material. Per-material translucency
+    // on these thin double-sided solids can't depth-sort and renders as jumbled
+    // shards (the "pixelated" diamond). Keeping them opaque fixes that; the
+    // `baseOpacity` per theme then fades the whole canvas to the right faintness.
+    const palette = () =>
+      isLightTheme()
+        ? // blackish-on-white
+          { color: 0x2a2d34, emissive: 0x2a2d34, emissiveIntensity: 0.02, baseOpacity: 0.22 }
+        : // whitish-on-black (the original look)
+          { color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.12, baseOpacity: 0.4 };
+
+    // Canvas opacity = per-theme baseOpacity × scroll-fade. The scroll fade is
+    // strong at the top, eases down as the portfolio approaches but never to
+    // nothing (bottoms out at FLOOR), so the mark stays faintly present.
+    let scrollProgress = 0;
+    const FLOOR = 0.45;
+    const updateOpacity = () => {
+      const base = palette().baseOpacity;
+      const fade = FLOOR + (1 - FLOOR) * Math.pow(1 - scrollProgress, 1.6);
+      host.style.opacity = String(gsap.utils.clamp(0, 1, base * fade));
+    };
+
+    const materials: any[] = [];
+    const makeMaterial = () => {
+      const p = palette();
+      const m = new THREE.MeshStandardMaterial({
+        color: p.color,
+        emissive: p.emissive,
+        emissiveIntensity: p.emissiveIntensity,
+        metalness: 0.05,
+        roughness: 0.9,
+        side: THREE.DoubleSide,
+      });
+      materials.push(m);
+      return m;
+    };
+
+    const applyTheme = () => {
+      const p = palette();
+      for (const m of materials) {
+        m.color.setHex(p.color);
+        m.emissive.setHex(p.emissive);
+        m.emissiveIntensity = p.emissiveIntensity;
+        m.needsUpdate = true;
+      }
+      updateOpacity();
+    };
+
+    // Recolour live when the theme attribute flips.
+    const themeObserver = new MutationObserver(applyTheme);
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    const faces: Faces[] = [];
+
+    // ---- The break function (reference `Tg`): displace faces by `amount`. ----
+    function applyBreak(amount: number) {
+      for (const f of faces) {
+        const { position, original, offsets, delays, strengths, faceCount } = f;
+        const arr = position.array as Float32Array;
+        for (let s = 0; s < faceCount; s++) {
+          const t = Math.max(0, (amount - delays[s]) / (1 - delays[s])) * strengths[s];
+          const ox = offsets[s * 3];
+          const oy = offsets[s * 3 + 1];
+          const oz = offsets[s * 3 + 2];
+          for (let v = 0; v < 3; v++) {
+            const i = (s * 3 + v) * 3;
+            arr[i] = original[i] + ox * t;
+            arr[i + 1] = original[i + 1] + oy * t;
+            arr[i + 2] = original[i + 2] + oz * t;
+          }
+        }
+        position.needsUpdate = true;
+      }
+    }
+
+    // ---- Load + fracture the GLB ---------------------------------------------
+    const loader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+    loader.setDRACOLoader(draco);
+
+    let ready = false;
+
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        gltf.scene.traverse((obj: any) => {
+          if (!obj.isMesh) return;
+          // Meshes whose name marks them as wireframe stay whole; everything
+          // else is fractured into the solid group.
+          const isWire = /wire/i.test(obj.name);
+          if (isWire) {
+            const mesh = new THREE.Mesh(obj.geometry.clone(), makeMaterial());
+            obj.updateWorldMatrix(true, false);
+            mesh.applyMatrix4(obj.matrixWorld);
+            wire.add(mesh);
+            return;
+          }
+          const geom = obj.geometry.toNonIndexed();
+          geom.computeVertexNormals();
+          const pos = geom.attributes.position;
+          const faceCount = pos.count / 3;
+          const original = new Float32Array(pos.array);
+          const offsets = new Float32Array(faceCount * 3);
+          const delays = new Float32Array(faceCount);
+          const strengths = new Float32Array(faceCount);
+          for (let i = 0; i < faceCount; i++) {
+            offsets[i * 3] = (Math.random() - 0.5) * 10;
+            offsets[i * 3 + 1] = (Math.random() - 0.5) * 10;
+            offsets[i * 3 + 2] = (Math.random() - 0.5) * 5;
+            delays[i] = Math.random() * 0.4;
+            strengths[i] = 0.5 + Math.random() * 1.5;
+          }
+          const mesh = new THREE.Mesh(geom, makeMaterial());
+          obj.updateWorldMatrix(true, false);
+          mesh.applyMatrix4(obj.matrixWorld);
+          solid.add(mesh);
+          faces.push({ position: pos, original, offsets, delays, strengths, faceCount });
+        });
+
+        // Center + normalise scale to ~2.5 units (reference).
+        const box = new THREE.Box3().setFromObject(group);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        group.position.sub(center);
+        group.scale.setScalar(2.5 / Math.max(size.x, size.y, size.z));
+
+        ready = true;
+
+        // No intro animation — load already assembled, then snap to wherever
+        // the scroll currently is (so a mid-page reload shows the right break).
+        applyBreak(st.progress);
+
+        ScrollTrigger.refresh();
+      },
+      undefined,
+      (err) => console.error("HeroLogo3D: failed to load logo.glb", err)
+    );
+
+    // ---- Scroll: scrub the break amount + fade the canvas --------------------
+    const fromEl = document.querySelector<HTMLElement>(fromSel);
+    const toEl = document.querySelector<HTMLElement>(toSel);
+
+    updateOpacity();
+
+    const st = ScrollTrigger.create({
+      trigger: fromEl ?? host,
+      start: "top top",
+      endTrigger: toEl ?? undefined,
+      end: toEl ? "top top" : "+=" + window.innerHeight * 2,
+      scrub: true,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        scrollProgress = self.progress;
+        // Drive the break only once the model has loaded.
+        if (ready) applyBreak(self.progress);
+        updateOpacity();
+      },
+    });
+
+    // ---- Mouse parallax -------------------------------------------------------
+    const mouse = { x: 0, y: 0 };
+    const onMove = (e: MouseEvent) => {
+      mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+
+    // ---- Render loop ----------------------------------------------------------
+    let spin = 0;
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      spin += 0.004;
+      group.rotation.y = spin;
+      group.rotation.x += (mouse.y * 0.25 - group.rotation.x) * 0.04;
+      renderer.render(scene, camera);
+    };
+    tick();
+
+    // ---- Resize ---------------------------------------------------------------
+    const onResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+    window.addEventListener("resize", onResize);
+
+    // ---- Teardown (Astro view transitions) ------------------------------------
+    const destroy = () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("resize", onResize);
+      themeObserver.disconnect();
+      st.kill();
+      renderer.dispose();
+      draco.dispose();
+      host.replaceChildren();
+      delete (host as any).__heroLogo3D;
+    };
+    (host as any).__heroLogo3D = { destroy };
+  }
+
+  function init() {
+    if (prefersReduced() || !isDesktop()) return;
+    document.querySelectorAll<HTMLElement>("[data-hero-logo3d]").forEach((host) => {
+      if ((host as any).__heroLogo3D) return; // already mounted
+      mount(host).catch((err) => console.error("HeroLogo3D mount failed", err));
+    });
+  }
+
+  // Tear down before navigating away (Astro client routing).
+  document.addEventListener("astro:before-swap", () => {
+    document.querySelectorAll<HTMLElement>("[data-hero-logo3d]").forEach((host) => {
+      (host as any).__heroLogo3D?.destroy();
+    });
+  });
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>
