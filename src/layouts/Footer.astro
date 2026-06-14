@@ -15,6 +15,7 @@ import { query } from "@/utils/query";
 import PreferencesLayout from "./PreferencesLayout.astro";
 import Button from "@/components/Button/Button";
 import AIIconPrompt from "@/components/Footer/AIIconPrompt";
+import LogoMark from "@/components/Logo/LogoMark.astro";
 import { ctaData } from "@/content/siteData";
 
 const eyebrow = "Let's build work that inspires.";
@@ -42,7 +43,7 @@ const legalColClass = [
 ---
 
 <footer class="bg-bg text-text mt-auto border-t border-border-soft" role="contentinfo" aria-label="Site footer">
-  <div class="section-container grid gap-x-12 gap-y-16 py-12 lg:py-16 lg:grid-cols-2">
+  <div class="section-container grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2">
     {/* Top-left — eyebrow + heading */}
     <div class="lg:col-start-1 lg:row-start-1">
       <p class="footer__eyebrow">{eyebrow}</p>
@@ -90,10 +91,49 @@ const legalColClass = [
     </div>
   </div>
 
-
+  {/* Full-bleed giant logo + wordmark lockup — spans the viewport, clipped at
+      both edges. Desktop/tablet only (hidden on mobile). */}
+  <div class="footer-wordmark" aria-hidden="true">
+    <LogoMark size={320} imgClass="footer-wordmark__mark" />
+    <span class="footer-wordmark__text">{siteData.title}</span>
+  </div>
 </footer>
 
 <style>
+  /* Full-bleed logo + wordmark lockup: the mark and the single word are sized
+     to span the viewport together, clipped flush to the bottom edge so they
+     bleed off the left/right margins. Hidden on mobile. */
+  .footer-wordmark {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .footer-wordmark {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2vw;
+      overflow: hidden;
+      line-height: 0.72;
+    }
+  }
+  /* Mark scales with the viewport to track the wordmark's cap height. */
+  .footer-wordmark :global(.footer-wordmark__mark) {
+    width: 14vw;
+    height: 14vw;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+  .footer-wordmark__text {
+    white-space: nowrap;
+    font-size: 15vw;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-heading);
+    /* Push the baseline down so descenders clip at the page edge. */
+    transform: translateY(0.1em);
+    user-select: none;
+  }
+
   .footer__eyebrow {
     font-size: 0.8125rem;
     font-weight: 500;
