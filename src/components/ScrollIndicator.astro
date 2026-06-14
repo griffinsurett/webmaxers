@@ -3,9 +3,13 @@
 export interface Props {
   href?: string;
   className?: string;
+  /** When true, skip the built-in scrollY-driven visibility script — the caller
+   *  controls the indicator's opacity/pointer-events itself (e.g. a pinned
+   *  section showing it during a specific scroll phase). */
+  managed?: boolean;
 }
 
-const { href = "#about-us", className = "" } = Astro.props;
+const { href = "#about-us", className = "", managed = false } = Astro.props;
 ---
 
 <a
@@ -13,6 +17,7 @@ const { href = "#about-us", className = "" } = Astro.props;
   class={`scroll-indicator absolute bottom-16 lg:bottom-12 left-1/2 -translate-x-1/2 cursor-pointer no-underline z-20 ${className}`}
   aria-label="Scroll down for more content"
   data-scroll-indicator
+  data-managed={managed ? "" : undefined}
 >
   <div
     class="flex items-center justify-center p-1 border border-muted rounded-full shadow-lg transition-all duration-300 ease-in-out"
@@ -60,7 +65,11 @@ const { href = "#about-us", className = "" } = Astro.props;
 </style>
 
 <script>
-  const indicator = document.querySelector('[data-scroll-indicator]') as HTMLElement;
+  // Self-driving indicators hide as the page scrolls away from the top. Managed
+  // indicators ([data-managed]) opt out — their caller controls visibility.
+  const indicator = document.querySelector(
+    '[data-scroll-indicator]:not([data-managed])',
+  ) as HTMLElement | null;
   if (indicator) {
     let ticking = false;
 

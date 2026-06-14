@@ -1,0 +1,64 @@
+---
+// src/components/ContentRenderer/variants/SolutionsVariant.astro
+/**
+ * Solutions Variant — the headline "what we build" stack used as the
+ * ServicesScene intro (Websites / Branding / Ai Agents). Massive, light-weight,
+ * tight-tracked uppercase lines, centred. Each line is a link that underlines on
+ * hover. Items that resolve to no URL render as plain (still underline-on-hover)
+ * text. Visual styling is self-contained here so the variant is reusable.
+ */
+
+import type { BaseVariantProps } from "../ContentRenderer.types";
+
+type Props = BaseVariantProps;
+
+const { items = [], id, className = "" } = Astro.props as Props;
+---
+
+<ul class:list={["solutions-stack list-none", className]} id={id}>
+  {items.map((item) => (
+    <li class="solutions-item">
+      {item.url ? (
+        <a href={item.url} class="solutions-line">{item.title}</a>
+      ) : (
+        <span class="solutions-line">{item.title}</span>
+      )}
+    </li>
+  ))}
+</ul>
+
+<style>
+  /* Stack — matches the former .services-intro-stack exactly. */
+  .solutions-stack {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.35rem, 0.8vw, 0.65rem);
+    color: var(--color-primary-light);
+    text-transform: uppercase;
+    letter-spacing: -0.09em;
+    font-weight: 300;
+    line-height: 0.8;
+    text-align: center;
+  }
+
+  /* Each line — matches the former .services-intro-line, plus underline-on-hover. */
+  .solutions-line {
+    display: inline-block;
+    font-size: clamp(3.5rem, 8.6vw, 9.2rem);
+    text-wrap: balance;
+    color: inherit;
+    text-decoration: none;
+    /* Underline drawn as a sized border so it tracks the huge type cleanly. */
+    border-bottom: 0.06em solid transparent;
+    transition: border-color 0.25s ease;
+  }
+
+  a.solutions-line:hover,
+  a.solutions-line:focus-visible {
+    border-bottom-color: currentColor;
+  }
+
+  @media (max-width: 767px) {
+    .solutions-line { font-size: clamp(2.8rem, 10vw, 4.8rem); }
+  }
+</style>

@@ -109,6 +109,14 @@ export const collections = {
       }),
   }),
 
+  // ── solutions ──────────────────────────────────────────
+  // The three headline things we build (Websites / Branding / Ai Agents),
+  // rendered as the ServicesScene intro stack via SolutionsVariant.
+  "solutions": defineCollection({
+    loader: GlobLoad("solutions"),
+    schema: ({ image }) => baseSchema({ image }),
+  }),
+
   "projects": defineCollection({
     loader: GlobLoad("projects"),
     schema: ({ image }) =>

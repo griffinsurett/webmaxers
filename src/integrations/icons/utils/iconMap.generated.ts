@@ -2,9 +2,9 @@
 // Do not edit manually. Run "npm run generate:icons" (or node src/integrations/icons/utils/generate-icon-map.mjs) to regenerate.
 
 import type { IconType } from 'react-icons';
-import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGithub, LuGlobe, LuImage, LuLinkedin, LuMail, LuPhone, LuSettings, LuTwitter } from 'react-icons/lu';
+import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGlobe, LuImage, LuMail, LuPhone, LuSettings } from 'react-icons/lu';
 import { FaArrowRight, FaArrowsUpDownLeftRight, FaBolt, FaBullseye, FaCartShopping, FaClockRotateLeft, FaCode, FaCompass, FaDroplet, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMagnifyingGlassChart, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
-import { SiFacebook } from 'react-icons/si';
+import { SiFacebook, SiGithub, SiLinkedin, SiX } from 'react-icons/si';
 
 export const iconMap = {
   'fa6:arrow-right': FaArrowRight,
@@ -39,15 +39,15 @@ export const iconMap = {
   'lu:book-open': LuBookOpen,
   'lu:chevron-right': LuChevronRight,
   'lu:contact': LuContact,
-  'lu:github': LuGithub,
   'lu:globe': LuGlobe,
   'lu:image': LuImage,
-  'lu:linkedin': LuLinkedin,
   'lu:mail': LuMail,
   'lu:phone': LuPhone,
   'lu:settings': LuSettings,
-  'lu:twitter': LuTwitter,
   'si:facebook': SiFacebook,
+  'si:github': SiGithub,
+  'si:linkedin': SiLinkedin,
+  'si:x': SiX,
 } satisfies Record<string, IconType>;
 
 export type IconKey = keyof typeof iconMap;

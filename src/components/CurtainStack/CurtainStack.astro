@@ -80,7 +80,8 @@ const { class: className = "" } = Astro.props;
 <script>
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
-  gsap.registerPlugin(ScrollTrigger);
+  import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+  gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
   function clamp(v: number, lo: number, hi: number) {
     return v < lo ? lo : v > hi ? hi : v;
@@ -183,6 +184,33 @@ const { class: className = "" } = Astro.props;
           leg.move === "left" ? { xPercent: -100 } : { yPercent: -100 };
         tl.to(leg.layer, { ...vars, ease: "none", duration: moveDur });
       }
+    });
+
+    // In-stack anchor navigation. A link inside the pinned stack pointing at a
+    // layer (or any element within one) — e.g. the services ScrollIndicator's
+    // href="#logo-scene" — would natively jump to the stack's start (where the
+    // whole pin sits in the document), not to where that layer visually reveals.
+    // Intercept those clicks and smooth-scroll to the layer's reveal position:
+    // the scroll point where the layer ABOVE it has finished moving off, i.e.
+    // this layer's scrubStart on the pinned timeline.
+    const st = tl.scrollTrigger!;
+    stack.addEventListener("click", (e) => {
+      const link = (e.target as HTMLElement | null)?.closest<HTMLAnchorElement>(
+        'a[href^="#"]',
+      );
+      if (!link || !stack.contains(link)) return;
+      const id = decodeURIComponent(link.getAttribute("href")!.slice(1));
+      const targetEl = id ? document.getElementById(id) : null;
+      if (!targetEl) return;
+      const idx = legs.findIndex((leg) => leg.layer.contains(targetEl));
+      if (idx < 0) return; // not a layer in this stack — let the browser handle it
+      e.preventDefault();
+      const y = st.start + legs[idx].scrubStart * (st.end - st.start);
+      gsap.to(window, {
+        scrollTo: { y, autoKill: false },
+        duration: 0.9,
+        ease: "power2.inOut",
+      });
     });
   }
 

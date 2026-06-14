@@ -20,6 +20,8 @@
  */
 
 import Icon from "@/components/Icon";
+import ScrollIndicator from "@/components/ScrollIndicator.astro";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import EyebrowSection from "@/layouts/EyebrowSection.astro";
 import { query, sortByOrder } from "@/utils/query";
 import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
@@ -58,8 +60,6 @@ const services = await prepareCollectionEntries(result.entries, "services", meta
 
 // Eyebrow comes from the collection's _meta title (falls back to a label).
 const eyebrow = meta.title ?? "Our Services";
-
-const introLines = ["Websites", "Branding", "Ai Agents"];
 ---
 
 <section
@@ -93,11 +93,12 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     <div class="services-intro" data-services-intro>
       <div class="services-intro-copy" data-services-intro-copy>
         <EyebrowSection eyebrow={eyebrow} buttonText={ctaText} buttonLink={ctaLink} center>
-          <div class="services-intro-stack">
-            {introLines.map((line) => (
-              <span class="services-intro-line">{line}</span>
-            ))}
-          </div>
+          {/* The three solutions (Websites / Branding / Ai Agents) — sourced from
+              the `solutions` collection and rendered as the headline stack. */}
+          <ContentRenderer
+            query={query("solutions").orderBy(sortByOrder())}
+            variant="SolutionsVariant"
+          />
         </EyebrowSection>
       </div>
     </div>
@@ -123,6 +124,14 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
           ))}
         </ul>
       </div>
+    </div>
+
+    {/* Scroll hint — reused ScrollIndicator, managed by this section: hidden
+        until phase 3 has lifted the cards above the section's bottom edge, then
+        faded in to invite the user to keep scrolling (and faded out again right
+        before the section releases). */}
+    <div class="services-scroll-indicator" data-services-scroll-hint>
+      <ScrollIndicator href="#logo-scene" managed />
     </div>
   </div>
 </section>
@@ -208,23 +217,9 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     pointer-events: auto;
   }
 
-  /* Stack — visual styling only; EyebrowSection (center) handles the centring. */
-  .services-intro-stack {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(0.35rem, 0.8vw, 0.65rem);
-    color: var(--color-primary-light);
-    text-transform: uppercase;
-    letter-spacing: -0.09em;
-    font-weight: 300;
-    line-height: 0.8;
-    text-align: center;
-  }
-
-  .services-intro-line {
-    font-size: clamp(3.5rem, 8.6vw, 9.2rem);
-    text-wrap: balance;
-  }
+  /* The solutions stack (Websites / Branding / Ai Agents) is rendered by
+     SolutionsVariant, which carries its own type styling. EyebrowSection
+     (center) handles its centring within the intro. */
 
   /* ── Cards (phase 2 + 3) ─────────────────────────────────────────
      The wrap is a fixed-height clipping viewport; the inner scroller is
@@ -285,11 +280,31 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     max-width: 42ch;
   }
 
+  /* ── Scroll hint (phase 3) ───────────────────────────────────
+     Full-bleed overlay so the reused ScrollIndicator's `absolute bottom-16`
+     anchors to the pinned viewport. Starts hidden; JS fades --hint-opacity in
+     once the cards have lifted above the section bottom, out before release. */
+  .services-scroll-indicator {
+    --hint-opacity: 0;
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    /* The full-bleed overlay never captures pointers (so empty areas don't block
+       the cards). JS marks it [data-hint-shown] once it's visible in phase 3,
+       which re-enables the inner <a> so it's clickable to advance the curtain. */
+    pointer-events: none;
+    opacity: var(--hint-opacity);
+    transition: opacity 0.4s ease;
+    color: var(--color-primary-light);
+  }
+  .services-scroll-indicator[data-hint-shown] :global([data-scroll-indicator]) {
+    pointer-events: auto;
+  }
+
   /* ── Mobile sizing ────────────────────────────────────────────
      The curtain animation runs on mobile too (same pinned timeline as desktop),
      so we only adjust sizing here — no positional flattening. */
   @media (max-width: 767px) {
-    .services-intro-line { font-size: clamp(2.8rem, 10vw, 4.8rem); }
     .services-cards-grid { grid-template-columns: 1fr; }
     .services-cards-scroll { padding: clamp(3rem, 8vh, 6rem) 1.5rem; }
   }
@@ -310,6 +325,8 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
     .services-cards-wrap { position: relative; inset: auto; overflow: visible; pointer-events: auto; }
     .services-cards-scroll { transform: none !important; will-change: auto; }
     .svc-card { transform: none !important; opacity: 1 !important; }
+    /* No pinned phases here — the scroll hint has no role in static flow. */
+    .services-scroll-indicator { display: none; }
   }
 </style>
 
@@ -363,11 +380,25 @@ const introLines = ["Websites", "Branding", "Ai Agents"];
 
     // Phase 3 — scroll the card list vertically until every card has cleared
     // the top of the frame, so the section only releases once they've exited.
+    const hint = scene.querySelector<HTMLElement>("[data-services-scroll-hint]");
     if (cardsScroll && cardsWrap) {
       const travel = cardsScroll.scrollHeight;
       const scrollP = clamp((p - CARDS_IN_END) / (1 - CARDS_IN_END), 0, 1);
       cardsScroll.style.setProperty("--cards-scroll", (-scrollP * travel).toFixed(1) + "px");
       cardsWrap.style.pointerEvents = cardsP > 0.9 ? "auto" : "none";
+
+      // Scroll hint — fades in once the cards have begun lifting above the
+      // section bottom (phase 3 underway) and then stays visible for the rest of
+      // phase 3 (including as the section moves up). Hidden only before phase 3.
+      if (hint) {
+        const HINT_IN = 0.12; // faded in by 12% into phase 3
+        const fadeIn = clamp(scrollP / HINT_IN, 0, 1);
+        hint.style.setProperty("--hint-opacity", fadeIn.toFixed(4));
+        // Make the indicator clickable once it's meaningfully visible so it can
+        // advance the curtain; non-interactive while hidden.
+        if (fadeIn > 0.5) hint.setAttribute("data-hint-shown", "");
+        else hint.removeAttribute("data-hint-shown");
+      }
     }
   }
 
