@@ -33,9 +33,6 @@ import "../integrations/scroll-animations/styles/animations.css";
         : (prefersLight ? 'light' : 'dark');
     d.setAttribute('data-theme', t);
     d.style.colorScheme = t;
-    var a = null;
-    try { a = localStorage.getItem('accent'); } catch (_) {}
-    if (a) d.style.setProperty('--color-accent', a);
   })();
 </script>
 

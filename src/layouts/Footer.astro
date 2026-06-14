@@ -15,7 +15,7 @@ import { query } from "@/utils/query";
 import PreferencesLayout from "./PreferencesLayout.astro";
 import Button from "@/components/Button/Button";
 import AIIconPrompt from "@/components/Footer/AIIconPrompt";
-import LogoMark from "@/components/Logo/LogoMark.astro";
+import Logo from "@/components/Logo/Logo.astro";
 import { ctaData } from "@/content/siteData";
 
 const eyebrow = "Let's build work that inspires.";
@@ -92,9 +92,18 @@ const legalColClass = [
   </div>
 
   {/* Full-bleed giant logo + wordmark lockup — spans the viewport, clipped at
-      both edges. Desktop/tablet only (hidden on mobile). */}
+      both edges. Desktop/tablet only (hidden on mobile). The mark reuses the
+      header's scroll-driven animated logo (no text portion). */}
   <div class="footer-wordmark" aria-hidden="true">
-    <LogoMark size={320} imgClass="footer-wordmark__mark" />
+    <div class="footer-wordmark__mark">
+      <Logo
+        showText={false}
+        trigger="scroll"
+        loading="lazy"
+        size={320}
+        altContext="Footer"
+      />
+    </div>
     <span class="footer-wordmark__text">{siteData.title}</span>
   </div>
 </footer>
@@ -116,12 +125,28 @@ const legalColClass = [
       line-height: 0.72;
     }
   }
-  /* Mark scales with the viewport to track the wordmark's cap height. */
-  .footer-wordmark :global(.footer-wordmark__mark) {
+  /* Mark scales with the viewport to track the wordmark's cap height. The
+     reused <Logo> bakes a fixed pixel size into its inner media, so we override
+     the wrapper + descendants to fill this fluid box. */
+  .footer-wordmark__mark {
     width: 14vw;
     height: 14vw;
-    object-fit: contain;
     flex-shrink: 0;
+  }
+  /* The reused <Logo> nests: a > span.logo-class > div[w-320px] > svg/img.
+     Force every wrapper in that chain to fill the fluid box. */
+  .footer-wordmark__mark :global(a),
+  .footer-wordmark__mark :global(span),
+  .footer-wordmark__mark :global(div) {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .footer-wordmark__mark :global(svg),
+  .footer-wordmark__mark :global(img) {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
   }
   .footer-wordmark__text {
     white-space: nowrap;
