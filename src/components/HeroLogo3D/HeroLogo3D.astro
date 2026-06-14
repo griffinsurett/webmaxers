@@ -21,21 +21,16 @@
  * Desktop / no-reduced-motion only — the canvas isn't created otherwise (it's
  * purely decorative, aria-hidden, so there's no fallback to show).
  *
- * Scroll range is bounded by `data-from` (start element) → `data-to` (end
- * element), defaulting to #hero → the curtain stack.
+ * Scroll range is driven by the host's PARENT container: the break runs across
+ * that container's height (top hits viewport top → bottom hits viewport top),
+ * so wrapping this in any container bounds the effect. No props.
  */
 
 interface Props {
-  /** Selector whose top edge starts the scroll range. */
-  from?: string;
-  /** Selector whose top edge ends the scroll range (logo fully broken/faded). */
-  to?: string;
   modelUrl?: string;
 }
 
 const {
-  from = "#hero",
-  to = "[data-curtain-stack]",
   modelUrl = "/lotties/scroll-affected-lottie-that-breaks/logo.glb",
 } = Astro.props;
 ---
@@ -44,8 +39,6 @@ const {
   class="hero-logo3d"
   data-hero-logo3d
   data-model={modelUrl}
-  data-from={from}
-  data-to={to}
   aria-hidden="true"
 >
 </div>
@@ -102,8 +95,6 @@ const {
     const { DRACOLoader } = await import("three/examples/jsm/loaders/DRACOLoader.js");
 
     const modelUrl = host.dataset.model!;
-    const fromSel = host.dataset.from!;
-    const toSel = host.dataset.to!;
 
     // ---- Renderer / scene / camera (transparent, sits behind content) -------
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -283,26 +274,17 @@ const {
       (err) => console.error("HeroLogo3D: failed to load logo.glb", err)
     );
 
-    // ---- Scroll: scrub the break amount + fade the canvas --------------------
-    const fromEl = document.querySelector<HTMLElement>(fromSel);
-    const toEl = document.querySelector<HTMLElement>(toSel);
-
+    // ---- Break progress: 0 (whole) → 1 (shattered) ---------------------------
+    // The component does NOT decide WHEN to break — it only knows HOW. Whatever
+    // mounts it (the page) drives this via host.__heroLogo3D.setProgress(p),
+    // typically from a scroll position. Decoupled by design.
     updateOpacity();
 
-    const st = ScrollTrigger.create({
-      trigger: fromEl ?? host,
-      start: "top top",
-      endTrigger: toEl ?? undefined,
-      end: toEl ? "top top" : "+=" + window.innerHeight * 2,
-      scrub: true,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        scrollProgress = self.progress;
-        // Drive the break only once the model has loaded.
-        if (ready) applyBreak(self.progress);
-        updateOpacity();
-      },
-    });
+    const setProgress = (p: number) => {
+      scrollProgress = gsap.utils.clamp(0, 1, p);
+      if (ready) applyBreak(scrollProgress);
+      updateOpacity();
+    };
 
     // ---- Mouse parallax -------------------------------------------------------
     const mouse = { x: 0, y: 0 };

@@ -15,12 +15,15 @@ import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro"
 ---
 
 <BaseLayout title="Home" description={siteData.description}>
-  {/* Fixed WebGL fracturing logo behind the hero→portfolio range. Decorative,
-      desktop-only; mounts behind the content (z-0) while sections sit at z-10. */}
-  <HeroLogo3D from="#hero" to="[data-curtain-stack]" />
-
   <main class="flex-1 relative z-10">
-    <!-- <div class="px-6 md:px-[80px]"> -->
+    {/* HeroLogo3D fractures across this wrapper (hero → marquee). Its fixed
+        canvas is driven by this container, so the break completes exactly where
+        the wrapper ends — i.e. when the projects section begins. Decorative,
+        desktop-only; sits behind the content (z-0, sections at z-10). */}
+    <div class="relative">
+      <HeroLogo3D />
+
+      <!-- <div class="px-6 md:px-[80px]"> -->
       <FrontPageHero
         headline="Designed to"
         headlineLine2="grow your business."
@@ -42,12 +45,14 @@ import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro"
         ctaText="Explore Our Story"
         ctaLink="/about-us"
       />
-    <!-- </div> -->
+      <!-- </div> -->
 
-    <!-- Marquee: full-bleed, manages its own horizontal escape -->
-    <Marquee />
+      <!-- Marquee: full-bleed, manages its own horizontal escape -->
+      <Marquee />
+    </div>
 
-    {/*
+    {
+      /*
       Curtain reveal chain — four full-bleed layers stacked on one pinned
       timeline (top → bottom):
         1. filmstrip   panels glide left, then the whole layer peels off-LEFT
@@ -56,7 +61,8 @@ import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro"
         4. testimonials revealed in place underneath — the final resting layer
       Each layer covers the next and moves off to uncover it; nothing scrolls
       up into view. Edit/reorder layers here — CurtainStack sequences them.
-    */}
+    */
+    }
     <CurtainStack>
       <div data-curtain-layer data-move="left">
         <PortfolioSection ctaLink="/projects" />
@@ -68,8 +74,7 @@ import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro"
         <LogoScene />
       </div>
     </CurtainStack>
-            <TestimonialCarousel />
-
+    <TestimonialCarousel />
   </main>
 </BaseLayout>
 
