@@ -15,6 +15,9 @@ export default function UnderlineButton({
       size={size}
       className={[
         'group inline-flex items-center justify-between gap-8',
+        // Never stretch full-width: cap the width and don't let a flex/grid
+        // parent stretch it, so the underline tracks the content, not the column.
+        'w-fit max-w-xs self-start',
         'text-[11px] font-medium tracking-[0.18em] uppercase text-text',
         'border-b border-text pb-[6px]',
         'hover:text-primary hover:border-primary',
