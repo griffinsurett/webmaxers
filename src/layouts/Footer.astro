@@ -16,6 +16,9 @@ import PreferencesLayout from "./PreferencesLayout.astro";
 import Button from "@/components/Button/Button";
 import AIIconPrompt from "@/components/Footer/AIIconPrompt";
 import Logo from "@/components/Logo/Logo.astro";
+import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
+import { Image } from "astro:assets";
+import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
 import { ctaData } from "@/content/siteData";
 
 const eyebrow = "Let's build work that inspires.";
@@ -42,8 +45,28 @@ const legalColClass = [
 ].join(" ");
 ---
 
-<footer class="bg-bg text-text mt-auto border-t border-border-soft" role="contentinfo" aria-label="Site footer">
-  <div class="section-container grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2">
+<footer class="relative bg-bg text-text mt-auto border-t border-border-soft" role="contentinfo" aria-label="Site footer" data-footer-logo-break>
+  {/* Centered 3D brand mark — same scroll-driven spin → shatter → vacuum as the
+      hero, absolutely positioned to fill the footer container behind the
+      content (pointer-events-none, aria-hidden). The break scrubs across the
+      footer itself (data-footer-logo-break). */}
+  <HeroLogo3D
+    class="absolute inset-0 z-0 opacity-40 dark:invert"
+    variant={2}
+    breakSelector="[data-footer-logo-break]"
+  >
+    {/* Poster sized to match the live canvas framing (viewport-tall, centred),
+        so the poster → 3D swap is seamless and at the hero's scale. */}
+    <Image
+      src={heroLogo3dPoster}
+      alt=""
+      width={1200}
+      loading="lazy"
+      class="h-screen w-auto max-w-none"
+    />
+  </HeroLogo3D>
+
+  <div class="relative z-10 section-container grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2">
     {/* Top-left — eyebrow + heading */}
     <div class="lg:col-start-1 lg:row-start-1">
       <p class="footer__eyebrow">{eyebrow}</p>

@@ -12,14 +12,17 @@ import HeroLogo3DIsland from "./HeroLogo3D.tsx";
 
 interface Props {
   class?: string;
+  /** 1 = hero (spin→shatter→vacuum), 2 = footer (frozen wide jittering rubble). */
+  variant?: 1 | 2;
   breakSelector?: string;
 }
 
-const { class: className = "", breakSelector } = Astro.props;
+const { class: className = "", variant, breakSelector } = Astro.props;
 ---
 
 <HeroLogo3DIsland
   className={className}
+  variant={variant}
   breakSelector={breakSelector}
   client:idle
 >
