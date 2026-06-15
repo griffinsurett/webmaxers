@@ -146,7 +146,14 @@ export default function HeroLogo3D({
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, initSize.w / initSize.h, 0.1, 100);
-      camera.position.z = 5;
+      // Apparent size scales inversely with camera distance, so pushing the
+      // camera to 2× its base distance halves the logo on screen. Do that below
+      // the mobile breakpoint (Tailwind `md` = 768px). Recomputed on resize so
+      // it tracks orientation / DPR changes.
+      const BASE_Z = 5;
+      const MOBILE_BP = 768;
+      const cameraZ = () => (window.innerWidth < MOBILE_BP ? BASE_Z * 2 : BASE_Z);
+      camera.position.z = cameraZ();
 
       const key = new THREE.DirectionalLight(0xffffff, 1.2);
       key.position.set(3, 5, 5);
@@ -445,6 +452,7 @@ export default function HeroLogo3D({
       const onResize = () => {
         const { w, h } = getSize();
         camera.aspect = w / h;
+        camera.position.z = cameraZ(); // half size below the mobile breakpoint
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
       };
