@@ -1,5 +1,6 @@
 import { useId } from "react";
 import DarkLightToggle from "./DarkLightToggle";
+import ReducedMotionToggle from "./ReducedMotionToggle";
 
 interface ThemeControlsProps {
   className?: string;
@@ -11,7 +12,7 @@ export default function ThemeControls({ className = "" }: ThemeControlsProps) {
   return (
     <div
       className={[
-        "relative flex h-9 shrink-0 items-center justify-center sm:h-10 z-[999999]",
+        "relative flex h-9 shrink-0 items-center justify-center gap-1.5 sm:h-10 z-[999999]",
         className,
       ]
         .filter(Boolean)
@@ -28,6 +29,7 @@ export default function ThemeControls({ className = "" }: ThemeControlsProps) {
         </defs>
       </svg>
 
+      <ReducedMotionToggle gradientId={iconGradientId} />
       <DarkLightToggle gradientId={iconGradientId} />
     </div>
   );

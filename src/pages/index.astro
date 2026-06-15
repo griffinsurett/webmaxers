@@ -12,16 +12,30 @@ import LogoScene from "@/components/LogoScene/LogoScene.astro";
 import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
 import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
 import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro";
+import { Image } from "astro:assets";
+import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
 ---
 
 <BaseLayout title="Home" description={siteData.description}>
   <main class="flex-1 relative z-10">
-    {/* HeroLogo3D fractures across this wrapper (hero → marquee). Its fixed
-        canvas is driven by this container, so the break completes exactly where
-        the wrapper ends — i.e. when the projects section begins. Decorative,
-        desktop-only; sits behind the content (z-0, sections at z-10). */}
-    <div class="relative">
-      <HeroLogo3D />
+    {/* HeroLogo3D renders the fracturing logo; THIS wrapper decides when it
+        breaks. The logo goes from whole (top) to shattered across the wrapper's
+        height — i.e. fully broken when the projects section begins below it. */}
+    <div class="relative" data-logo-break>
+      <HeroLogo3D class="fixed inset-0 z-0 opacity-40 dark:invert">
+        {/* Poster: a render of the 3D logo at progress 0, captured on a SQUARE
+            canvas with the same perspective camera. The live canvas frames the
+            logo by VERTICAL fov (its on-screen height is a fixed fraction of the
+            viewport height at any width), so we size the poster by height and
+            centre it — matching the live logo's size exactly, seamless swap. */}
+        <Image
+          src={heroLogo3dPoster}
+          alt=""
+          width={1200}
+          loading="eager"
+          class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto"
+        />
+      </HeroLogo3D>
 
       <!-- <div class="px-6 md:px-[80px]"> -->
       <FrontPageHero

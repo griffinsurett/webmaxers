@@ -158,6 +158,19 @@ const words = splitTextIntoAnimatedWords(statement);
       will-change: auto;
     }
   }
+  /* Same static fallback for the in-app accessibility reduced-motion toggle. */
+  :global([data-a11y-motion="reduced"]) .about-sticky-section {
+    min-height: auto;
+  }
+  :global([data-a11y-motion="reduced"]) .about-sticky-pin {
+    position: static;
+    min-height: auto;
+    padding-block: 0;
+  }
+  :global([data-a11y-motion="reduced"]) .about-word-layer--overlay {
+    opacity: 1;
+    will-change: auto;
+  }
 
   /* ── Rolling logo divider ── */
   .about-roll-shell {
@@ -219,16 +232,22 @@ const words = splitTextIntoAnimatedWords(statement);
     to   { transform: rotate(1440deg); }
   }
 
+  /* Reduced motion (OS preference OR the in-app accessibility toggle): hide the
+     rolling logo divider entirely. */
   @media (prefers-reduced-motion: reduce) {
     .about-roll-bounce {
       display: none;
     }
+  }
+  :global([data-a11y-motion="reduced"]) .about-roll-bounce {
+    display: none;
   }
 </style>
 
 <script>
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { readMotionPreference } from "@/hooks/useMotionPreference";
   gsap.registerPlugin(ScrollTrigger);
 
   function init() {
@@ -239,7 +258,9 @@ const words = splitTextIntoAnimatedWords(statement);
       const words = section.querySelectorAll<HTMLElement>("[data-about-word-progress]");
       if (!words.length) return;
 
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // Reduced motion (OS preference OR in-app accessibility toggle): show the
+      // statement fully revealed and skip the scroll-driven reveal entirely.
+      if (readMotionPreference()) {
         words.forEach((w) => w.style.setProperty("--word-progress", "1"));
         return;
       }
