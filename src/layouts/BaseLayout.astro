@@ -23,10 +23,13 @@ import Header from "./Header.astro";
 import Footer from "./Footer.astro";
 
 export interface Props {
+  /** Suppress the default site footer (e.g. when a page renders it itself,
+   *  like the homepage curtain stack revealing the footer with an up-slide). */
+  hideFooter?: boolean;
   [key: string]: any;  // Accept any props for SEO component
 }
 
-const { ...seoProps } = Astro.props;
+const { hideFooter = false, ...seoProps } = Astro.props;
 ---
 
 <!doctype html>
@@ -60,9 +63,11 @@ const { ...seoProps } = Astro.props;
     <div id="app" class="min-h-screen flex flex-col">
       {/* Page content goes here */}
       <slot />
-      
-      {/* Footer at bottom - now contains both consent and accessibility */}
-      <Footer />
+
+      {/* Footer at bottom - now contains both consent and accessibility.
+          Pages that render their own footer (e.g. inside a curtain reveal) set
+          hideFooter to suppress this one. */}
+      {!hideFooter && <Footer />}
     </div>
   </body>
 </html>

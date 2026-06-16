@@ -10,11 +10,12 @@ import PortfolioSection from "@/components/Portfolio/PortfolioSection.astro";
 import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
 import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
 import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro";
+import Footer from "@/layouts/Footer.astro";
 import { Image } from "astro:assets";
 import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
 ---
 
-<BaseLayout title="Home" description={siteData.description}>
+<BaseLayout title="Home" description={siteData.description} hideFooter>
   <main class="flex-1 relative z-10">
     {/* HeroLogo3D renders the fracturing logo; THIS wrapper decides when it
         breaks. The logo goes from whole (top) to shattered across the wrapper's
@@ -69,7 +70,8 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
       Curtain reveal chain — full-bleed layers stacked on one pinned timeline
       (top → bottom):
         1. filmstrip    panels glide left, then the whole layer peels off-LEFT
-        2. testimonials revealed in place on the fire background — final layer
+        2. testimonials revealed in place on the fire bg, then slides UP away
+        3. footer       revealed beneath as the final resting layer
       Each layer covers the next and moves off to uncover it; nothing scrolls
       up into view. Edit/reorder layers here — CurtainStack sequences them.
     */
@@ -81,7 +83,34 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
       <div data-curtain-layer data-move="up" id="logo-scene">
         <TestimonialCarousel withBackground />
       </div>
+      <div data-curtain-layer data-move="none" class="curtain-footer-layer">
+        <Footer />
+      </div>
     </CurtainStack>
 
   </main>
 </BaseLayout>
+
+<style>
+  /* The footer is the final curtain layer (revealed when testimonials slides
+     up). Let its content fill the pinned frame and sit flush to the bottom, and
+     make the inner <footer> fill the layer height. */
+  :global(.curtain-footer-layer) {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+  :global(.curtain-footer-layer) > :global(footer) {
+    width: 100%;
+  }
+
+  /* Reduced motion: the stack flattens to normal flow — the footer layer returns
+     to a normal block (no forced height / justify). */
+  @media (prefers-reduced-motion: reduce) {
+    :global(.curtain-footer-layer) {
+      display: block;
+      overflow: visible;
+    }
+  }
+</style>
