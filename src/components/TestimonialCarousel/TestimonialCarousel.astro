@@ -107,7 +107,10 @@ const items: SerializedItem[] = await Promise.all(
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 100vh;
+    /* EXACTLY one viewport — not min-height. As a curtain layer this section
+       must never exceed the layer's 100vh, or its overflow stays in frame when
+       the layer slides up (a band of it covers the footer beneath). */
+    height: 100vh;
     overflow: hidden;
   }
   .tc-bg {
