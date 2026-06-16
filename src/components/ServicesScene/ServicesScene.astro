@@ -257,15 +257,14 @@ const eyebrow = meta.title ?? "Our Services";
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    /* Faded glass panel behind each card */
+    /* Solid panel — fully opaque, nothing shows through. The entrance is the
+       slide-in transform only; no opacity. */
     padding: clamp(1.5rem, 2.5vw, 2.25rem);
     border-radius: 1rem;
-    background: color-mix(in srgb, var(--color-primary-light) 6%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-primary-light) 12%, transparent);
-    backdrop-filter: blur(6px);
+    background: var(--color-bg2);
+    border: 1px solid var(--color-border);
     transform: translateX(calc(var(--card-from) * (1 - var(--card-progress)) * 60vw));
-    opacity: var(--card-progress);
-    will-change: transform, opacity;
+    will-change: transform;
   }
 
   .svc-card-title {

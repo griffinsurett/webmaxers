@@ -187,7 +187,10 @@
 }
 
 @utility card-bg-2 {
-  @apply bg-bg3 faded-accent-border transition-all main-duration;
+  /* Solid (non-transparent) card surface that reads clearly against the
+     near-black page bg. bg3 (zinc-900) sits too close to the page bg, so use a
+     distinctly lighter solid: zinc-800 in dark, zinc-100 in light. */
+  @apply dark:bg-zinc-800 light:bg-zinc-100 faded-accent-border transition-all main-duration;
 }
 
 /* Lighter left-to-right surface gradient (matches griffinswebservices). */
