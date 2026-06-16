@@ -117,6 +117,25 @@ export const collections = {
     schema: ({ image }) => baseSchema({ image }),
   }),
 
+  // ── stats ──────────────────────────────────────────────
+  // Headline numbers (e.g. "7+ Years", "$1M+ Clients") rendered as animated
+  // count-up counters via StatsVariant. `title` is the label under the number.
+  "stats": defineCollection({
+    loader: GlobLoad("stats"),
+    schema: ({ image }) =>
+      baseSchema({ image }).extend({
+        /** The number to count up to. Optional so the collection's _meta.mdx
+         *  (which has no value) still validates; every real item sets it. */
+        value: z.number().default(0),
+        /** Optional text before the number (e.g. "$"). */
+        prefix: z.string().optional(),
+        /** Optional text after the number (e.g. "+", "%", "M"). */
+        suffix: z.string().optional(),
+        /** Decimal places to display (e.g. 1 for "4.9"). */
+        decimals: z.number().optional(),
+      }),
+  }),
+
   "projects": defineCollection({
     loader: GlobLoad("projects"),
     schema: ({ image }) =>

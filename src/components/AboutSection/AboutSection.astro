@@ -3,6 +3,8 @@ import { splitTextIntoAnimatedWords } from "@/utils/animatedText";
 import LogoMark from "@/components/Logo/LogoMark.astro";
 import Button from "@/components/Button/Button";
 import EyebrowSection from "@/layouts/EyebrowSection.astro";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query, sortByOrder } from "@/utils/query";
 
 interface Props {
   statement?: string;
@@ -12,6 +14,8 @@ interface Props {
   ctaLink?: string;
   stickyHeight?: string;
   logoSize?: number;
+  /** Show the `stats` counters (bottom-left on desktop). */
+  showStats?: boolean;
 }
 
 const {
@@ -22,6 +26,7 @@ const {
   ctaLink = "/about-us",
   stickyHeight = "250svh",
   logoSize = 56,
+  showStats = false,
 } = Astro.props;
 
 const words = splitTextIntoAnimatedWords(statement);
@@ -36,7 +41,7 @@ const words = splitTextIntoAnimatedWords(statement);
     data-about-sticky="true"
     style={`--about-section-height:${stickyHeight};`}
   >
-    <div class="about-sticky-pin" data-about-sticky-inner>
+    <div class:list={["about-sticky-pin", showStats && "about-sticky-pin--with-stats"]} data-about-sticky-inner>
       <section class="relative w-full">
         <EyebrowSection eyebrow="About">
           <!-- Animated statement -->
@@ -59,6 +64,16 @@ const words = splitTextIntoAnimatedWords(statement);
             ))}
           </h2>
         </EyebrowSection>
+
+        {/* Animated stat counters — absolutely pinned to the BOTTOM-LEFT of the
+            frame, aligned to the same inset as the "About" eyebrow label. */}
+        {showStats && (
+          <ContentRenderer
+            query={query("stats").orderBy(sortByOrder())}
+            variant="StatsVariant"
+            className="about-stats"
+          />
+        )}
       </section>
     </div>
   </aside>
@@ -103,9 +118,28 @@ const words = splitTextIntoAnimatedWords(statement);
   }
 
   .about-sticky-pin {
+    --about-pin-top: clamp(5rem, 7vw, 7rem);
     position: sticky;
-    top: clamp(5rem, 7vw, 7rem);
+    top: var(--about-pin-top);
     width: 100%;
+  }
+
+  /* When the stats are shown, the pinned frame fills the visible viewport so the
+     stats can anchor to its BOTTOM (the frame is 100vh minus the top offset). A
+     definite height (not just min-height) lets the inner section resolve 100%. */
+  .about-sticky-pin--with-stats {
+    height: calc(100svh - var(--about-pin-top) - 1.5rem);
+  }
+  .about-sticky-pin--with-stats > section {
+    height: 100%;
+  }
+
+  /* Stat counters: absolutely pinned to the bottom-left of the frame, aligned to
+     the same inset as the "About" eyebrow label (the section-container edge). */
+  :global(.about-stats) {
+    position: absolute;
+    left: 0;
+    bottom: 0;
   }
 
   .about-statement {
@@ -153,6 +187,11 @@ const words = splitTextIntoAnimatedWords(statement);
       min-height: auto;
       padding-block: 0;
     }
+    /* No pinned frame to anchor to — stats return to normal flow under the text. */
+    :global(.about-stats) {
+      position: static;
+      margin-top: clamp(1.5rem, 4vw, 3rem);
+    }
     .about-word-layer--overlay {
       opacity: 1;
       will-change: auto;
@@ -166,6 +205,10 @@ const words = splitTextIntoAnimatedWords(statement);
     position: static;
     min-height: auto;
     padding-block: 0;
+  }
+  :global([data-a11y-motion="reduced"]) .about-stats {
+    position: static;
+    margin-top: clamp(1.5rem, 4vw, 3rem);
   }
   :global([data-a11y-motion="reduced"]) .about-word-layer--overlay {
     opacity: 1;

@@ -1,0 +1,68 @@
+---
+// src/components/ContentRenderer/variants/StatsVariant.astro
+/**
+ * Stats Variant — a row of headline numbers rendered as animated count-up
+ * counters (big number on top, small label beneath). Sourced from the `stats`
+ * collection: each item provides `value` plus optional `prefix`/`suffix`/
+ * `decimals`, and `title` is the label. Animation + reduced-motion handling come
+ * from the shared Counter component. Layout is a horizontal row that wraps.
+ */
+import type { BaseVariantProps } from "../ContentRenderer.types";
+import Counter from "@/components/Counter.astro";
+
+type Props = BaseVariantProps & {
+  /** Count-up duration in ms (passed through to each Counter). */
+  counterDuration?: number;
+};
+
+const { items = [], id, className = "", counterDuration = 1800 } =
+  Astro.props as Props;
+---
+
+<ul class:list={["stats-row list-none", className]} id={id}>
+  {items.map((item: any) => (
+    <li class="stat">
+      <span class="stat-value">
+        <Counter
+          end={item.value}
+          duration={counterDuration}
+          prefix={item.prefix ?? ""}
+          suffix={item.suffix ?? ""}
+          decimals={item.decimals}
+        />
+      </span>
+      {item.title && <span class="stat-label">{item.title}</span>}
+    </li>
+  ))}
+</ul>
+
+<style>
+  .stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(1.75rem, 4vw, 3.5rem);
+    align-items: flex-end;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .stat-value {
+    font-size: clamp(1.75rem, 3.2vw, 2.75rem);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--color-heading);
+  }
+
+  .stat-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+</style>

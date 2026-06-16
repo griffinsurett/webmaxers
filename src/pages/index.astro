@@ -7,8 +7,6 @@ import AboutSection from "@/components/AboutSection/AboutSection.astro";
 import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
 import Marquee from "@/components/Marquee.astro";
 import PortfolioSection from "@/components/Portfolio/PortfolioSection.astro";
-import ServicesScene from "@/components/ServicesScene/ServicesScene.astro";
-import LogoScene from "@/components/LogoScene/LogoScene.astro";
 import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
 import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
 import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro";
@@ -58,6 +56,7 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
         rightText="Our mission is to make technology feel human by designing digital products that are intuitive, purposeful, and meaningful to people."
         ctaText="Explore Our Story"
         ctaLink="/about-us"
+        showStats
       />
       <!-- </div> -->
 
@@ -67,12 +66,10 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
 
     {
       /*
-      Curtain reveal chain — four full-bleed layers stacked on one pinned
-      timeline (top → bottom):
-        1. filmstrip   panels glide left, then the whole layer peels off-LEFT
-        2. services    revealed in place; runs its phases, then slides UP away
-        3. logo        scroll-scrubbed brand logo; revealed in place, then UP away
-        4. testimonials revealed in place underneath — the final resting layer
+      Curtain reveal chain — full-bleed layers stacked on one pinned timeline
+      (top → bottom):
+        1. filmstrip    panels glide left, then the whole layer peels off-LEFT
+        2. testimonials revealed in place on the fire background — final layer
       Each layer covers the next and moves off to uncover it; nothing scrolls
       up into view. Edit/reorder layers here — CurtainStack sequences them.
     */
@@ -81,27 +78,10 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
       <div data-curtain-layer data-move="left">
         <PortfolioSection ctaLink="/projects" />
       </div>
-      <div data-curtain-layer data-move="up">
-        <ServicesScene />
-      </div>
       <div data-curtain-layer data-move="up" id="logo-scene">
-        <!-- <LogoScene /> -->
-            <TestimonialCarousel />
+        <TestimonialCarousel withBackground />
       </div>
     </CurtainStack>
 
   </main>
 </BaseLayout>
-
-<style>
-  /* The testimonials layer is a padded block, not full-bleed — centre it in the
-     pinned viewport so it reads well while it's the revealed bottom layer. The
-     component carries its own solid background. On mobile / reduced motion the
-     stack flattens and the centring is a no-op. */
-  .curtain-layer--testimonials {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background: var(--color-bg);
-  }
-</style>

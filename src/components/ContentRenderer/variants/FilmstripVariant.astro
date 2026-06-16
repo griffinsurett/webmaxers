@@ -65,7 +65,7 @@ const totalPanels = items.length + 2;
             ))}
           </h2>
           {collectionUrl && (
-            <Button variant="underline" href={collectionUrl} size="sm" client:load>
+            <Button variant="underline" href={collectionUrl} size="sm" className="self-center!" client:load>
               View all {collectionTitle?.toLowerCase() ?? "projects"}
             </Button>
           )}
@@ -105,7 +105,7 @@ const totalPanels = items.length + 2;
             <p class="fs-outro-text">
               {description ?? "Discover our complete collection of digital experiences, brands, and platforms."}
             </p>
-            <Button variant="underline" href={collectionUrl} size="sm" client:load>
+            <Button variant="underline" href={collectionUrl} size="sm" className="self-center!" client:load>
               View all {collectionTitle?.toLowerCase() ?? "projects"}
             </Button>
           </div>
@@ -201,6 +201,7 @@ const totalPanels = items.length + 2;
     padding: var(--fs-pad-y) calc(var(--fs-pad-x) * 0.85);
     overflow: hidden;
   }
+
 
   /* ── Intro text ──────────────────────────────────────────────── */
   .fs-eyebrow {

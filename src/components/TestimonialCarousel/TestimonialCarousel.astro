@@ -5,6 +5,23 @@ import EyebrowSection from "@/layouts/EyebrowSection.astro";
 import { getCollection } from "astro:content";
 import { getCollectionMeta } from "@/utils/collections";
 import { resolveImageMetadata, getImageAlt } from "@/utils/images";
+import servicesBg from "@/assets/fire-pic.jpg";
+
+interface Props {
+  /** Render a full-bleed fixed background photo (dimmed for readability) behind
+   *  the carousel. Used on the homepage to put testimonials on the fire image. */
+  withBackground?: boolean;
+}
+const { withBackground = false } = Astro.props;
+
+// Optimized fire background sources — only built when requested.
+const bg = withBackground
+  ? await Promise.all([
+      getImage({ src: servicesBg, format: "webp", quality: 68, width: 768 }),
+      getImage({ src: servicesBg, format: "webp", quality: 72, width: 1280 }),
+      getImage({ src: servicesBg, format: "webp", quality: 74, width: 1920 }),
+    ])
+  : null;
 
 const raw = await getCollection("testimonials");
 
@@ -55,10 +72,23 @@ const items: SerializedItem[] = await Promise.all(
 );
 ---
 
-<div class="tc-section section-container">
-  <EyebrowSection eyebrow={eyebrow}>
-    <TestimonialCarouselClient items={items} client:visible />
-  </EyebrowSection>
+<div class:list={["tc-section", { "tc-section--bg": withBackground }]}>
+  {bg && (
+    <div class="tc-bg" aria-hidden="true">
+      <picture>
+        <source media="(max-width: 640px)" srcset={bg[0].src} type="image/webp" />
+        <source media="(min-width: 641px) and (max-width: 1024px)" srcset={bg[1].src} type="image/webp" />
+        <source media="(min-width: 1025px)" srcset={bg[2].src} type="image/webp" />
+        <img src={bg[2].src} alt="" class="h-full w-full object-cover object-center" loading="lazy" decoding="async" fetchpriority="low" />
+      </picture>
+      <div class="tc-bg-dim"></div>
+    </div>
+  )}
+  <div class="tc-content section-container">
+    <EyebrowSection eyebrow={eyebrow}>
+      <TestimonialCarouselClient items={items} client:visible />
+    </EyebrowSection>
+  </div>
 </div>
 
 <style>
@@ -67,6 +97,40 @@ const items: SerializedItem[] = await Promise.all(
   .tc-section {
     width: 100%;
     padding-block: clamp(4rem, 8vw, 7rem);
+  }
+
+  /* ── Fire-background variant ──────────────────────────────────────
+     Full-bleed fire photo behind the carousel with a dim overlay so the light
+     testimonial text stays readable. Fills the pinned curtain layer. */
+  .tc-section--bg {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  .tc-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .tc-bg picture,
+  .tc-bg img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .tc-bg-dim {
+    position: absolute;
+    inset: 0;
+    /* Darken the fire so the testimonial text reads clearly on top. */
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .tc-section--bg .tc-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
   }
 
   /* ── Root ── EyebrowSection's slot column drives width now, so the carousel
