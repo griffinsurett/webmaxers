@@ -10,73 +10,53 @@ import { useMotionPreference, readMotionPreference } from "@/hooks/useMotionPref
 const MODEL_URL = "/lotties/scroll-affected-lottie-that-breaks/logo.glb";
 
 /**
- * Two variants of the same fracturing mark:
- *   1 — HERO: full-viewport `fixed` instance. Spins up, shatters, then the
- *       self-running vacuum sucks the rubble away and the canvas hides. Scrub
- *       range is tied to the viewport TOP (the wrapper scrolls up past it).
- *   2 — FOOTER: contained instance that NEVER disappears. Spins while whole,
- *       FREEZES its rotation the moment it starts breaking, then explodes into
- *       a wide, continuously-jittering rubble field that stays in frame. Scrub
- *       range is tied to the viewport BOTTOM (it plays as it scrolls INTO view).
+ * The fracturing 3D brand mark. ONE behavior everywhere:
+ *   • spins at a constant rate while whole (NEVER speeds up — not with scroll,
+ *     not with anything),
+ *   • shatters apart as it scrolls through its range (the spin eases to a stop),
+ *   • then the shards disperse and get blown everywhere like ripped paper —
+ *     spreading out to fill the frame and fluttering/tumbling individually.
+ * The group never rotates as a clump once it's rubble.
+ *
+ * Used full-screen in the hero and contained in the footer — the ONLY difference
+ * is layout (the `contained` prop) and where the break scrubs (`breakSelector`).
  */
-type Variant = 1 | 2;
-
-interface VariantConfig {
-  scrollStart: string;
-  scrollEnd: string;
-  enableVacuum: boolean;
-  hideOnLeave: boolean;
-  /** Cap the scrubbed break (1 = full). <1 keeps shards in frame (no vacuum). */
-  maxBreak: number;
-  /** Random scatter half-extent per axis at break==1 — [x, y, z]. Bigger = crazier. */
-  scatter: [number, number, number];
-  /** Spin keeps running once shattered (hero) vs. freezes hard on break (footer). */
-  freezeSpinOnBreak: boolean;
-  /** Per-shard continuous jitter amplitude (local units) once shattered. 0 = off. */
-  jitter: number;
+const CFG = {
+  scrollStart: "top top",
+  scrollEnd: "bottom top",
+  /** Cap the scrubbed break (1 = full shatter). */
+  maxBreak: 1,
+  /** Random scatter half-extent per axis at break==1 — [x, y, z]. */
+  scatter: [16, 16, 8] as [number, number, number],
+  /** Per-shard continuous jitter amplitude (local units) once shattered. */
+  jitter: 0.4,
   /**
-   * Scroll-progress fraction at which the break reaches `maxBreak`. Smaller =
-   * a quicker, snappier shatter with little whole↔rubble in-between (it then
-   * just holds as rubble for the rest of the range). For the hero this is
-   * effectively VAC_TRIGGER; `null` means "use VAC_TRIGGER".
+   * Wind-blown wander once shattered — base half-extent (local units) for the
+   * outward dispersal + shared gust + per-shard turbulence that blow the shards
+   * everywhere like torn paper.
    */
-  breakEnd: number | null;
-  /** Per-shard break-delay spread. Smaller = shards shatter more in unison (snappier). */
-  breakDelaySpread: number;
-}
-
-const VARIANTS: Record<Variant, VariantConfig> = {
-  1: {
-    scrollStart: "top top",
-    scrollEnd: "bottom top",
-    enableVacuum: true,
-    hideOnLeave: true,
-    maxBreak: 1,
-    scatter: [5, 5, 2.5],
-    freezeSpinOnBreak: false,
-    jitter: 0,
-    breakEnd: null, // hero hands off to the vacuum at VAC_TRIGGER
-    breakDelaySpread: 0.4,
-  },
-  2: {
-    scrollStart: "top bottom",
-    scrollEnd: "bottom bottom",
-    enableVacuum: false,
-    hideOnLeave: false,
-    maxBreak: 1,
-    scatter: [11, 11, 6], // much wider explosion — "crazier" particles
-    freezeSpinOnBreak: true,
-    jitter: 0.18,
-    breakEnd: 0.35, // snap whole → rubble fast, then hold as jittering rubble
-    breakDelaySpread: 0.08, // shards shatter near-simultaneously (little in-between)
-  },
+  drift: 11,
+  /** Per-shard tumble speed once shattered — each shard flips like ripped paper. */
+  tumble: 2.4,
+  /** Base spin velocity (rad/frame) while whole. CONSTANT — never speeds up. */
+  spinSpeed: 0.004,
+  /** Scroll-progress fraction at which the break reaches `maxBreak`. Higher =
+   *  the shatter is spread over more scroll, so it breaks more gradually/slowly. */
+  breakEnd: 0.95,
+  /** Per-shard break-delay spread. Smaller = shards shatter more in unison. */
+  breakDelaySpread: 0.4,
 };
 
 interface Props {
   /** Tailwind classes for positioning/sizing/opacity at the usage site. */
   className?: string;
-  /** 1 = hero (spin→shatter→vacuum), 2 = footer (frozen wide jittering rubble). */
-  variant?: Variant;
+  /**
+   * Contained (footer box) vs full-viewport (hero). Only affects canvas sizing /
+   * poster framing — the animation is identical either way.
+   */
+  contained?: boolean;
+  /** Hide the root once scrolled past the break range (fixed/overlapping canvases). */
+  hideOnLeave?: boolean;
   /** Selector of the element the break scrubs across (top → bottom). */
   breakSelector?: string;
   /** Crossfade duration poster → canvas, ms. */
@@ -86,7 +66,8 @@ interface Props {
 
 export default function HeroLogo3D({
   className = "",
-  variant = 1,
+  contained = false,
+  hideOnLeave = true,
   breakSelector = "[data-logo-break]",
   fadeMs = 180,
   respectReducedMotion = true,
@@ -119,20 +100,18 @@ export default function HeroLogo3D({
       gsap.registerPlugin(ScrollTrigger);
       if (canceled) return;
 
-      const cfg = VARIANTS[variant];
+      const cfg = CFG;
 
       // Render size. A PerspectiveCamera frames the scene by its VERTICAL fov
-      // against the render HEIGHT — so to make the contained footer logo (v2)
-      // start at the SAME on-screen size as the full-viewport hero (v1), we size
-      // the render height to the viewport height in BOTH variants. Width comes
-      // from the container for v2 (so the wide/short footer box doesn't squash
-      // the canvas), and from the viewport for v1.
+      // against the render HEIGHT — so the contained (footer) logo starts at the
+      // SAME on-screen size as the full-viewport one, we size the render height to
+      // the viewport height either way. Width comes from the container when
+      // contained (so the wide/short box doesn't squash the canvas), else viewport.
       const getSize = () => {
         const h = window.innerHeight;
-        const w =
-          variant === 1
-            ? window.innerWidth
-            : rootRef.current?.getBoundingClientRect().width || window.innerWidth;
+        const w = contained
+          ? rootRef.current?.getBoundingClientRect().width || window.innerWidth
+          : window.innerWidth;
         return { w: w || 1, h: h || 1 };
       };
 
@@ -182,17 +161,32 @@ export default function HeroLogo3D({
         offsets: Float32Array;
         delays: Float32Array;
         strengths: Float32Array;
-        /** Per-shard jitter seed: [phaseX, phaseY, phaseZ, freq] for variant-2 wobble. */
+        /** Per-shard jitter seed: [phaseX, phaseY, phaseZ, freq] for the in-place wobble. */
         jitterSeed: Float32Array;
+        /** Per-shard drift seed: [phaseX, phaseY, phaseZ, freqScale] for the slow wide wander. */
+        driftSeed: Float32Array;
+        /** Per-shard rest centroid (x,y,z) — the pivot each shard tumbles around. */
+        centroids: Float32Array;
+        /** Per-shard fixed outward direction (x,y,z) — where it disperses to. */
+        driftDir: Float32Array;
+        /** Per-shard tumble seed: [phaseX, phaseY, phaseZ, rateScale] for confetti spin. */
+        tumbleSeed: Float32Array;
+        /** Per-shard streak flag (1 = long thin sliver) — collapsed once broken. */
+        sliver: Uint8Array;
         faceCount: number;
       };
       const faces: Face[] = [];
       let isReady = false;
       let progress = 0;
 
-      // `time` (seconds) drives the per-shard continuous wobble; `jitterAmp` is
-      // the variant's jitter amplitude (0 for the hero — pure scrubbed break).
-      const applyBreak = (amount: number, time = 0, jitterAmp = 0) => {
+      // `time` (seconds) drives the per-shard motion. `jitterAmp` is the fast,
+      // small in-place wobble; `driftAmp` is a slow, WIDE wander that carries
+      // shards away from their rest point so the rubble roams the whole
+      // container instead of clustering. `floatGate` (0→1) is the FREE-FLOAT
+      // amount — once the mark is rubble it's purely time-driven (NOT scroll-
+      // tied), so the debris drifts merrily on its own no matter the scroll.
+      // All three are 0 for the hero.
+      const applyBreak = (amount: number, time = 0, jitterAmp = 0, driftAmp = 0, tumbleAmp = 0, floatGate = 1) => {
         for (const f of faces) {
           const arr = f.position.array as Float32Array;
           for (let s = 0; s < f.faceCount; s++) {
@@ -202,52 +196,119 @@ export default function HeroLogo3D({
             const ox = f.offsets[s * 3];
             const oy = f.offsets[s * 3 + 1];
             const oz = f.offsets[s * 3 + 2];
-            // Wobble grows with how shattered the shard is, so the whole logo
-            // stays crisp and only loose rubble jitters.
+            // Motion grows with how shattered the shard is, so the whole logo
+            // stays crisp and only loose rubble moves.
+            // Free-float amplitude is gated by `floatGate` (time-driven once the
+            // mark is rubble), NOT by this shard's scrubbed break — so the drift
+            // doesn't scale with scroll position once it's blown apart.
+            const free = shard > 0 ? floatGate : 0;
             let jx = 0, jy = 0, jz = 0;
-            if (jitterAmp > 0 && shard > 0) {
-              const px = f.jitterSeed[s * 4];
-              const py = f.jitterSeed[s * 4 + 1];
-              const pz = f.jitterSeed[s * 4 + 2];
-              const freq = f.jitterSeed[s * 4 + 3];
-              const a = jitterAmp * Math.min(shard, 1);
-              jx = Math.sin(time * freq + px) * a;
-              jy = Math.cos(time * freq * 1.3 + py) * a;
-              jz = Math.sin(time * freq * 0.7 + pz) * a;
+            if (free > 0 && (jitterAmp > 0 || driftAmp > 0)) {
+              if (jitterAmp > 0) {
+                const px = f.jitterSeed[s * 4];
+                const py = f.jitterSeed[s * 4 + 1];
+                const pz = f.jitterSeed[s * 4 + 2];
+                const freq = f.jitterSeed[s * 4 + 3];
+                const a = jitterAmp * free;
+                jx += Math.sin(time * freq + px) * a;
+                jy += Math.cos(time * freq * 1.3 + py) * a;
+                jz += Math.sin(time * freq * 0.7 + pz) * a;
+              }
+              if (driftAmp > 0) {
+                const px = f.driftSeed[s * 4];
+                const py = f.driftSeed[s * 4 + 1];
+                const pz = f.driftSeed[s * 4 + 2];
+                const fs = f.driftSeed[s * 4 + 3]; // per-shard turbulence-speed scale
+                const a = driftAmp * free;
+
+                // 0) DISPERSE — a persistent OUTWARD push along each shard's own
+                // fixed direction (driftDir) so the field spreads apart to fill the
+                // frame and STAYS spread, instead of swarming as a clump. Eases in
+                // and saturates (1 - e^-t) so it's a one-way spread, not an orbit.
+                const spread = (1 - Math.exp(-time * 0.5)) * driftAmp * free;
+                jx += f.driftDir[s * 3] * spread;
+                jy += f.driftDir[s * 3 + 1] * spread;
+                jz += f.driftDir[s * 3 + 2] * spread;
+
+                // 1) WIND — a shared, slow gust on top of the spread, so the
+                // dispersed scraps keep fluttering and shifting (never returns to
+                // center; just adds restless motion to the spread-out field).
+                const wt = time * 0.18;
+                const windX = Math.sin(wt + px * 0.5) + 0.7 * Math.sin(wt * 0.37 + 1.3) + 0.5 * Math.sin(wt * 1.9 + px);
+                const windY = Math.cos(wt * 0.8 + py * 0.5) + 0.6 * Math.sin(wt * 0.53 + 2.1) + 0.4 * Math.cos(wt * 1.7 + py);
+                const windZ = Math.sin(wt * 1.1 + pz * 0.5) + 0.6 * Math.cos(wt * 0.41 + 0.7);
+
+                // 2) TURBULENCE — fast, sharp per-shard swirl on top of the gust, so
+                // each scrap of paper flutters and darts on its own erratic path.
+                const w = 0.9 * fs;
+                const turbX = Math.sin(time * w * 2.1 + pz) * 0.6;
+                const turbY = Math.cos(time * w * 1.7 + px) * 0.6;
+                const turbZ = Math.sin(time * w * 2.4 + py) * 0.5;
+
+                // Wind/turbulence are FLUTTER on top of the dispersal — a fraction
+                // of the amplitude, so they shimmy the spread-out field without
+                // dominating it (the outward spread above is the main travel).
+                const fa = a * 0.28;
+                jx += (windX + turbX) * fa;
+                jy += (windY + turbY) * fa * 0.95;
+                jz += (windZ + turbZ) * fa * 0.8;
+              }
             }
+            // Confetti tumble: spin each shard about its own centroid on all 3
+            // axes. Angles advance purely with TIME once the shard is free —
+            // gated by `free` (time-driven), so the spin doesn't scale with scroll.
+            let useTumble = false;
+            let s0 = 1, c0 = 0, s1 = 1, c1 = 0, s2 = 1, c2 = 0;
+            let cx = 0, cy = 0, cz = 0;
+            if (tumbleAmp > 0 && free > 0) {
+              const rate = f.tumbleSeed[s * 4 + 3] * tumbleAmp;
+              const ax = time * rate + f.tumbleSeed[s * 4];
+              const ay = time * rate * 0.83 + f.tumbleSeed[s * 4 + 1];
+              const az = time * rate * 1.17 + f.tumbleSeed[s * 4 + 2];
+              // Ease rotation in with the float gate so solid shards stay put.
+              s0 = Math.sin(ax * free); c0 = Math.cos(ax * free);
+              s1 = Math.sin(ay * free); c1 = Math.cos(ay * free);
+              s2 = Math.sin(az * free); c2 = Math.cos(az * free);
+              useTumble = true;
+            }
+            // Centroid (pivot for both tumble and the shrink below).
+            cx = f.centroids[s * 3];
+            cy = f.centroids[s * 3 + 1];
+            cz = f.centroids[s * 3 + 2];
+            // Streak shards: collapse to a point as they break free so the rubble
+            // has no line-confetti — but they stay FULL while whole (they're real
+            // surface faces; removing them from the solid logo would gash it).
+            if (f.sliver[s] && free > 0) {
+              for (let v = 0; v < 3; v++) {
+                const i = (s * 3 + v) * 3;
+                // Lerp the 3 verts to the centroid by `free` → zero-area when loose.
+                arr[i] = f.original[i] + (cx - f.original[i]) * free;
+                arr[i + 1] = f.original[i + 1] + (cy - f.original[i + 1]) * free;
+                arr[i + 2] = f.original[i + 2] + (cz - f.original[i + 2]) * free;
+              }
+              continue;
+            }
+            // Shrink each shard toward its centroid as it breaks free: full size
+            // while WHOLE (so the starting logo is solid and continuous), down to
+            // half size once it's loose rubble. `free` 0→1 drives it.
+            const shardScale = 1 - 0.5 * free;
             for (let v = 0; v < 3; v++) {
               const i = (s * 3 + v) * 3;
-              arr[i] = f.original[i] + ox * t + jx;
-              arr[i + 1] = f.original[i + 1] + oy * t + jy;
-              arr[i + 2] = f.original[i + 2] + oz * t + jz;
-            }
-          }
-          f.position.needsUpdate = true;
-        }
-      };
-
-      // Vacuum: from the fully-broken positions, lerp every vertex toward a
-      // single point below-and-centred (local space), so the rubble gets sucked
-      // down toward the horizontal-centre / vertical-bottom as `v` goes 0 → 1.
-      const VAC_TARGET = { x: 0, y: -4.0, z: 0 }; // below the logo, on its axis
-      const applyVacuum = (v: number) => {
-        const e = v * v; // ease-in so it accelerates as it's swallowed
-        for (const f of faces) {
-          const arr = f.position.array as Float32Array;
-          for (let s = 0; s < f.faceCount; s++) {
-            // fully-broken displacement (break == 1) for this shard
-            const t = f.strengths[s];
-            const ox = f.offsets[s * 3];
-            const oy = f.offsets[s * 3 + 1];
-            const oz = f.offsets[s * 3 + 2];
-            for (let vert = 0; vert < 3; vert++) {
-              const i = (s * 3 + vert) * 3;
-              const bx = f.original[i] + ox * t;
-              const by = f.original[i + 1] + oy * t;
-              const bz = f.original[i + 2] + oz * t;
-              arr[i] = bx + (VAC_TARGET.x - bx) * e;
-              arr[i + 1] = by + (VAC_TARGET.y - by) * e;
-              arr[i + 2] = bz + (VAC_TARGET.z - bz) * e;
+              // Start from the centroid-relative vertex, scaled by shardScale.
+              let bx = cx + (f.original[i] - cx) * shardScale;
+              let by = cy + (f.original[i + 1] - cy) * shardScale;
+              let bz = cz + (f.original[i + 2] - cz) * shardScale;
+              if (useTumble) {
+                // Rotate (vert - centroid) about X, then Y, then Z; restore centroid.
+                let dx = bx - cx, dy = by - cy, dz = bz - cz;
+                let ny = dy * c0 - dz * s0; let nz = dy * s0 + dz * c0; dy = ny; dz = nz; // X
+                let nx = dx * c1 + dz * s1; nz = -dx * s1 + dz * c1; dx = nx; dz = nz;    // Y
+                nx = dx * c2 - dy * s2; ny = dx * s2 + dy * c2; dx = nx; dy = ny;         // Z
+                bx = cx + dx; by = cy + dy; bz = cz + dz;
+              }
+              arr[i] = bx + ox * t + jx;
+              arr[i + 1] = by + oy * t + jy;
+              arr[i + 2] = bz + oz * t + jz;
             }
           }
           f.position.needsUpdate = true;
@@ -275,8 +336,13 @@ export default function HeroLogo3D({
             const delays = new Float32Array(faceCount);
             const strengths = new Float32Array(faceCount);
             const jitterSeed = new Float32Array(faceCount * 4);
+            const driftSeed = new Float32Array(faceCount * 4);
+            const centroids = new Float32Array(faceCount * 3);
+            const driftDir = new Float32Array(faceCount * 3);
+            const tumbleSeed = new Float32Array(faceCount * 4);
+            const sliver = new Uint8Array(faceCount); // 1 = streak shard, hidden once broken
             for (let i = 0; i < faceCount; i++) {
-              // Per-axis scatter extent comes from the variant (footer = crazier).
+              // Per-axis scatter extent (how far each shard flies on full break).
               offsets[i * 3] = (Math.random() - 0.5) * cfg.scatter[0];
               offsets[i * 3 + 1] = (Math.random() - 0.5) * cfg.scatter[1];
               offsets[i * 3 + 2] = (Math.random() - 0.5) * cfg.scatter[2];
@@ -287,12 +353,55 @@ export default function HeroLogo3D({
               jitterSeed[i * 4 + 1] = Math.random() * Math.PI * 2;
               jitterSeed[i * 4 + 2] = Math.random() * Math.PI * 2;
               jitterSeed[i * 4 + 3] = 0.6 + Math.random() * 1.8;
+              // Drift: independent phases + a slow per-shard frequency scale, so
+              // each shard wanders the container on its own slow, unique path.
+              driftSeed[i * 4] = Math.random() * Math.PI * 2;
+              driftSeed[i * 4 + 1] = Math.random() * Math.PI * 2;
+              driftSeed[i * 4 + 2] = Math.random() * Math.PI * 2;
+              driftSeed[i * 4 + 3] = 0.5 + Math.random() * 1.0;
+              // Tumble: rest centroid (pivot) + per-axis phase + a per-shard rate
+              // scale, so each flake of confetti spins at its own speed/angle.
+              const i0 = (i * 3 + 0) * 3, i1 = (i * 3 + 1) * 3, i2 = (i * 3 + 2) * 3;
+              const cX = (original[i0] + original[i1] + original[i2]) / 3;
+              const cY = (original[i0 + 1] + original[i1 + 1] + original[i2 + 1]) / 3;
+              const cZ = (original[i0 + 2] + original[i1 + 2] + original[i2 + 2]) / 3;
+              centroids[i * 3] = cX;
+              centroids[i * 3 + 1] = cY;
+              centroids[i * 3 + 2] = cZ;
+
+              // FLAG line/sliver shards — long thin triangles that render as
+              // streaks once they break free. We do NOT remove them from the solid
+              // logo (they're real surface faces — removing them gashes the mark);
+              // instead applyBreak collapses them to a point ONLY as they shatter,
+              // so the whole logo stays intact but the rubble has no streaks.
+              const eA = Math.hypot(original[i1] - original[i0], original[i1 + 1] - original[i0 + 1], original[i1 + 2] - original[i0 + 2]);
+              const eB = Math.hypot(original[i2] - original[i1], original[i2 + 1] - original[i1 + 1], original[i2 + 2] - original[i1 + 2]);
+              const eC = Math.hypot(original[i0] - original[i2], original[i0 + 1] - original[i2 + 1], original[i0 + 2] - original[i2 + 2]);
+              const longest = Math.max(eA, eB, eC);
+              const shortest = Math.min(eA, eB, eC);
+              const SLIVER_ASPECT = 6; // longest edge ≥ 6× shortest ⇒ a streak
+              sliver[i] = shortest <= 1e-6 || longest / shortest >= SLIVER_ASPECT ? 1 : 0;
+              // Fixed OUTWARD dispersal direction: centroid-away-from-origin biased
+              // wide on the screen plane (x,y) + a big random component so the
+              // field fans out everywhere, not as a clean radial starburst. Z is
+              // damped so shards spread across the frame, not deep toward camera.
+              let dX = cX + (Math.random() - 0.5) * 3;
+              let dY = cY + (Math.random() - 0.5) * 3;
+              let dZ = (cZ + (Math.random() - 0.5) * 1.5) * 0.4;
+              const dLen = Math.hypot(dX, dY, dZ) || 1;
+              driftDir[i * 3] = dX / dLen;
+              driftDir[i * 3 + 1] = dY / dLen;
+              driftDir[i * 3 + 2] = dZ / dLen;
+              tumbleSeed[i * 4] = Math.random() * Math.PI * 2;
+              tumbleSeed[i * 4 + 1] = Math.random() * Math.PI * 2;
+              tumbleSeed[i * 4 + 2] = Math.random() * Math.PI * 2;
+              tumbleSeed[i * 4 + 3] = 0.6 + Math.random() * 1.4;
             }
             const mesh = new THREE.Mesh(geom, material);
             obj.updateWorldMatrix(true, false);
             mesh.applyMatrix4(obj.matrixWorld);
             group.add(mesh);
-            faces.push({ position: pos, original, offsets, delays, strengths, jitterSeed, faceCount });
+            faces.push({ position: pos, original, offsets, delays, strengths, jitterSeed, driftSeed, centroids, driftDir, tumbleSeed, sliver, faceCount });
           });
 
           // Center + normalise scale to ~2.5 units.
@@ -318,26 +427,19 @@ export default function HeroLogo3D({
       const setVisible = (v: boolean) => {
         if (rootRef.current) rootRef.current.style.visibility = v ? "visible" : "hidden";
       };
-      // Scroll-SCRUBBED: spin up, then shatter out (break 0 → 1) across the range.
-      //   progress 0 → SPIN_END : spin accelerates, logo whole
-      //   progress SPIN_END → 1 : break ramps 0 → 1
-      const SPIN_END = 0.15;
-      let scrollSpin = 0; // 0 (idle) → 1 (max spin-up)
+      // Scroll-SCRUBBED shatter (break 0 → 1) across the range.
+      //   progress 0 → SPIN_END : logo whole (break hasn't started)
+      //   progress SPIN_END → breakEnd : break ramps 0 → 1
+      const SPIN_END = 0.35; // stay whole longer before it starts to fall apart
 
-      // Latest scrubbed break amount, re-applied every frame (so variant-2
-      // jitter keeps animating even when the scroll position is static).
+      // Latest break amount (scroll-driven), re-applied every frame by the tick
+      // loop so the rubble keeps animating even when the scroll position is static.
       let breakAmount = 0;
 
-      // The vacuum is NOT scrubbed — it's a self-running animation that fires
-      // once scroll crosses VAC_TRIGGER and plays to completion on its own
-      // (independent of whether the user keeps scrolling). `vacuum` 0 → 1 is
-      // driven by a GSAP tween; the break/spin freeze while it's active.
-      let vacuum = 0;
-      let brokenness = 0; // 0 = whole, 1 = fully shattered (slows the spin)
-      const vacState = { v: 0 };
-      const VAC_TRIGGER = 0.85; // fraction of the wrapper where the vacuum kicks in
-
       const trigger = document.querySelector<HTMLElement>(breakSelector);
+      // Scroll → break. The break scrubs across the range; the tick loop owns the
+      // continuous rubble motion (so the float never judders with scroll speed) —
+      // here we only update `breakAmount` (how shattered it is).
       const st = ScrollTrigger.create({
         trigger: trigger ?? undefined,
         start: cfg.scrollStart,
@@ -345,104 +447,64 @@ export default function HeroLogo3D({
         scrub: true,
         onUpdate: (self) => {
           progress = self.progress;
-          scrollSpin = Math.min(progress / SPIN_END, 1);
           if (!isReady) return;
-          // While the vacuum animation is running/active, it owns the geometry.
-          if (vacuum > 0) return;
-          // Break completes at `breakEnd` (hero: VAC_TRIGGER, then the vacuum
-          // takes over; footer: an early fraction so it snaps whole → rubble fast
-          // with little in-between, then just holds/jitters for the rest).
-          const breakEnd = cfg.breakEnd ?? (cfg.enableVacuum ? VAC_TRIGGER : 1);
+          const breakEnd = cfg.breakEnd;
           const breakSpan = breakEnd - SPIN_END;
           breakAmount =
             progress <= SPIN_END
               ? 0
               : Math.min((progress - SPIN_END) / breakSpan, 1) * cfg.maxBreak;
-          brokenness = breakAmount;
-          // The tick loop re-applies break+jitter every frame; this snap keeps
-          // the static (no-jitter) variant exact between frames too.
-          applyBreak(breakAmount);
         },
-        // Hide once scrolled past the range only for the hero (its fixed canvas
-        // would otherwise show through later sections). The footer mark stays.
-        onLeave: cfg.hideOnLeave ? () => setVisible(false) : undefined,
-        onEnterBack: cfg.hideOnLeave ? () => setVisible(true) : undefined,
+        // Hide once scrolled past the range when requested (a fixed/overlapping
+        // canvas would otherwise show through later sections).
+        onLeave: hideOnLeave ? () => setVisible(false) : undefined,
+        onEnterBack: hideOnLeave ? () => setVisible(true) : undefined,
       });
 
-      // Self-running vacuum trigger: fires near the end of the scroll range.
-      const VAC_DURATION = 1.4; // seconds — its own pace, NOT scroll-tied
-      const runVacuum = (forward: boolean) => {
-        gsap.to(vacState, {
-          v: forward ? 1 : 0,
-          duration: VAC_DURATION,
-          ease: forward ? "power2.in" : "power2.out",
-          overwrite: true,
-          onUpdate: () => {
-            vacuum = vacState.v;
-            brokenness = 1; // stay fully shattered → spin stays slowed
-            if (isReady) {
-              if (vacuum > 0) applyVacuum(vacuum);
-              else applyBreak(1); // back to fully-shattered when the vacuum undoes
-            }
-          },
-        });
-      };
-      // Match the vacuum's viewport reference to the break range's end (its
-      // second token), so the vacuum fires at the same proportional scroll point
-      // whether the range is tied to the viewport top (hero) or bottom (footer).
-      const vacViewportRef = cfg.scrollEnd.split(/\s+/)[1] ?? "top";
-      if (cfg.enableVacuum) {
-        ScrollTrigger.create({
-          trigger: trigger ?? undefined,
-          // Fires when a point VAC_TRIGGER down the wrapper reaches that viewport edge.
-          start: `${VAC_TRIGGER * 100}% ${vacViewportRef}`,
-          onEnter: () => runVacuum(true),      // crossed the point going down → vacuum out
-          onLeaveBack: () => runVacuum(false), // scrolled back up → vacuum back in
-        });
-      }
-
-      // Mouse parallax + auto-spin (idle base speed, boosted by scroll phase 1).
+      // Mouse parallax (tilt). Spin velocity is handled in the tick loop.
       let mouseY = 0;
       const onMove = (e: MouseEvent) => {
         mouseY = -(e.clientY / window.innerHeight - 0.5) * 2;
       };
       window.addEventListener("mousemove", onMove, { passive: true });
 
-      const BASE_SPIN = 0.004; // idle rotation per frame
-      const MAX_SPIN = 0.05; // spun-up rotation per frame at full scroll-up
       let spin = 0;
       let raf = 0;
-      // Slow factor: fast while whole/transforming, eased down to a crawl once
-      // it's rubble. `brokenness` 0 → 1 scales the spin velocity (never reverses).
-      const SLOWED = 0.08; // residual spin speed once fully rubble
-      let slow = 1;
+      // Free-float gate: 0 while the mark is whole, eases to 1 once it's rubble
+      // and then HOLDS — the merry drift/tumble is time-driven from here on, so
+      // scrolling further (or holding still) doesn't change it. Latches open so
+      // the debris keeps floating freely once shattered.
+      let floatGate = 0;
+      const FLOAT_BREAK_THRESH = 0.25; // open early so the wind/tumble churns DURING the burst
+      // Global slow-motion factor for ALL rubble motion (wind, turbulence, jitter,
+      // tumble). Lower = lazier, more languid drift. One knob to set the pace.
+      const MOTION_SPEED = 0.15;
       const t0 = performance.now();
       const tick = () => {
         raf = requestAnimationFrame(tick);
-        const elapsed = (performance.now() - t0) / 1000; // seconds
+        const elapsed = ((performance.now() - t0) / 1000) * MOTION_SPEED; // scaled seconds
 
-        // Spin. Variant 2 FREEZES rotation the instant breaking begins (so the
-        // rubble field doesn't rotate); variant 1 only eases the spin slower.
-        if (cfg.freezeSpinOnBreak) {
-          // Spin only while whole; once any break has started, hold the angle.
-          if (brokenness <= 0.0001) {
-            spin += BASE_SPIN + (MAX_SPIN - BASE_SPIN) * scrollSpin;
-          }
-        } else {
-          // Ease the slow factor toward its target so the slowdown is smooth.
-          const targetSlow = 1 - (1 - SLOWED) * brokenness;
-          slow += (targetSlow - slow) * 0.08;
-          // Spin keeps the SAME direction — we only reduce its speed, never unwind.
-          spin += (BASE_SPIN + (MAX_SPIN - BASE_SPIN) * scrollSpin) * slow;
-        }
+        // Open the gate once shattered; ease it (time-based) so it fades in quickly
+        // enough to be storming while the shards are still bursting outward.
+        const floatTarget = breakAmount >= FLOAT_BREAK_THRESH ? 1 : 0;
+        floatGate += (floatTarget - floatGate) * 0.12;
+
+        // Spin only the WHOLE mark at a CONSTANT rate — never speeds up. As it
+        // shatters toward full rubble the spin velocity fades to zero so it eases
+        // to a stop, then the frozen angle holds (the rubble must not rotate).
+        const wholeness = 1 - Math.min(breakAmount, 1); // 1 = whole → 0 = full rubble
+        spin += cfg.spinSpeed * wholeness;
         group.rotation.y = spin;
-        group.rotation.x += (mouseY * 0.25 - group.rotation.x) * 0.04;
+        // Mouse tilt only while whole — once it's rubble the GROUP must not rotate
+        // at all (the shards disperse/tumble individually instead of orbiting as a
+        // clump). Ease the body tilt back to 0 as it shatters.
+        group.rotation.x += ((mouseY * 0.25 * wholeness) - group.rotation.x) * 0.04;
 
-        // Continuous rubble jitter (variant 2): re-apply break + time-based
-        // wobble every frame so the shattered field keeps writhing even when the
-        // scroll position is static. Skip while the (hero-only) vacuum owns it.
-        if (isReady && cfg.jitter > 0 && vacuum <= 0) {
-          applyBreak(breakAmount, elapsed, cfg.jitter);
+        // Continuous rubble motion: re-apply break + time-based jitter + drift
+        // (outward dispersal + wind) + tumble every frame, so the shattered field
+        // keeps blowing around even when the scroll position is static.
+        if (isReady && (cfg.jitter > 0 || cfg.drift > 0 || cfg.tumble > 0)) {
+          applyBreak(breakAmount, elapsed, cfg.jitter, cfg.drift, cfg.tumble, floatGate);
         }
 
         renderer.render(scene, camera);
@@ -462,7 +524,7 @@ export default function HeroLogo3D({
         cancelAnimationFrame(raf);
         window.removeEventListener("mousemove", onMove);
         window.removeEventListener("resize", onResize);
-        st.kill();
+        st?.kill();
         renderer.dispose();
         draco.dispose();
         renderer.domElement.remove();
@@ -473,15 +535,14 @@ export default function HeroLogo3D({
       canceled = true;
       cleanup();
     };
-  }, [motionDisabled, breakSelector, variant]);
+  }, [motionDisabled, breakSelector, contained, hideOnLeave]);
 
-  // Variant 1 (hero): the canvas fills its full-viewport box exactly.
-  // Variant 2 (footer): the render buffer is container-wide but viewport-TALL
-  // (so the logo starts at the hero's size). The canvas is therefore displayed
-  // full-width and viewport-height, centred and clipped by the short footer box
-  // — never stretched to the box height (which would squash it).
-  const isContained = variant === 2;
-  const hostClass = isContained
+  // Full-viewport: the canvas fills its box exactly.
+  // Contained (footer): the render buffer is container-wide but viewport-TALL (so
+  // the logo starts at the full-screen size). The canvas is displayed full-width
+  // and viewport-height, centred and clipped by the short box — never stretched
+  // to the box height (which would squash it).
+  const hostClass = contained
     ? "absolute inset-0 overflow-hidden flex items-center justify-center [&>canvas]:!w-full [&>canvas]:!h-screen [&>canvas]:block [&>canvas]:max-w-none"
     : "absolute inset-0 [&>canvas]:!w-full [&>canvas]:!h-full [&>canvas]:block";
 
@@ -489,10 +550,10 @@ export default function HeroLogo3D({
     <div ref={rootRef} className={`hero-logo3d pointer-events-none ${className}`} aria-hidden="true">
       {/* Poster: shown until the 3D scene is ready (and forever under reduced
           motion). It must frame the mark at the SAME scale as the live canvas,
-          so the contained variant centres it over a viewport-tall box too. */}
+          so the contained (footer) layout centres it over a viewport-tall box too. */}
       <div
         className={
-          isContained
+          contained
             ? "absolute inset-0 overflow-hidden flex items-center justify-center"
             : "absolute inset-0"
         }

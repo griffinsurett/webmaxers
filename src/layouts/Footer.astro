@@ -52,7 +52,8 @@ const legalColClass = [
       footer itself (data-footer-logo-break). */}
   <HeroLogo3D
     class="absolute inset-0 z-0 opacity-40 dark:invert"
-    variant={2}
+    contained
+    hideOnLeave={false}
     breakSelector="[data-footer-logo-break]"
   >
     {/* Poster sized to match the live canvas framing (viewport-tall, centred),

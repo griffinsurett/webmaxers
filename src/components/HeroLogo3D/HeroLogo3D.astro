@@ -12,17 +12,20 @@ import HeroLogo3DIsland from "./HeroLogo3D.tsx";
 
 interface Props {
   class?: string;
-  /** 1 = hero (spin→shatter→vacuum), 2 = footer (frozen wide jittering rubble). */
-  variant?: 1 | 2;
+  /** Contained (footer box) vs full-viewport (hero). Only affects sizing. */
+  contained?: boolean;
+  /** Hide the root once scrolled past the break range. */
+  hideOnLeave?: boolean;
   breakSelector?: string;
 }
 
-const { class: className = "", variant, breakSelector } = Astro.props;
+const { class: className = "", contained, hideOnLeave, breakSelector } = Astro.props;
 ---
 
 <HeroLogo3DIsland
   className={className}
-  variant={variant}
+  contained={contained}
+  hideOnLeave={hideOnLeave}
   breakSelector={breakSelector}
   client:idle
 >
