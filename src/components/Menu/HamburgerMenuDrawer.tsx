@@ -21,7 +21,7 @@ export default function MobileMenuDrawer({
   items,
   className = "",
   hamburgerTransform = true,
-  closeButton = false,
+  closeButton = true,
 }: MobileMenuDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -48,6 +48,7 @@ export default function MobileMenuDrawer({
         className="w-full max-w-full h-full bg-bg p-0 rounded-none"
         overlayClass="bg-black/50"
         closeButton={closeButton}
+        closeButtonClass="absolute top-4 right-4 p-2 text-text hover:text-primary transition-colors z-[100000]"
         ariaLabel="Mobile navigation menu"
         ssr={false}
       >

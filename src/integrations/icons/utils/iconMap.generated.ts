@@ -3,17 +3,15 @@
 
 import type { IconType } from 'react-icons';
 import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGlobe, LuImage, LuMail, LuPhone, LuSettings } from 'react-icons/lu';
-import { FaArrowRight, FaArrowsUpDownLeftRight, FaBolt, FaBullseye, FaCartShopping, FaClockRotateLeft, FaCode, FaCompass, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMagnifyingGlassChart, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
+import { FaArrowRight, FaArrowsUpDownLeftRight, FaBullseye, FaClockRotateLeft, FaCompass, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
+import { PiBrain, PiCode, PiGauge, PiMagnifyingGlass, PiPenNib, PiShoppingCart } from 'react-icons/pi';
 import { SiFacebook, SiGithub, SiLinkedin, SiX } from 'react-icons/si';
 
 export const iconMap = {
   'fa6:arrow-right': FaArrowRight,
   'fa6:arrows-up-down-left-right': FaArrowsUpDownLeftRight,
-  'fa6:bolt': FaBolt,
   'fa6:bullseye': FaBullseye,
-  'fa6:cart-shopping': FaCartShopping,
   'fa6:clock-rotate-left': FaClockRotateLeft,
-  'fa6:code': FaCode,
   'fa6:compass': FaCompass,
   'fa6:eye': FaEye,
   'fa6:feather': FaFeather,
@@ -22,7 +20,6 @@ export const iconMap = {
   'fa6:layer-group': FaLayerGroup,
   'fa6:life-ring': FaLifeRing,
   'fa6:link': FaLink,
-  'fa6:magnifying-glass-chart': FaMagnifyingGlassChart,
   'fa6:moon': FaMoon,
   'fa6:palette': FaPalette,
   'fa6:robot': FaRobot,
@@ -43,6 +40,12 @@ export const iconMap = {
   'lu:mail': LuMail,
   'lu:phone': LuPhone,
   'lu:settings': LuSettings,
+  'pi:brain': PiBrain,
+  'pi:code': PiCode,
+  'pi:gauge': PiGauge,
+  'pi:magnifying-glass': PiMagnifyingGlass,
+  'pi:pen-nib': PiPenNib,
+  'pi:shopping-cart': PiShoppingCart,
   'si:facebook': SiFacebook,
   'si:github': SiGithub,
   'si:linkedin': SiLinkedin,

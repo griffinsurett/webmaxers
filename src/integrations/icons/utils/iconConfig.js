@@ -49,6 +49,11 @@ export const ICON_LIBRARIES = {
     componentPrefix: 'Md',
     aliases: [],
   },
+  pi: {
+    package: 'react-icons/pi',
+    componentPrefix: 'Pi',
+    aliases: ['phosphor'],
+  },
 };
 
 /**
@@ -69,6 +74,8 @@ export const SCANNABLE_PREFIXES = [
   'bi',
   'si',
   'simple-icons',
+  'pi',
+  'phosphor',
 ];
 
 // Build and export alias map and normalizer so both generator and loader can share it

@@ -1,0 +1,247 @@
+---
+// src/components/ContentRenderer/variants/PremiumBentoVariant.astro
+/**
+ * Premium Bento Variant - "August" Design Concept
+ *
+ * Restructures collection items into a responsive scroll-drawn S-curve timeline:
+ * - Desktop: Winding SVG lime line drawing itself dynamically on scroll.
+ *   Mission, Promise, and Vision items positioned precisely on alternating sides of the S-curve.
+ * - Mobile: Linear vertical dot timeline, fully readable and responsive.
+ * - Colors: Neon volt green accents (#c4f934) and lowercase styling.
+ */
+import type { BaseVariantProps } from "../ContentRenderer.types";
+
+interface Props extends BaseVariantProps {}
+
+const {
+  items = [],
+  id,
+} = Astro.props as Props;
+
+// Filter out the metadata item (_meta) to prevent circular rendering loops
+const contentItems = items.filter((item) => item.id !== "_meta");
+
+// Resolve lazy render functions to Astro components for server-side rendering
+const resolvedItems = await Promise.all(
+  contentItems.map(async (item) => {
+    let ContentComponent = null;
+    if (item.render) {
+      try {
+        const res = await item.render();
+        ContentComponent = res.Content;
+      } catch (e) {
+        console.error("Failed to render item: ", item.id, e);
+      }
+    }
+    return {
+      ...item,
+      ContentComponent,
+    };
+  })
+);
+---
+
+<div id={id} class="w-full relative">
+  
+  <!-- DESKTOP TIMELINE: Winding S-Curve Path Layout -->
+  <div class="timeline-container relative hidden md:block max-w-5xl mx-auto w-full h-[1600px] overflow-visible select-none">
+    
+    <!-- SVG Winding Path Overlay -->
+    <svg 
+      viewBox="0 0 1000 1600" 
+      class="absolute inset-0 w-full h-full pointer-events-none overflow-visible z-0"
+      aria-hidden="true"
+    >
+      <!-- Background Faint Outline Path -->
+      <path 
+        d="M 500 40 C 650 40, 650 160, 500 160 C 350 160, 350 280, 500 280 C 650 280, 780 350, 780 450 C 780 650, 220 700, 220 900 C 220 1100, 780 1150, 780 1350 C 780 1480, 500 1520, 500 1600" 
+        fill="none" 
+        stroke="rgba(255, 255, 255, 0.06)" 
+        stroke-width="2.5" 
+      />
+
+      <!-- Scroll-drawn Accent Winding Path -->
+      <path 
+        id="scroll-path" 
+        d="M 500 40 C 650 40, 650 160, 500 160 C 350 160, 350 280, 500 280 C 650 280, 780 350, 780 450 C 780 650, 220 700, 220 900 C 220 1100, 780 1150, 780 1350 C 780 1480, 500 1520, 500 1600" 
+        fill="none" 
+        stroke="#c4f934" 
+        stroke-width="2.5" 
+      />
+
+      <!-- Node Process: Start of Timeline -->
+      <g>
+        <circle cx="500" cy="40" r="10" fill="#c4f934" opacity="0.15" />
+        <circle cx="500" cy="40" r="4.5" fill="#c4f934" />
+        <text x="525" y="45" fill="#c4f934" font-family="monospace" font-size="14" font-style="italic">process.</text>
+      </g>
+
+      <!-- Node 01: Mission (Peak around x=780, y=450) -->
+      <g>
+        <circle cx="780" cy="450" r="10" fill="#c4f934" opacity="0.15" />
+        <circle cx="780" cy="450" r="4.5" fill="#c4f934" />
+        <text x="810" y="456" fill="#c4f934" font-family="monospace" font-size="14" font-style="italic">01.</text>
+      </g>
+
+      <!-- Node 02: Promise (Peak around x=220, y=900) -->
+      <g>
+        <circle cx="220" cy="900" r="10" fill="#c4f934" opacity="0.15" />
+        <circle cx="220" cy="900" r="4.5" fill="#c4f934" />
+        <text x="170" y="906" fill="#c4f934" font-family="monospace" font-size="14" font-style="italic">02.</text>
+      </g>
+
+      <!-- Node 03: Vision (Peak around x=780, y=1350) -->
+      <g>
+        <circle cx="780" cy="1350" r="10" fill="#c4f934" opacity="0.15" />
+        <circle cx="780" cy="1350" r="4.5" fill="#c4f934" />
+        <text x="810" y="1356" fill="#c4f934" font-family="monospace" font-size="14" font-style="italic">03.</text>
+      </g>
+    </svg>
+
+    <!-- Custom equal-length copies for absolute layout symmetry -->
+    {(() => {
+      const shortDescriptions = {
+        mission: "We empower businesses through innovative technology, crafting digital longevity and brand experiences.",
+        promise: "We deliver exceptional value with complete transparency, reliability, and high-fidelity execution.",
+        vision: "We design the digital future, helping purposeful brands grow and scale with absolute clarity."
+      };
+
+      return resolvedItems.map((item, index) => {
+        const isMission = item.title.toLowerCase().includes("mission");
+        const isPromise = item.title.toLowerCase().includes("promise");
+        const isVision = item.title.toLowerCase().includes("vision");
+
+        let blockClass = "";
+        let alignmentClass = "";
+        let descriptionText = "";
+        
+        if (isMission) {
+          blockClass = "top-[390px] left-[8%] w-[35%]";
+          alignmentClass = "text-right items-end justify-end";
+          descriptionText = shortDescriptions.mission;
+        } else if (isPromise) {
+          blockClass = "top-[840px] right-[8%] w-[35%]";
+          alignmentClass = "text-left items-start justify-start";
+          descriptionText = shortDescriptions.promise;
+        } else if (isVision) {
+          blockClass = "top-[1290px] left-[8%] w-[35%]";
+          alignmentClass = "text-right items-end justify-end";
+          descriptionText = shortDescriptions.vision;
+        }
+
+        return (
+          <div class={`absolute ${blockClass} flex flex-col space-y-3 z-10 timeline-item`}>
+            <!-- Node Label -->
+            <div class={`flex items-center gap-2 font-header font-bold text-2xl tracking-tight text-white lowercase ${alignmentClass}`}>
+              {alignmentClass.includes("justify-end") && (
+                <>
+                  <span>{item.title}</span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#c4f934] flex-shrink-0" />
+                </>
+              )}
+              {alignmentClass.includes("justify-start") && (
+                <>
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#c4f934] flex-shrink-0" />
+                  <span>{item.title}</span>
+                </>
+              )}
+            </div>
+
+            <!-- Description Prose -->
+            <div class={`text-text/75 font-light leading-relaxed prose prose-invert font-sans text-base ${isPromise ? "pl-4" : "pr-4"}`}>
+              {item.ContentComponent ? <item.ContentComponent /> : <p>{descriptionText}</p>}
+            </div>
+          </div>
+        );
+      });
+    })()}
+
+  </div>
+
+  <!-- MOBILE TIMELINE: Standard Vertical Dot Layout -->
+  <div class="md:hidden relative border-l border-[#c4f934]/20 pl-8 ml-4 space-y-16 py-8">
+    {resolvedItems.map((item, index) => {
+      return (
+        <div class="relative space-y-3">
+          <!-- Neon dot indicator -->
+          <div 
+            class="absolute -left-[41px] top-1 w-6 h-6 rounded-full bg-bg border border-[#c4f934] flex items-center justify-center text-[10px] font-mono text-[#c4f934]"
+            aria-hidden="true"
+          >
+            0{index + 1}
+          </div>
+
+          <!-- Header -->
+          <div class="flex items-center gap-2 text-[#c4f934] font-header font-bold text-lg tracking-tight lowercase">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#c4f934]" />
+            <span>{item.title}</span>
+          </div>
+
+          <!-- Content Description -->
+          <div class="text-text/80 text-sm font-light leading-relaxed prose prose-invert">
+            {item.ContentComponent ? <item.ContentComponent /> : <p>{item.description}</p>}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+</div>
+
+<style>
+  /* Local color overrides to match reference */
+  :root {
+    --color-accent: #c4f934;
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initTimeline() {
+    const path = document.querySelector<SVGPathElement>('#scroll-path');
+    if (!path) return;
+
+    // Reset stroke animation parameters
+    const length = path.getTotalLength();
+    path.style.strokeDasharray = `${length}`;
+    path.style.strokeDashoffset = `${length}`;
+
+    // Animate path drawing on scroll
+    gsap.to(path, {
+      strokeDashoffset: 0,
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".timeline-container",
+        start: "top 65%",
+        end: "bottom 80%",
+        scrub: true,
+      }
+    });
+
+    // Animate text highlights as scroll crosses
+    const items = document.querySelectorAll<HTMLElement>('.timeline-item');
+    items.forEach((item) => {
+      gsap.fromTo(item,
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: item,
+            start: "top 80%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+    });
+  }
+
+  // Handle initialization on initial load and route swaps
+  initTimeline();
+  document.addEventListener("astro:page-load", initTimeline);
+</script>

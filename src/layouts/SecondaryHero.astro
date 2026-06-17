@@ -27,6 +27,10 @@ export interface Props {
   readingTime?: number;
   className?: string;
   minHeight?: string;
+  imageClass?: string;
+  overlayClass?: string;
+  textColorClass?: string;
+  hideText?: boolean;
 }
 
 const {
@@ -39,16 +43,20 @@ const {
   readingTime,
   className = "",
   minHeight = "60vh",
+  imageClass = "bg-cover bg-center",
+  overlayClass = "bg-gradient-to-b from-black/40 via-black/50 to-black/70",
+  textColorClass = "text-heading",
+  hideText = false,
 } = Astro.props;
 
 // Prepare optimized background media
 const backgroundMedia = {
   image: {
     src: image || backgroundSvg,
-    imageClass: "bg-cover bg-center",
+    imageClass: imageClass,
     aboveTheFold: true, // Automatic LCP optimization
   },
-  overlayClass: "bg-gradient-to-b from-black/40 via-black/50 to-black/70",
+  overlayClass: overlayClass,
 };
 ---
 
@@ -61,98 +69,100 @@ const backgroundMedia = {
     <BackgroundMedia backgroundMedia={backgroundMedia} />
 
     {/* Hero content */}
-    <div class="relative container mx-auto px-4 py-16 md:py-24 z-10">
-      <div class="max-w-4xl mx-auto text-center text-bg">
-        {
-          eyebrow && (
-            <p class="inline-flex items-center justify-center px-5 py-2 mb-6 rounded-full border border-bg/60 text-sm md:text-base font-semibold tracking-[0.28em] uppercase text-bg/95">
-              {eyebrow}
-            </p>
-          )
-        }
+    {!hideText && (
+      <div class="relative container mx-auto px-4 py-16 md:py-24 z-10">
+        <div class={`max-w-4xl mx-auto text-center ${textColorClass}`}>
+          {
+            eyebrow && (
+              <p class="inline-flex items-center justify-center px-5 py-2 mb-6 rounded-full border border-current/60 text-sm md:text-base font-semibold tracking-[0.28em] uppercase text-current/95">
+                {eyebrow}
+              </p>
+            )
+          }
 
-        <h1
-          class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg"
-        >
-          {title}
-        </h1>
+          <h1
+            class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg"
+          >
+            {title}
+          </h1>
 
-        {
-          description && (
-            <p class="text-xl md:text-2xl mb-8 opacity-95 drop-shadow-md leading-relaxed">
-              {description}
-            </p>
-          )
-        }
+          {
+            description && (
+              <p class="text-xl md:text-2xl mb-8 opacity-95 drop-shadow-md leading-relaxed">
+                {description}
+              </p>
+            )
+          }
 
-        {/* Metadata row with icons */}
-        {
-          (publishDate || author || readingTime) && (
-            <div class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm md:text-base text-bg/90">
-              {publishDate && (
-                <time
-                  datetime={new Date(publishDate).toISOString()}
-                  class="flex items-center gap-2"
-                >
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+          {/* Metadata row with icons */}
+          {
+            (publishDate || author || readingTime) && (
+              <div class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm md:text-base opacity-90">
+                {publishDate && (
+                  <time
+                    datetime={new Date(publishDate).toISOString()}
+                    class="flex items-center gap-2"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  {new Date(publishDate).toLocaleDateString()}
-                </time>
-              )}
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    {new Date(publishDate).toLocaleDateString()}
+                  </time>
+                )}
 
-              {author && (
-                <span class="flex items-center gap-2">
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  By {getAuthorName(author)}
-                </span>
-              )}
+                {author && (
+                  <span class="flex items-center gap-2">
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                    By {getAuthorName(author)}
+                  </span>
+                )}
 
-              {readingTime && (
-                <span class="flex items-center gap-2">
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {readingTime} min read
-                </span>
-              )}
-            </div>
-          )
-        }
+                {readingTime && (
+                  <span class="flex items-center gap-2">
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {readingTime} min read
+                  </span>
+                )}
+              </div>
+            )
+          }
+        </div>
       </div>
-    </div>
+    )}
   </div>
 
   {/* Optional slot for additional content below hero */}

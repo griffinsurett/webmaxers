@@ -34,12 +34,13 @@ const ctaLink = "/contact-us";
         </div>
 
         <ContentRenderer
+          id="header-navigation-menu"
           query={related("menu-items", "menu", "main-menu")}
           variant="MenuVariant"
           mode="hamburger-only"
           className="header-navigation"
           hamburgerTransform={true}
-          closeButton={false}
+          closeButton={true}
         />
       </div>
 

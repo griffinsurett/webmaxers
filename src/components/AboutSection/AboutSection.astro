@@ -69,6 +69,7 @@ const words = splitTextIntoAnimatedWords(statement);
             frame, aligned to the same inset as the "About" eyebrow label. */}
         {showStats && (
           <ContentRenderer
+            id="about-metrics-section"
             query={query("stats").orderBy(sortByOrder())}
             variant="StatsVariant"
             className="about-stats"

@@ -15,6 +15,7 @@ const filterByLinksMenu = (entry: any) => {
 
 <BaseLayout title="Links" description="All my important links in one place" addToLLMs={false}>
   <ContentRenderer
+    id="links-tree-showcase"
     query={query("menu-items")
       .where(filterByLinksMenu)
       .orderBy(sortBy("order", "desc"))}

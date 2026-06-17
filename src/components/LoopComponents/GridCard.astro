@@ -12,6 +12,8 @@
  * Generic card used in GridVariant - the default section variant.
  */
 
+import Icon from "@/components/Icon";
+
 export interface Props {
   title: string;
   url?: string;
@@ -20,13 +22,14 @@ export interface Props {
     src: string;
     alt: string;
   };
+  icon?: any;
 }
 
-const { title, url, description, image } = Astro.props;
+const { title, url, description, image, icon } = Astro.props;
 ---
 
 <article
-  class="bg-bg rounded-lg overflow-hidden shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+  class="relative bg-bg rounded-lg overflow-hidden shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
 >
   {/* Optional image */}
   {
@@ -37,12 +40,17 @@ const { title, url, description, image } = Astro.props;
 
   {/* Card content */}
   <div class="p-6">
+    {icon && (
+      <div class="mb-4 w-10 h-10 flex items-center justify-center rounded-lg bg-white/5">
+        <Icon icon={icon} size="lg" className="text-heading" />
+      </div>
+    )}
     <h3 class="text-xl font-semibold mb-2">
       {
         url ? (
           <a
             href={url}
-            class="text-heading hover:text-primary transition-colors"
+            class="text-heading hover:text-primary transition-colors after:absolute after:inset-0 after:content-[''] z-10"
           >
             {title}
           </a>
