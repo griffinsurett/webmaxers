@@ -189,8 +189,10 @@ const resolvedItems = await Promise.all(
 </div>
 
 <style>
-  /* Local color overrides to match reference */
-  :root {
+  /* Local color override to match reference — scoped to THIS component only.
+     Must NOT use :root: Astro leaves :root global, so this leaked the chartreuse
+     accent site-wide and turned the OG blue accent yellow everywhere. */
+  div[id] {
     --color-accent: #c4f934;
   }
 </style>

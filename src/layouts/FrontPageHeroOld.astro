@@ -1,0 +1,130 @@
+---
+// src/layouts/FrontPageHeroOld.astro
+// Preserved hero from pre-merge main (underline-CTA version). The current
+// FrontPageHero.astro is the mayank/Mark Smith version.
+import { ctaData } from "@/content/siteData";
+import ScrollIndicator from "@/components/ScrollIndicator.astro";
+import Button from "@/components/Button/Button";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import HeroStatBlock from "@/layouts/HeroStatBlock.astro";
+import { query } from "@/utils/query";
+
+export interface Props {
+  headline?: string;
+  headlineLine2?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  statLabel?: string;
+  statValue?: string;
+  statDescription?: string;
+  bodyText?: string;
+  id?: string;
+}
+
+const {
+  headline = "Built to",
+  headlineLine2 = "grow your business.",
+  ctaText = ctaData.text ?? "Start a project",
+  ctaLink = ctaData.link ?? "/contact-us",
+  statLabel = "EST. 2020",
+  statValue = "Web design",
+  statDescription = "Websites, AI products, and systems built for clarity and growth.",
+  bodyText,
+  id = "hero",
+} = Astro.props;
+---
+
+<section
+  id={id}
+  class="relative w-full section-container min-h-screen flex flex-col hero-gap-py"
+>
+
+  <!-- Hero body — fills remaining space, stat pinned to bottom-right, headline top-left -->
+  <div class="relative z-10 flex-1 flex flex-col justify-between w-full py-0 pb-12 lg:pb-16">
+
+    <!-- Top row: headline left, (empty right) -->
+    <div class="flex items-start justify-between gap-8 w-full">
+
+      <!-- Left: headline + CTA -->
+      <div class="max-w-3xl">
+        <h1 class="heading-display">
+          {headline}<br />{headlineLine2}
+        </h1>
+
+        <Button variant="underline" href={ctaLink} className="mt-7" client:load>
+          {ctaText}
+        </Button>
+
+        <!-- Mobile only: circles sit under the CTA (unchanged on small screens). -->
+        <ContentRenderer
+          query={query("testimonials")
+            .where((entry) => entry.data.featured === true)
+            .limit(3)}
+          variant="TestimonialCirclesVariant"
+          className="mt-6 lg:hidden"
+          counterStart={10}
+          counterEnd={100}
+          counterDuration={1800}
+          counterSuffix="+"
+          counterLabel="Happy Clients"
+        />
+      </div>
+    </div>
+
+    <!-- Bottom row — pinned to the bottom of the hero by the parent's
+         justify-between. Mobile: stat block stacked above the scroll arrow.
+         lg+: [spacer] [scroll arrow centred] [stat box right]. -->
+    <div class="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between w-full">
+      <!-- Desktop only: testimonial circles pinned bottom-left, mirroring the
+           stat box's bottom-right placement. (Mobile keeps them under the CTA.) -->
+      <ContentRenderer
+        query={query("testimonials")
+          .where((entry) => entry.data.featured === true)
+          .limit(3)}
+        variant="TestimonialCirclesVariant"
+        className="hidden lg:flex shrink-0 lg:w-[340px]"
+        counterStart={10}
+        counterEnd={100}
+        counterDuration={1800}
+        counterSuffix="+"
+        counterLabel="Happy Clients"
+      />
+
+      <!-- Scroll indicator: centred in the row on desktop, below the stat on mobile -->
+      <ScrollIndicator className="order-last lg:order-none self-center lg:self-auto relative bottom-auto left-auto translate-x-0 static-in-row" />
+
+      <!-- Stat box + body text — bottom of hero on mobile, bottom-right on desktop. -->
+      <HeroStatBlock
+        statLabel={statLabel}
+        statValue={statValue}
+        statDescription={statDescription}
+        bodyText={bodyText}
+        class="shrink-0 lg:w-[340px]"
+      />
+    </div>
+  </div>
+
+  <slot />
+</section>
+
+<style>
+  :root {
+    --hero-gap: 1.5rem; /* 24px — matches py-6 / pb-6 */
+  }
+  @media (min-width: 1024px) {
+    :root {
+      --hero-gap: 2rem; /* 32px — matches lg:py-8 / lg:pb-8 */
+    }
+  }
+  .hero-gap-py {
+    padding-top: var(--hero-gap);
+    padding-bottom: var(--hero-gap);
+  }
+  /* Override ScrollIndicator's default absolute positioning when inline in the row */
+  :global(.static-in-row) {
+    position: static !important;
+    transform: none !important;
+    bottom: auto !important;
+    left: auto !important;
+  }
+</style>
