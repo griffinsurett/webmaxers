@@ -106,6 +106,9 @@ export const collections = {
       baseSchema({ image }).extend({
         price: z.string().optional(),
         features: z.array(z.string()).default([]),
+        tagline: z.string().optional(),
+        includes: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
+        steps: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
       }),
   }),
 
@@ -114,7 +117,13 @@ export const collections = {
   // rendered as the ServicesScene intro stack via SolutionsVariant.
   "solutions": defineCollection({
     loader: GlobLoad("solutions"),
-    schema: ({ image }) => baseSchema({ image }),
+    schema: ({ image }) =>
+      baseSchema({ image }).extend({
+        icon: z.string().optional(),
+        tagline: z.string().optional(),
+        includes: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
+        steps: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
+      }),
   }),
 
   // ── stats ──────────────────────────────────────────────

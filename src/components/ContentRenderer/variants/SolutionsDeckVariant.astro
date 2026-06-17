@@ -1,19 +1,13 @@
 ---
 // src/components/ContentRenderer/variants/SolutionsDeckVariant.astro
-/**
- * Solutions Deck Variant — a simple full-width 3-across card row, one card per
- * solution (from the `solutions` collection). No heading; the only copy is each
- * card's title + description. Each card links to its solution page.
- *
- * Static layout — no scroll animation. 3 columns on desktop, 1 column on mobile.
- * Cards use the shared `card-bg-2` utility so they stay theme-aware (dark/light).
- */
-
 import type { BaseVariantProps } from "../ContentRenderer.types";
+import Icon from "@/components/Icon";
 
 type Props = BaseVariantProps;
 
 const { items = [], id, className = "" } = Astro.props as Props;
+
+const NUMS = ["01", "02", "03", "04", "05", "06"];
 ---
 
 <section
@@ -23,32 +17,44 @@ const { items = [], id, className = "" } = Astro.props as Props;
 >
   <ul class="solutions-grid list-none">
     {
-      items.map((item) => {
+      items.map((item, i) => {
         const Tag = item.url ? "a" : "div";
         return (
           <li>
             <Tag
               {...(item.url ? { href: item.url } : {})}
-              class="solutions-card card-bg-2"
+              class="solutions-card"
             >
-              <header class="solutions-card-head">
-                <h3 class="solutions-card-title">{item.title}</h3>
+              {/* Top row: number + arrow */}
+              <div class="solutions-card-toprow">
+                <span class="solutions-card-num">{NUMS[i] ?? `0${i + 1}`}</span>
                 <span class="solutions-card-arrow" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                  <svg viewBox="0 0 24 24" fill="none" width="15" height="15">
                     <path
                       d="M7 17L17 7M17 7H8M17 7V16"
                       stroke="currentColor"
-                      stroke-width="1.8"
+                      stroke-width="2"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     />
                   </svg>
                 </span>
-              </header>
+              </div>
 
-              {item.description && (
-                <p class="solutions-card-text">{item.description}</p>
+              {/* Icon */}
+              {item.icon && (
+                <div class="solutions-card-icon-wrap">
+                  <Icon icon={item.icon} size="xl" className="solutions-icon" />
+                </div>
               )}
+
+              {/* Title + description pushed to bottom */}
+              <div class="solutions-card-body">
+                <h3 class="solutions-card-title">{item.title}</h3>
+                {item.description && (
+                  <p class="solutions-card-text">{item.description}</p>
+                )}
+              </div>
             </Tag>
           </li>
         );
@@ -58,82 +64,120 @@ const { items = [], id, className = "" } = Astro.props as Props;
 </section>
 
 <style>
-  /* Full-viewport section; the card grid is centred within it. */
   .solutions-row {
     min-height: 100vh;
     min-height: 100svh;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    padding-block: clamp(4rem, 8vh, 6rem);
   }
 
   .solutions-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.25rem;
+    gap: 1rem;
     margin: 0;
     padding: 0;
   }
 
+  /* ── Card ───────────────────────────────────────────────────────── */
   .solutions-card {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: clamp(1.5rem, 4vh, 3rem);
     height: 100%;
-    border-radius: 1.5rem;
-    padding: clamp(1.75rem, 2.5vw, 2.5rem);
-    min-height: clamp(18rem, 24vw, 24rem);
+    min-height: clamp(22rem, 26vw, 30rem);
+    padding: clamp(1.5rem, 2.2vw, 2rem);
+    border-radius: 0.5rem;
     text-decoration: none;
+
+    background: var(--color-bg3);
+    border: 1px solid color-mix(in srgb, var(--color-heading) 8%, transparent);
+
+    transition:
+      border-color 200ms ease,
+      transform 200ms ease;
   }
 
-  .solutions-card-head {
+  a.solutions-card:hover {
+    border-color: color-mix(in srgb, var(--color-heading) 18%, transparent);
+    transform: translateY(-2px);
+  }
+
+  /* ── Top row ────────────────────────────────────────────────────── */
+  .solutions-card-toprow {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .solutions-card-num {
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, var(--color-heading) 20%, transparent);
   }
 
   .solutions-card-arrow {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 9999px;
-    color: var(--color-heading);
-    background: color-mix(in srgb, var(--color-heading) 8%, transparent);
-    transition:
-      background var(--main-duration, 0.3s) ease,
-      transform var(--main-duration, 0.3s) ease;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    color: color-mix(in srgb, var(--color-heading) 35%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-heading) 10%, transparent);
     flex-shrink: 0;
+    transition:
+      color 200ms ease,
+      border-color 200ms ease,
+      transform 200ms ease;
   }
 
   a.solutions-card:hover .solutions-card-arrow {
-    background: color-mix(in srgb, var(--color-heading) 16%, transparent);
+    color: var(--color-heading);
+    border-color: color-mix(in srgb, var(--color-heading) 30%, transparent);
     transform: translate(2px, -2px);
+  }
+
+  /* ── Icon — monochrome, no container ────────────────────────────── */
+  .solutions-card-icon-wrap {
+    color: color-mix(in srgb, var(--color-heading) 45%, transparent);
+    flex-shrink: 0;
+    margin-bottom: auto;
+  }
+
+  /* ── Body ───────────────────────────────────────────────────────── */
+  .solutions-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin-top: 2rem;
   }
 
   .solutions-card-title {
     color: var(--color-heading);
-    font-size: clamp(1.6rem, 2.4vw, 2.25rem);
-    font-weight: 500;
-    line-height: 1.05;
-    letter-spacing: -0.01em;
+    font-size: clamp(1.75rem, 2.6vw, 2.5rem);
+    font-weight: 400;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
   }
 
   .solutions-card-text {
-    color: var(--color-text);
-    font-size: clamp(1rem, 1.1vw, 1.0625rem);
+    color: color-mix(in srgb, var(--color-heading) 42%, transparent);
+    font-size: clamp(0.875rem, 1vw, 0.9375rem);
     font-weight: 300;
-    line-height: 1.6;
-    margin-top: auto; /* push description to the bottom of the card */
+    line-height: 1.7;
   }
 
-  /* 3 across on desktop. */
+  /* ── Desktop 3-col ──────────────────────────────────────────────── */
   @media (min-width: 768px) {
     .solutions-grid {
       grid-template-columns: repeat(3, 1fr);
-      gap: clamp(1.25rem, 2vw, 2rem);
+      gap: 1.25rem;
     }
   }
 </style>

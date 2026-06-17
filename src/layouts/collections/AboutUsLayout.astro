@@ -1,0 +1,680 @@
+---
+// src/layouts/collections/AboutUsLayout.astro
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { Image } from "astro:assets";
+
+import aboutPortraitBwImg from "@/assets/founder.jpeg";
+import aboutMissionImg    from "@/assets/about_mission.png";
+import aboutVisionImg     from "@/assets/about_vision.png";
+
+export interface Props {
+  seoProps: any;
+  [key: string]: any;
+}
+
+const { seoProps } = Astro.props;
+
+const capabilities = [
+  { label: "Web Design & UI/UX", pct: 95 },
+  { label: "Web Development",    pct: 92 },
+  { label: "AI Automation & Agents", pct: 87 },
+  { label: "Brand Identity",     pct: 83 },
+] as const;
+
+const stats = [
+  { value: "50+",  label: "Projects Delivered"  },
+  { value: "100%", label: "Client Satisfaction" },
+  { value: "7+",   label: "Years of Expertise"  },
+  { value: "20+",  label: "Brands Elevated"     },
+] as const;
+---
+
+<BaseLayout {...seoProps}>
+  <main class="au-page">
+
+    <!-- ═══════════════════════════════════════
+         1. HERO — full-width dark image header
+    ═══════════════════════════════════════ -->
+    <section class="au-hero" aria-label="Page header">
+      <div class="au-hero-media" aria-hidden="true">
+        <Image src={aboutMissionImg} alt="" class="au-hero-img" loading="eager" />
+        <div class="au-hero-veil"></div>
+      </div>
+      <div class="au-hero-body">
+        <h1 class="au-hero-heading reveal-item">About Us</h1>
+        <nav class="au-breadcrumb reveal-item" style="--rv-delay:.12s"
+             aria-label="Breadcrumb">
+          <a href="/">Home</a>
+          <span aria-hidden="true">/</span>
+          <span>About Us</span>
+        </nav>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         2. WHO WE ARE — image + text
+    ═══════════════════════════════════════ -->
+    <section class="au-about au-pad" aria-label="Who we are">
+      <div class="page-container au-about-grid">
+
+        <figure class="au-about-figure reveal-item">
+          <Image
+            src={aboutPortraitBwImg}
+            alt="Webmaxers founder"
+            class="au-about-img"
+          />
+        </figure>
+
+        <div class="au-about-copy">
+          <p class="au-eyebrow reveal-item" style="--rv-delay:.06s">
+            About Webmaxers
+          </p>
+          <h2 class="au-h2 reveal-item" style="--rv-delay:.12s">
+            We Build Websites, Brands, and AI Systems That Work
+          </h2>
+          <p class="au-body reveal-item" style="--rv-delay:.18s">
+            Webmaxers is a full-service digital studio specializing in web
+            design, web development, brand identity, and AI agents and
+            automation. We build fast, high-converting websites, craft bold
+            brand identities, and deploy custom AI systems that save your
+            team hours every week.
+          </p>
+          <div class="reveal-item" style="--rv-delay:.24s">
+            <a href="/contact-us" class="au-btn">Get In Touch</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         3. CRAFT + STATS — capabilities & numbers
+    ═══════════════════════════════════════ -->
+    <section class="au-craft-stats au-pad" aria-label="Capabilities and statistics">
+      <div class="page-container au-cs-grid">
+
+        <!-- ── Capabilities ── -->
+        <div class="au-craft">
+          <h2 class="au-h2 reveal-item">The Craft Behind The Work</h2>
+          <p class="au-body reveal-item" style="--rv-delay:.08s">
+            Every website, brand, and AI system we build is executed with
+            obsessive attention to detail: creative thinking meets technical
+            precision to deliver solutions that truly perform.
+          </p>
+
+          <ul class="cap-list" aria-label="Capability levels">
+            {capabilities.map((cap, i) => (
+              <li
+                class="cap-item reveal-bar"
+                style={`--bar-i:${i}`}
+                role="group"
+                aria-label={`${cap.label}: ${cap.pct}%`}
+              >
+                <div class="cap-row">
+                  <span class="cap-label">{cap.label}</span>
+                  <span class="cap-pct" aria-hidden="true" data-target={cap.pct}>0%</span>
+                </div>
+                <div
+                  class="cap-track"
+                  role="progressbar"
+                  aria-valuenow={cap.pct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div class="cap-fill" style={`--pct:${cap.pct}%`}></div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <!-- ── Stats ── -->
+        <div class="au-stats" aria-label="Agency statistics">
+          {stats.map((s, i) => (
+            <div class="stat-card reveal-item" style={`--rv-delay:${i * 0.08}s`}>
+              <p class="stat-val">{s.value}</p>
+              <p class="stat-lbl">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         4. CTA BANNER — hire us / let's build
+    ═══════════════════════════════════════ -->
+    <section class="au-cta" aria-label="Call to action">
+      <div class="au-cta-media" aria-hidden="true">
+        <Image src={aboutVisionImg} alt="" class="au-cta-img" loading="lazy" />
+        <div class="au-cta-veil"></div>
+      </div>
+      <div class="page-container au-cta-body">
+        <p class="au-eyebrow au-eyebrow--cta reveal-item">Work With Us</p>
+        <h2 class="au-cta-heading reveal-item" style="--rv-delay:.1s">
+          Ready To Build Something Remarkable?
+        </h2>
+        <div class="reveal-item" style="--rv-delay:.2s">
+          <a href="/contact-us" class="au-btn au-btn--ghost">Let's Start</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<!---------------------------------------------------------------------------->
+<style>
+
+  /* ═══ PAGE BASE ═══ */
+  .au-page {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .au-pad {
+    padding-block: clamp(4.5rem, 8vw, 7.5rem);
+  }
+
+  /* ═══ 1. HERO ═══ */
+  .au-hero {
+    position: relative;
+    min-height: clamp(300px, 40vw, 460px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .au-hero-media {
+    position: absolute;
+    inset: 0;
+  }
+
+  .au-hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  /* Two-layer veil: bottom darkens more for text legibility */
+  .au-hero-veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to bottom,
+        rgba(8,8,8,0.42) 0%,
+        rgba(8,8,8,0.78) 80%,
+        rgba(8,8,8,0.92) 100%
+      );
+  }
+
+  .au-hero-body {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding-top: clamp(4rem, 6vw, 6rem);
+    padding-inline: 1.5rem;
+  }
+
+  .au-hero-heading {
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+  }
+
+  .au-breadcrumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .au-breadcrumb a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .au-breadcrumb a:hover { color: rgba(255,255,255,0.85); }
+
+  /* ═══ 2. WHO WE ARE ═══ */
+  .au-about-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: clamp(2.5rem, 5.5vw, 5.5rem);
+    align-items: center;
+  }
+
+  @media (max-width: 860px) {
+    .au-about-grid { grid-template-columns: 1fr; }
+  }
+
+  .au-about-figure {
+    margin: 0;
+    border-radius: 0.875rem;
+    overflow: hidden;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+  }
+
+  .au-about-img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .au-about-figure:hover .au-about-img {
+    transform: scale(1.03);
+  }
+
+  .au-about-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  /* ═══ TYPOGRAPHY ═══ */
+  .au-eyebrow {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-heading);
+    margin-bottom: 0.75rem;
+  }
+
+  .au-h2 {
+    font-size: clamp(1.65rem, 3.2vw, 2.5rem);
+    font-weight: 700;
+    color: var(--color-heading);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+    text-wrap: balance;
+  }
+
+  .au-body {
+    font-size: clamp(0.875rem, 1.4vw, 1rem);
+    font-weight: 300;
+    color: color-mix(in srgb, var(--color-text) 75%, transparent);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    max-width: 52ch;
+  }
+
+  /* ═══ BUTTON ═══ */
+  .au-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 0.4rem;
+    text-decoration: none;
+    border: 1px solid color-mix(in srgb, var(--color-heading) 28%, transparent);
+    color: var(--color-heading);
+    background: transparent;
+    transition:
+      background  0.25s ease,
+      border-color 0.25s ease,
+      color        0.25s ease;
+  }
+  .au-btn:hover {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #0a0a0a;
+  }
+
+  .au-btn--ghost {
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #fff;
+  }
+  .au-btn--ghost:hover {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #0a0a0a;
+  }
+
+  /* ═══ 3. CRAFT + STATS ═══ */
+  .au-craft-stats {
+    border-top: 1px solid color-mix(in srgb, var(--color-heading) 8%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-heading) 8%, transparent);
+  }
+
+  .au-cs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(3rem, 6vw, 6.5rem);
+    align-items: start;
+  }
+
+  @media (max-width: 860px) {
+    .au-cs-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Capability bars ── */
+  .cap-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+
+  .cap-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.45rem;
+  }
+
+  .cap-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-heading);
+    letter-spacing: 0.01em;
+  }
+
+  .cap-pct {
+    font-size: 0.78rem;
+    color: color-mix(in srgb, var(--color-text) 58%, transparent);
+    font-family: monospace;
+    letter-spacing: 0.04em;
+  }
+
+  .cap-track {
+    width: 100%;
+    height: 2px;
+    background: color-mix(in srgb, var(--color-heading) 10%, transparent);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .cap-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 2px;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.95),
+      rgba(255, 255, 255, 0.55)
+    );
+    /* bar-i is 0,1,2,3 — staggers the animation per bar */
+    transition: width 1.15s cubic-bezier(0.16, 1, 0.3, 1)
+                calc(var(--bar-i, 0) * 0.12s);
+  }
+
+  .cap-item.bars-go .cap-fill { width: var(--pct); }
+
+  /* ── Stats grid ── */
+  .au-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  .stat-card {
+    padding: clamp(1.25rem, 2.5vw, 2rem);
+    border: 1px solid color-mix(in srgb, var(--color-heading) 10%, transparent);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--color-heading) 3%, transparent);
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+  .stat-card:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .stat-val {
+    font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--color-heading);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: 0.4rem;
+  }
+
+  .stat-lbl {
+    font-size: 0.78rem;
+    color: color-mix(in srgb, var(--color-text) 62%, transparent);
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* ═══ 4. CTA BANNER ═══ */
+  .au-cta {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .au-cta-media {
+    position: absolute;
+    inset: 0;
+  }
+
+  .au-cta-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  .au-cta-veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(8, 8, 8, 0.88) 0%,
+      rgba(8, 8, 8, 0.72) 100%
+    );
+  }
+
+  .au-cta-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding-block: clamp(5rem, 11vw, 9rem);
+  }
+
+  .au-eyebrow--cta {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .au-cta-heading {
+    font-size: clamp(1.9rem, 4.8vw, 3.6rem);
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+
+  /* ═══ REVEAL ANIMATIONS (no GSAP) ═══ */
+  .reveal-item {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity   0.72s cubic-bezier(0.16, 1, 0.3, 1) var(--rv-delay, 0s),
+      transform 0.72s cubic-bezier(0.16, 1, 0.3, 1) var(--rv-delay, 0s);
+  }
+  .reveal-item.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* No-JS / scripting:none fallback */
+  @media (scripting: none) {
+    .reveal-item         { opacity: 1; transform: none; transition: none; }
+    .cap-fill            { width: var(--pct) !important; }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-item         { opacity: 1; transform: none; transition: none; }
+    .cap-fill            { transition: none !important; width: var(--pct) !important; }
+    .au-about-img        { transition: none; }
+  }
+
+  :global([data-a11y-motion="reduced"]) .reveal-item {
+    opacity: 1; transform: none; transition: none;
+  }
+  :global([data-a11y-motion="reduced"]) .cap-fill {
+    transition: none !important; width: var(--pct) !important;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     RESPONSIVE — ordered narrow → wide so later rules win
+  ══════════════════════════════════════════════════════════ */
+
+  /* ── Tablet: grid just collapsed to single column (≤ 860px) ── */
+  @media (max-width: 860px) {
+    /* Tighter gaps in single-column stacks */
+    .au-about-grid { gap: clamp(2rem, 4vw, 3rem); }
+    .au-cs-grid    { gap: clamp(2.5rem, 4vw, 3.5rem); }
+
+    /* Portrait editorial → cinematic 16:9 for full-width banner image */
+    .au-about-img  { aspect-ratio: 16 / 9; }
+
+    /* Body text can stretch to full column width */
+    .au-body       { max-width: 100%; font-size: clamp(0.9rem, 1.6vw, 1rem); }
+
+    /* Headings benefit from slightly more vw-responsiveness mid-range */
+    .au-h2         { font-size: clamp(1.65rem, 4.2vw, 2.5rem); }
+  }
+
+  /* ── Mobile (≤ 640px) ── */
+  @media (max-width: 640px) {
+    /* Tighter vertical rhythm on phone */
+    .au-pad { padding-block: clamp(3rem, 7vw, 4rem); }
+
+    /* Less top-offset in hero so heading stays well-centered */
+    .au-hero-body { padding-top: clamp(2.5rem, 7vw, 3.5rem); }
+
+    /* More compact image ratio for phone — avoids a wall-of-image effect */
+    .au-about-img  { aspect-ratio: 4 / 3; }
+
+    /* WCAG 2.5.5 — minimum 44px touch target */
+    .au-btn {
+      min-height: 44px;
+      padding: 0.875rem 1.5rem;
+    }
+
+    /* CTA banner: tighter block on phone */
+    .au-cta-body {
+      padding-block: clamp(3.5rem, 9vw, 5rem);
+      gap: 1.2rem;
+    }
+    .au-cta-heading {
+      font-size: clamp(1.6rem, 7vw, 2.2rem);
+      max-width: 100%;
+    }
+  }
+
+  /* ── Small mobile (≤ 430px) ── */
+  @media (max-width: 430px) {
+    /* Hero heading — prevent overflow on very narrow viewports */
+    .au-hero-heading { font-size: clamp(2.2rem, 10vw, 2.8rem); }
+
+    /* Compact stat cards on narrow screens */
+    .stat-card { padding: 0.875rem 1rem; }
+    .stat-val  { font-size: clamp(1.75rem, 7.5vw, 2.2rem); }
+    .stat-lbl  { font-size: 0.7rem; letter-spacing: 0.03em; }
+
+    /* Tighter capability list */
+    .cap-list  { gap: 1.25rem; margin-top: 2rem; }
+    .cap-label { font-size: 0.8rem; }
+    .cap-pct   { font-size: 0.72rem; }
+  }
+
+</style>
+
+<!---------------------------------------------------------------------------->
+<script>
+  function initAboutPage(): void {
+    /* ── scroll reveals ─────────────────────────────────── */
+    const revEls = document.querySelectorAll<HTMLElement>(".reveal-item");
+    if (revEls.length) {
+      const revObs = new IntersectionObserver(
+        (entries) => entries.forEach((e) => {
+          if (e.isIntersecting) {
+            (e.target as HTMLElement).classList.add("is-visible");
+            revObs.unobserve(e.target);
+          }
+        }),
+        { threshold: 0.12, rootMargin: "0px 0px -30px 0px" }
+      );
+      revEls.forEach((el) => revObs.observe(el));
+    }
+
+    /* ── capability bars ────────────────────────────────── */
+    const capItems = document.querySelectorAll<HTMLElement>(".cap-item.reveal-bar");
+    if (capItems.length) {
+      const barObs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (!e.isIntersecting) return;
+            const item = e.target as HTMLElement;
+            item.classList.add("bars-go");
+            barObs.unobserve(item);
+
+            const pctEl = item.querySelector<HTMLElement>(".cap-pct");
+            if (!pctEl) return;
+            const target = parseInt(pctEl.dataset.target ?? "0", 10);
+
+            const reducedMotion =
+              window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+              document.documentElement.dataset.a11yMotion === "reduced";
+
+            if (reducedMotion) {
+              pctEl.textContent = target + "%";
+              return;
+            }
+
+            const barIndex = parseInt(item.style.getPropertyValue("--bar-i") ?? "0", 10);
+            const delay = barIndex * 120; /* match CSS stagger: --bar-i * 0.12s */
+            const duration = 1300;
+
+            let startTime: number | null = null;
+            function tick(now: number) {
+              if (startTime === null) startTime = now;
+              const elapsed = now - startTime - delay;
+              if (elapsed < 0) { requestAnimationFrame(tick); return; }
+              const t = Math.min(elapsed / duration, 1);
+              /* ease-out-expo */
+              const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+              pctEl!.textContent = Math.round(eased * target) + "%";
+              if (t < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+          });
+        },
+        { threshold: 0.35 }
+      );
+      capItems.forEach((el) => barObs.observe(el));
+    }
+  }
+
+  initAboutPage();
+  document.addEventListener("astro:page-load", initAboutPage);
+</script>

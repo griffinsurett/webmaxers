@@ -8,10 +8,11 @@
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import { query, sortByOrder } from "@/utils/query";
 
-const solutions = query("solutions").orderBy(sortByOrder());
+const solutions = query("solutions").where((e) => e.id !== "_meta").orderBy(sortByOrder());
 ---
 
 <ContentRenderer
+  id="solutions-stacked-deck-section"
   query={solutions}
   variant="SolutionsDeckVariant"
   showHeadingSection={false}

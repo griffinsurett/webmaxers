@@ -104,7 +104,10 @@ function isMultiCollection(query?: Query<CollectionKey>): boolean {
 }
 
 function generateBaseId(collectionPart: string, pageSlug: string): string {
-  return `${collectionPart}-${pageSlug}`;
+  if (collectionPart === pageSlug) {
+    return `${collectionPart}-showcase-section`;
+  }
+  return `${collectionPart}-${pageSlug}-section`;
 }
 
 /**

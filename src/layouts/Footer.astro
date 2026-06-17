@@ -96,6 +96,7 @@ const legalColClass = [
     {/* Lower-right — LEGAL (left) + SOCIAL (far right), aligned under the CTA */}
     <div class="flex flex-wrap gap-x-16 gap-y-10 lg:col-start-2 lg:row-start-2 lg:justify-end">
       <ContentRenderer
+        id="footer-legal-section"
         query={query("legal")}
         variant="ListVariant"
         title="Legal"
@@ -104,6 +105,7 @@ const legalColClass = [
       <div class="footer-social">
         <p class="footer-col__heading">Social</p>
         <ContentRenderer
+          id="footer-social-section"
           query={query("social-media")}
           variant="SocialMediaVariant"
           size="lg"

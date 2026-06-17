@@ -1,0 +1,230 @@
+---
+// src/layouts/collections/ProjectLayout.astro
+/**
+ * Premium Project Layout
+ * 
+ * Custom layout for individual project pages.
+ * Recreates the multi-column editorial style with grid items, details, and site mockups/videos.
+ */
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SecondaryHero from '@/layouts/SecondaryHero.astro';
+import { humanizeSlug } from '@/utils/string';
+import { resolveImageMetadata } from '@/utils/images';
+import { Image } from 'astro:assets';
+import type { CollectionLayoutProps } from './types';
+
+const { 
+  entry,
+  collection,
+  collectionMeta,
+  Content,
+  seoProps = {},
+} = Astro.props as CollectionLayoutProps;
+
+const data = entry?.data || {};
+const resolvedImage = resolveImageMetadata(data.fullSiteImage);
+const resolvedBannerImage = resolveImageMetadata(data.bannerImage);
+const resolvedHeroImage = resolvedBannerImage || resolvedImage;
+---
+
+<BaseLayout {...seoProps}>
+  <main class="flex-1">
+    <SecondaryHero
+      eyebrow={humanizeSlug(entry?.id ?? "")}
+      title={data.title}
+      description={data.description}
+      image={resolvedHeroImage}
+      publishDate={data.publishDate}
+      author={data.author}
+      readingTime={data.readingTime}
+      imageClass="object-top"
+      overlayClass=""
+      textColorClass="text-heading"
+      hideText={true}
+    />
+
+    {/* Premium Detailed Layout */}
+    <article class="max-w-6xl mx-auto px-6 md:px-[80px] py-16 md:py-24">
+      
+      <!-- Project Title & Subtitle -->
+      <div class="mb-12">
+        <h1 class="text-4xl md:text-6xl font-light tracking-tight text-heading mb-4">
+          {data.title}
+        </h1>
+        {data.description && (
+          <p class="text-lg md:text-xl text-text/60 font-light leading-relaxed max-w-3xl">
+            {data.description}
+          </p>
+        )}
+      </div>
+
+      <!-- Headline & Tags -->
+      <div class="mb-16 border-b border-text/10 pb-12">
+        <h2 class="text-3xl md:text-5xl font-light tracking-tight text-heading leading-tight mb-8">
+          We build digital experiences <span class="font-normal text-primary">together.</span>
+        </h2>
+        
+        <div class="flex flex-wrap gap-2.5">
+          {data.technologies?.map((tech: string) => (
+            <span class="border border-text/15 text-[10px] text-text/60 tracking-widest font-semibold uppercase px-4 py-2 rounded-full hover:border-primary/50 hover:text-primary transition-all duration-300 select-none">
+              {tech}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Section 1: Design & Experience -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 border-b border-text/10 pb-20 mb-20">
+        
+        <!-- Left Specifications column -->
+        <div class="lg:col-span-4 flex flex-col justify-between group/sec1">
+          <div>
+            <!-- Abstract Blueprint Icon -->
+            <svg width="36" height="36" viewBox="0 0 100 100" class="text-text/40 mb-6 group-hover/sec1:text-primary transition-colors duration-500">
+              <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="1.5" fill="none" />
+              <circle cx="50" cy="50" r="30" stroke="currentColor" stroke-width="1" stroke-dasharray="4,4" fill="none" />
+              <circle cx="50" cy="50" r="20" stroke="currentColor" stroke-width="1.5" fill="none" />
+              <line x1="50" y1="10" x2="50" y2="90" stroke="currentColor" stroke-width="1" />
+              <line x1="10" y1="50" x2="90" y2="50" stroke="currentColor" stroke-width="1" />
+            </svg>
+            
+            <h3 class="text-lg font-bold text-heading tracking-widest uppercase mb-6">
+              DESIGN & STRATEGY
+            </h3>
+            
+            <ul class="space-y-2.5 text-[10px] text-text/50 uppercase tracking-widest font-medium">
+              <li>• UI/UX Design</li>
+              <li>• Information Architecture</li>
+              <li>• Responsive Grid Systems</li>
+              <li>• Custom Brand Guide</li>
+            </ul>
+          </div>
+          
+          <div class="mt-8">
+            <a 
+              href="/contact-us" 
+              class="inline-block bg-white text-black hover:bg-neutral-200 transition-colors duration-300 text-[10px] tracking-widest font-semibold uppercase px-6 py-3.5 rounded-lg shadow-sm"
+            >
+              Get in Touch
+            </a>
+          </div>
+        </div>
+
+        <!-- Right Description & Screenshot column -->
+        <div class="lg:col-span-8 flex flex-col justify-between">
+          <div>
+            <h4 class="text-xl md:text-2xl font-light text-heading leading-snug mb-8">
+              A high-performing interface is a tool to connect people with your product all around the world.
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-text/75 leading-relaxed">
+              <!-- Column A: MDX Content -->
+              <div>
+                {Content && (
+                  <div class="prose prose-sm dark:prose-invert text-text/75 leading-relaxed max-w-none">
+                    <Content />
+                  </div>
+                )}
+              </div>
+              
+              <!-- Column B: Brand Strategy -->
+              <div>
+                <p>
+                  Our strategic design approach ensures that your product's story is authentically communicated, capturing hearts and minds. We guide you in harnessing the true potential of your digital presence, bridging gaps and creating a lasting impression on your target audience.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Site Screenshot Showcase -->
+          {resolvedImage && (
+            <div class="mt-12 rounded-xl overflow-hidden border border-text/10 shadow-lg bg-white/[0.01] dark:bg-black/[0.05] group">
+              <Image 
+                src={resolvedImage} 
+                alt={data.fullSiteImage?.alt || data.title} 
+                widths={[860]}
+                class="w-full h-auto object-cover group-hover:scale-[1.015] transition-transform duration-700 ease-out" 
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <!-- Section 2: Development & Performance -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+        
+        <!-- Left Specifications column -->
+        <div class="lg:col-span-4 flex flex-col justify-between group/sec2">
+          <div>
+            <!-- Abstract Iso-Stack Icon -->
+            <svg width="36" height="36" viewBox="0 0 100 100" class="text-text/40 mb-6 group-hover/sec2:text-primary transition-colors duration-500">
+              <polygon points="50,15 80,32 50,50 20,32" stroke="currentColor" stroke-width="1.5" fill="none" />
+              <polygon points="50,50 80,68 50,85 20,68" stroke="currentColor" stroke-width="1.5" fill="none" />
+              <line x1="50" y1="50" x2="50" y2="85" stroke="currentColor" stroke-width="1.5" />
+              <line x1="20" y1="32" x2="20" y2="68" stroke="currentColor" stroke-width="1" />
+              <line x1="80" y1="32" x2="80" y2="68" stroke="currentColor" stroke-width="1" />
+            </svg>
+            
+            <h3 class="text-lg font-bold text-heading tracking-widest uppercase mb-6">
+              DEVELOPMENT & SYSTEMS
+            </h3>
+            
+            <ul class="space-y-2.5 text-[10px] text-text/50 uppercase tracking-widest font-medium">
+              <li>• Astro Framework</li>
+              <li>• Tailwind CSS & Custom Themes</li>
+              <li>• SEO & Performance Tuning</li>
+              <li>• Relational Databases</li>
+            </ul>
+          </div>
+          
+          <div class="mt-8">
+            <a 
+              href="/contact-us" 
+              class="inline-block bg-white text-black hover:bg-neutral-200 transition-colors duration-300 text-[10px] tracking-widest font-semibold uppercase px-6 py-3.5 rounded-lg shadow-sm"
+            >
+              Get in Touch
+            </a>
+          </div>
+        </div>
+
+        <!-- Right Description & Video column -->
+        <div class="lg:col-span-8 flex flex-col justify-between">
+          <div>
+            <h4 class="text-xl md:text-2xl font-light text-heading leading-snug mb-8">
+              We specialize in creating amazing web experiences that people will love, based on your great ideas.
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-text/75 leading-relaxed">
+              <div>
+                <p>
+                  At our agency, we're masters at crafting unforgettable web experiences that captivate and delight users, bringing your brilliant ideas to life. Our team works to create seamless and intuitive interfaces that load instantly and operate flawlessly.
+                </p>
+              </div>
+              <div>
+                <p>
+                  From sleek designs to seamless functionality, we ensure every element is meticulously crafted to evoke emotions and engage your audience. Trust us to transform your vision into an extraordinary online journey that converts visitors into advocates.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Showcase -->
+          {data.featuredVideo && (
+            <div class="mt-12 rounded-xl overflow-hidden border border-text/10 shadow-lg bg-neutral-900 group relative">
+              <video 
+                src={data.featuredVideo} 
+                autoplay 
+                loop 
+                muted 
+                playsinline 
+                class="w-full h-auto object-cover"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+    </article>
+  </main>
+</BaseLayout>

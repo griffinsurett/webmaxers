@@ -2,6 +2,22 @@
 @import "tailwindcss";
 @import "@/styles/fonts.css";
 
+/* ── Marquee animations ── */
+@theme inline {
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+}
+
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(-100% - var(--gap)), 0, 0); }
+}
+
+@keyframes marquee-vertical {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(0, calc(-100% - var(--gap)), 0); }
+}
+
 /* Tell Tailwind to scan integration components for class usage */
 @source "../integrations";
 

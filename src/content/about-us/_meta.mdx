@@ -1,8 +1,9 @@
 ---
 title: "About Us"
-description: "We are dedicated to providing the best service possible. Learn more about our mission, vision, and team."
+description: "Webmaxers is a full-service digital studio building websites, brand identities, and AI agents and automations for growing businesses."
 hasPage: true
 itemsHasPage: false
+indexLayout: "@/layouts/collections/AboutUsLayout.astro"
 redirectFrom:
   - "/about"
   - "/aboutus"
@@ -14,6 +15,7 @@ import { query } from "@/utils/query";
 
 <ContentRenderer
   query={query("about-us")}
-  variant="AccordionVariant"
+  variant="PremiumBentoVariant"
   columns={1}
 />
+

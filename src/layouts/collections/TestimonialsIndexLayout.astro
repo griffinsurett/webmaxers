@@ -1,0 +1,40 @@
+---
+// src/layouts/collections/TestimonialsIndexLayout.astro
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SecondaryHero from "@/layouts/SecondaryHero.astro";
+import TestimonialsMarquee from "@/components/TestimonialsMarquee/TestimonialsMarquee.astro";
+
+export interface Props {
+  collectionMeta: any;
+  seoProps: any;
+  [key: string]: any;
+}
+
+const { collectionMeta, seoProps } = Astro.props;
+---
+
+<BaseLayout {...seoProps}>
+  <main class="flex-1 bg-bg">
+
+    <!-- Hero: keep title + image exactly as before -->
+    <SecondaryHero
+      eyebrow="Testimonials"
+      title={collectionMeta.heading ?? collectionMeta.title}
+      description={collectionMeta.description}
+      minHeight="50vh"
+    />
+
+    <!-- 3D Marquee Section -->
+    <section class="tm-section" aria-label="Client testimonials">
+      <TestimonialsMarquee />
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style>
+  .tm-section {
+    padding-block: clamp(3rem, 7vw, 6rem);
+    overflow: hidden;
+  }
+</style>

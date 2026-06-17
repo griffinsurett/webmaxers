@@ -96,7 +96,7 @@ const eyebrow = meta.title ?? "Our Services";
           {/* The three solutions (Websites / Branding / Ai Agents) — sourced from
               the `solutions` collection and rendered as the headline stack. */}
           <ContentRenderer
-            query={query("solutions").orderBy(sortByOrder())}
+            query={query("solutions").where((e) => e.id !== "_meta").orderBy(sortByOrder())}
             variant="SolutionsVariant"
           />
         </EyebrowSection>

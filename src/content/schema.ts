@@ -432,6 +432,7 @@ export const metaSchema = ({ image }: { image: Function }) =>
     llms: llmsMetaSchema,
     indexLayout: z.string().default('../layouts/collections/CollectionIndexLayout.astro'),
     itemsLayout: z.string().default('../layouts/collections/CollectionLayout.astro'),
+    hideHeroText: z.boolean().default(false),
   });
 
 export type MetaData = z.infer<ReturnType<typeof metaSchema>>;

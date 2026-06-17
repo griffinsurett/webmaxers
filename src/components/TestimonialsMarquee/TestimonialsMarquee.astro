@@ -1,0 +1,46 @@
+---
+// src/components/TestimonialsMarquee/TestimonialsMarquee.astro
+import { getCollection } from "astro:content";
+import { getImage } from "astro:assets";
+import { resolveImageMetadata, getImageAlt } from "@/utils/images";
+import TestimonialsMarqueeClient from "./TestimonialsMarquee";
+
+const raw = await getCollection("testimonials");
+
+const sorted = raw
+  .filter((e) => !e.data.draft)
+  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+
+const items = await Promise.all(
+  sorted.map(async (entry) => {
+    const meta = resolveImageMetadata(entry.data.featuredImage);
+    let imageSrc: string | undefined;
+
+    if (meta) {
+      const optimised = await getImage({
+        src: meta,
+        width: 128,
+        height: 128,
+        format: "webp",
+        quality: 85,
+      });
+      imageSrc = optimised.src;
+    }
+
+    return {
+      id: entry.id,
+      quote: entry.data.description ?? "",
+      author: entry.data.author ?? entry.data.title,
+      role: (entry.data as any).role ?? "",
+      company: (entry.data as any).company,
+      imageSrc,
+      imageAlt: getImageAlt(
+        entry.data.featuredImage,
+        entry.data.author ?? entry.data.title,
+      ),
+    };
+  }),
+);
+---
+
+<TestimonialsMarqueeClient items={items} client:visible />
