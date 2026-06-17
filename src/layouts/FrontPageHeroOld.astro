@@ -6,8 +6,7 @@ import { ctaData } from "@/content/siteData";
 import ScrollIndicator from "@/components/ScrollIndicator.astro";
 import Button from "@/components/Button/Button";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import HeroStatBlock from "@/layouts/HeroStatBlock.astro";
-import { query } from "@/utils/query";
+import { query, sortByOrder } from "@/utils/query";
 
 export interface Props {
   headline?: string;
@@ -94,12 +93,12 @@ const {
       <ScrollIndicator className="order-last lg:order-none self-center lg:self-auto relative bottom-auto left-auto translate-x-0 static-in-row" />
 
       <!-- Stat box + body text — bottom of hero on mobile, bottom-right on desktop. -->
-      <HeroStatBlock
-        statLabel={statLabel}
-        statValue={statValue}
-        statDescription={statDescription}
-        bodyText={bodyText}
-        class="shrink-0 lg:w-[340px]"
+      <ContentRenderer
+        query={query("stats").orderBy(sortByOrder())}
+        variant="HeroStatsVariant"
+        description={bodyText || statDescription}
+        showHeadingSection={false}
+        className="shrink-0 lg:w-[340px]"
       />
     </div>
   </div>

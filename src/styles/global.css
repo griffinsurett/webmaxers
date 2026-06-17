@@ -160,6 +160,25 @@
   @apply text-[clamp(2.8rem,6.5vw,6rem)] font-light leading-[0.9] tracking-tight text-heading;
 }
 
+/* Small caption/supporting text — a readable small size used for labels,
+   meta, and captions. Replaces ad-hoc text-[10px]/[11px]/[13px]. */
+@utility small-text {
+  @apply text-xs leading-tight;
+}
+
+/* Supporting / secondary body copy — the readable muted text used under the
+   hero stat card, testimonial labels, etc. (Color left to the caller.) */
+@utility support-text {
+  @apply text-sm lg:text-base leading-relaxed;
+}
+
+/* Eyebrow / label text — small, uppercase, wide tracking. The shared style for
+   section eyebrows, underline buttons, and pill/tag labels. Font-weight is left
+   to the caller (font-medium / font-semibold) so each use can tune emphasis. */
+@utility eyebrow-text {
+  @apply small-text uppercase tracking-[0.18em];
+}
+
 @utility logo-class {
   @apply light:invert;
 }

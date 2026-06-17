@@ -269,7 +269,7 @@ function AccessibilityModal({ isOpen, onClose }: AccessibilityModalProps) {
                 >
                   <Icon icon="fa6:rotate-left" size="sm" className="text-bg" />
                   <span
-                    className={`absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-bg text-text text-[10px] tracking-wide px-2 py-1 shadow-md transition-opacity ${
+                    className={`absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-bg text-text small-text tracking-wide px-2 py-1 shadow-md transition-opacity ${
                       hoveredAction === "reset" ? "opacity-100" : "opacity-0 pointer-events-none"
                     }`}
                   >
@@ -288,7 +288,7 @@ function AccessibilityModal({ isOpen, onClose }: AccessibilityModalProps) {
                 >
                   <Icon icon="fa6:xmark" size="md" className="text-bg" />
                   <span
-                    className={`absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-bg text-text text-[10px] tracking-wide px-2 py-1 shadow-md transition-opacity ${
+                    className={`absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-bg text-text small-text tracking-wide px-2 py-1 shadow-md transition-opacity ${
                       hoveredAction === "close" ? "opacity-100" : "opacity-0 pointer-events-none"
                     }`}
                   >

@@ -71,7 +71,7 @@ export default function LanguageDropdown({
           className="mb-2 rounded-xl border border-yellow-400/40 bg-yellow-500/15 px-3 py-2 text-xs text-text text-left transition hover:border-yellow-400 hover:bg-yellow-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400"
         >
           Enable functional cookies to switch languages.
-          <span className="mt-1 block text-[11px] font-semibold uppercase tracking-wide text-primary">
+          <span className="mt-1 block small-text font-semibold uppercase tracking-wide text-primary">
             Manage consent preferences
           </span>
         </button>

@@ -1,0 +1,67 @@
+---
+// src/components/ContentRenderer/variants/HeroStatsVariant.astro
+/**
+ * HeroStatsVariant — the hero's stat card. Sourced from the `stats` collection
+ * (ordered by `order`): each item gives an `icon`, a `value` (+ optional
+ * `prefix`/`suffix`/`decimals`) rendered as a count-up Counter, and `title` as
+ * the label.
+ *
+ * Visual: a projects-theme card (the SolutionsDeck surface — `bg-bg3` + a faint
+ * heading-derived border, rounded) with the stats in a row separated by
+ * full-height vertical dividers. The optional `description` renders UNDER the
+ * card. No hover effects.
+ */
+import type { BaseVariantProps } from "../ContentRenderer.types";
+import Counter from "@/components/Counter.astro";
+import Icon from "@/components/Icon";
+
+type Props = BaseVariantProps & {
+  /** Count-up duration in ms (passed through to each Counter). */
+  counterDuration?: number;
+};
+
+const {
+  items = [],
+  id,
+  className = "",
+  description,
+  counterDuration = 1400,
+} = Astro.props as Props;
+---
+
+<div class:list={["flex flex-col w-full", className]} id={id}>
+  <!-- Card: stat row only. The dividers run the full card height. -->
+  <div class="w-full rounded-lg bg-bg3 border border-[color-mix(in_srgb,var(--color-heading)_8%,transparent)] overflow-hidden">
+    <div class="grid items-stretch divide-x divide-text/15 py-[1.1rem]" style={`grid-template-columns: repeat(${items.length}, minmax(0, 1fr));`}>
+      {items.map((item: any) => (
+        <div class="flex flex-col items-center justify-center text-center px-1.5">
+          <div class="flex items-center justify-center gap-2 text-text/80">
+            {item.icon && <Icon icon={item.icon} size="md" />}
+            <span class="text-2xl lg:text-3xl font-bold text-heading tracking-tight leading-none">
+              <Counter
+                start={1}
+                end={item.value}
+                duration={counterDuration}
+                prefix={item.prefix ?? ""}
+                suffix={item.suffix ?? ""}
+                decimals={item.decimals}
+                class="font-bold text-heading tracking-tight"
+              />
+            </span>
+          </div>
+
+          <span class="text-sm text-muted font-medium mt-2.5 leading-tight tracking-wide">
+            {item.title}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Description — sits UNDER the card. -->
+  {description && (
+    <p class="support-text text-muted text-center lg:text-left w-full mt-3.5">
+      {description}
+    </p>
+  )}
+</div>

@@ -37,7 +37,7 @@ function TestimonialCard({ author, role, company, quote, imageSrc, imageAlt }: T
             <span className="text-xs font-semibold text-white truncate leading-tight">
               {author}
             </span>
-            <span className="text-[10px] text-white/50 truncate leading-tight">
+            <span className="small-text text-white/50 truncate">
               {company ?? role}
             </span>
           </div>

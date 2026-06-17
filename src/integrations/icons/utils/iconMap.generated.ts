@@ -2,7 +2,7 @@
 // Do not edit manually. Run "npm run generate:icons" (or node src/integrations/icons/utils/generate-icon-map.mjs) to regenerate.
 
 import type { IconType } from 'react-icons';
-import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGlobe, LuImage, LuMail, LuPhone, LuSettings } from 'react-icons/lu';
+import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGlobe, LuImage, LuMail, LuPhone, LuSettings, LuTrendingUp, LuUsers } from 'react-icons/lu';
 import { FaArrowRight, FaArrowsUpDownLeftRight, FaBullseye, FaClockRotateLeft, FaCompass, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
 import { PiBrain, PiCode, PiGauge, PiMagnifyingGlass, PiPenNib, PiShoppingCart } from 'react-icons/pi';
 import { SiFacebook, SiGithub, SiLinkedin, SiX } from 'react-icons/si';
@@ -40,6 +40,8 @@ export const iconMap = {
   'lu:mail': LuMail,
   'lu:phone': LuPhone,
   'lu:settings': LuSettings,
+  'lu:trending-up': LuTrendingUp,
+  'lu:users': LuUsers,
   'pi:brain': PiBrain,
   'pi:code': PiCode,
   'pi:gauge': PiGauge,
