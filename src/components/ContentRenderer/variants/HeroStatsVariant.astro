@@ -31,10 +31,10 @@ const {
 <div class:list={["flex flex-col w-full", className]} id={id}>
   <!-- Card: stat row only. The dividers run the full card height. -->
   <div class="w-full rounded-lg bg-bg3 border border-[color-mix(in_srgb,var(--color-heading)_8%,transparent)] overflow-hidden">
-    <div class="grid items-stretch divide-x divide-text/15 py-[1.1rem]" style={`grid-template-columns: repeat(${items.length}, minmax(0, 1fr));`}>
+    <div class="grid items-stretch divide-x divide-text/15" style={`grid-template-columns: repeat(${items.length}, minmax(0, 1fr));`}>
       {items.map((item: any) => (
         <StatBlock
-          class="justify-center px-1.5"
+          class="justify-center px-1.5 py-[1.1rem]"
           value={item.value}
           label={item.title}
           icon={item.icon}
