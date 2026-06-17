@@ -12,8 +12,7 @@
  * card. No hover effects.
  */
 import type { BaseVariantProps } from "../ContentRenderer.types";
-import Counter from "@/components/Counter.astro";
-import Icon from "@/components/Icon";
+import StatBlock from "@/components/StatBlock.astro";
 
 type Props = BaseVariantProps & {
   /** Count-up duration in ms (passed through to each Counter). */
@@ -34,26 +33,16 @@ const {
   <div class="w-full rounded-lg bg-bg3 border border-[color-mix(in_srgb,var(--color-heading)_8%,transparent)] overflow-hidden">
     <div class="grid items-stretch divide-x divide-text/15 py-[1.1rem]" style={`grid-template-columns: repeat(${items.length}, minmax(0, 1fr));`}>
       {items.map((item: any) => (
-        <div class="flex flex-col items-center justify-center text-center px-1.5">
-          <div class="flex items-center justify-center gap-2 text-text/80">
-            {item.icon && <Icon icon={item.icon} size="md" />}
-            <span class="text-2xl lg:text-3xl font-bold text-heading tracking-tight leading-none">
-              <Counter
-                start={1}
-                end={item.value}
-                duration={counterDuration}
-                prefix={item.prefix ?? ""}
-                suffix={item.suffix ?? ""}
-                decimals={item.decimals}
-                class="font-bold text-heading tracking-tight"
-              />
-            </span>
-          </div>
-
-          <span class="text-sm text-muted font-medium mt-2.5 leading-tight tracking-wide">
-            {item.title}
-          </span>
-        </div>
+        <StatBlock
+          class="justify-center px-1.5"
+          value={item.value}
+          label={item.title}
+          icon={item.icon}
+          prefix={item.prefix ?? ""}
+          suffix={item.suffix ?? ""}
+          decimals={item.decimals}
+          duration={counterDuration}
+        />
       ))}
     </div>
   </div>

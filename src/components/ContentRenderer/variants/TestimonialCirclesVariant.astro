@@ -1,6 +1,6 @@
 ---
 import { Image } from "astro:assets";
-import Counter from "@/components/Counter.astro";
+import StatBlock from "@/components/StatBlock.astro";
 import type { BaseVariantProps } from "../ContentRenderer.types";
 import { toArray } from "@/utils/array";
 import { resolveImageMetadata, getImageAlt } from "@/utils/images";
@@ -13,7 +13,6 @@ interface Props extends BaseVariantProps {
   counterPrefix?: string;
   counterSuffix?: string;
   counterLabel?: string;
-  counterClassName?: string;
   link?: string;
 }
 
@@ -27,7 +26,6 @@ const {
   counterPrefix = "",
   counterSuffix = "+",
   counterLabel = "Happy Clients",
-  counterClassName = "text-heading m-0 p-0 text-2xl lg:text-3xl",
   link = "/#testimonials",
   id,
 } = Astro.props as Props;
@@ -76,26 +74,16 @@ const resolveImage = (face: any) => {
     })}
   </div>
 
-  <div class="flex flex-col items-start">
-    <span
-      class={`${counterClassName} capitalize`}
-      role="heading"
-      aria-level="3"
-    >
-      <Counter
-        prefix={counterPrefix}
-        start={counterStart}
-        end={counterEnd}
-        duration={counterDuration}
-        decimals={counterDecimals}
-        suffix={counterSuffix}
-        class="leading-none"
-      />
-    </span>
-    <p class="support-text m-0 mt-0.5 capitalize text-muted">
-      {counterLabel}
-    </p>
-  </div>
+  <StatBlock
+    align="start"
+    value={counterEnd}
+    label={counterLabel}
+    prefix={counterPrefix}
+    suffix={counterSuffix}
+    decimals={counterDecimals}
+    start={counterStart}
+    duration={counterDuration}
+  />
 </a>
 
 <script is:inline>

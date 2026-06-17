@@ -1,0 +1,66 @@
+---
+// src/components/StatBlock.astro
+/**
+ * StatBlock — the single reusable "number + label" unit shared by the hero
+ * stat card and the testimonial counter. Number on top (animated count-up,
+ * with optional inline icon + prefix/suffix), label beneath. One text format
+ * everywhere: light weight (no bold), tight number→label spacing.
+ */
+import Counter from "@/components/Counter.astro";
+import Icon from "@/components/Icon";
+import type { IconType } from "@/content/schema";
+
+interface Props {
+  /** The number to count up to. */
+  value: number;
+  /** Label beneath the number. */
+  label?: string;
+  /** Optional icon shown inline to the left of the number. */
+  icon?: IconType;
+  prefix?: string;
+  suffix?: string;
+  decimals?: number;
+  start?: number;
+  duration?: number;
+  /** Center (default) vs left-aligned content. */
+  align?: "center" | "start";
+  class?: string;
+}
+
+const {
+  value,
+  label,
+  icon,
+  prefix = "",
+  suffix = "",
+  decimals,
+  start = 1,
+  duration = 1600,
+  align = "center",
+  class: className = "",
+} = Astro.props as Props;
+
+const alignClass = align === "start" ? "items-start text-left" : "items-center text-center";
+---
+
+<div class:list={["flex flex-col", alignClass, className]}>
+  <span class="flex items-center gap-2 text-2xl lg:text-3xl font-light leading-none text-heading">
+    {icon && (
+      <span class="inline-flex shrink-0 text-text/80">
+        <Icon icon={icon} size="md" />
+      </span>
+    )}
+    <Counter
+      start={start}
+      end={value}
+      duration={duration}
+      prefix={prefix}
+      suffix={suffix}
+      decimals={decimals}
+      class="leading-none"
+    />
+  </span>
+  {label && (
+    <span class="support-text text-muted capitalize mt-0.5">{label}</span>
+  )}
+</div>
