@@ -43,9 +43,9 @@ const SCROLL_TOP_THRESHOLD = 2;
 
 export default function OptimizedLottie({
   // Animation source (provide one of these)
-  animationData = null,        // Pre-loaded JSON data
-  animationUrl = null,         // URL to JSON file (will fetch at runtime)
-  
+  animationData = null as any,        // Pre-loaded JSON data
+  animationUrl = null as any,         // URL to JSON file (will fetch at runtime)
+
   // Display options
   alt = "",
   className = "",

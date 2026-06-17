@@ -79,7 +79,14 @@ export default function HeroLogo3D({
   const motionDisabled = useMotionPreference(respectReducedMotion);
 
   useEffect(() => {
-    if (motionDisabled) return;
+    // Reduced motion: the scene never loads, so make sure we're back to the
+    // poster. If motion gets disabled AFTER the scene was ready, `ready` is
+    // still true and the poster sits at opacity 0 — reset it so the placeholder
+    // shows again in-place instead of going blank.
+    if (motionDisabled) {
+      setReady(false);
+      return;
+    }
     const canvasHost = canvasHostRef.current;
     if (!canvasHost) return;
 
@@ -546,6 +553,11 @@ export default function HeroLogo3D({
     ? "absolute inset-0 overflow-hidden flex items-center justify-center [&>canvas]:!w-full [&>canvas]:!h-screen [&>canvas]:block [&>canvas]:max-w-none"
     : "absolute inset-0 [&>canvas]:!w-full [&>canvas]:!h-full [&>canvas]:block";
 
+  // The live scene is only shown when it's ready AND motion is allowed. Under
+  // reduced motion the poster always wins, so it falls back to the placeholder
+  // image in-place no matter when the preference flips.
+  const showCanvas = ready && !motionDisabled;
+
   return (
     <div ref={rootRef} className={`hero-logo3d pointer-events-none ${className}`} aria-hidden="true">
       {/* Poster: shown until the 3D scene is ready (and forever under reduced
@@ -557,7 +569,7 @@ export default function HeroLogo3D({
             ? "absolute inset-0 overflow-hidden flex items-center justify-center"
             : "absolute inset-0"
         }
-        style={{ transition: `opacity ${fadeMs}ms ease`, opacity: ready ? 0 : 1 }}
+        style={{ transition: `opacity ${fadeMs}ms ease`, opacity: showCanvas ? 0 : 1 }}
       >
         {children}
       </div>
@@ -566,7 +578,7 @@ export default function HeroLogo3D({
       <div
         ref={canvasHostRef}
         className={hostClass}
-        style={{ transition: `opacity ${fadeMs}ms ease`, opacity: ready ? 1 : 0 }}
+        style={{ transition: `opacity ${fadeMs}ms ease`, opacity: showCanvas ? 1 : 0 }}
       />
     </div>
   );
