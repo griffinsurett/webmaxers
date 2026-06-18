@@ -16,6 +16,7 @@ import LinkButton from './variants/LinkButton';
 import TertiaryButton from './variants/TertiaryButton';
 import UnderlineButton from './variants/UnderlineButton';
 import HiddenUnderlineButton from './variants/HiddenUnderlineButton';
+import MenuItemButton from './variants/MenuItemButton';
 
 /**
  * Base props shared by all button variants
@@ -30,6 +31,11 @@ export interface BaseButtonProps {
   className?: string;
   buttonWrapperClasses?: string;
   fullWidth?: boolean;
+  /**
+   * Internal escape hatch that allows variant components to opt-out of the
+   * default btn-base styling when they need full control over the shell.
+   */
+  unstyled?: boolean;
 }
 
 /**
@@ -56,7 +62,7 @@ export type ButtonProps = ButtonAsButton | ButtonAsLink;
  * Uses forwardRef to allow ref passing to underlying element
  */
 export const ButtonBase = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
-  ({ href, className = '', leftIcon, rightIcon, size = 'md', children, ...props }, ref) => {
+  ({ href, className = '', leftIcon, rightIcon, size = 'md', children, unstyled = false, ...props }, ref) => {
     // Map size prop to Tailwind classes
     const normalizedSize = size ?? 'md';
     const sizeClass =
@@ -65,7 +71,10 @@ export const ButtonBase = forwardRef<HTMLButtonElement | HTMLAnchorElement, Butt
         : normalizedSize === 'lg'
         ? 'btn-lg'
         : 'btn-md';
-    const baseClasses = `btn-base ${sizeClass} ${className}`.trim();
+    // `unstyled` variants (e.g. menuItemButton) take full control of the shell.
+    const baseClasses = unstyled
+      ? className.trim()
+      : `btn-base ${sizeClass} ${className}`.trim();
 
     // Render as anchor if href is provided
     if (href) {
@@ -113,6 +122,7 @@ const VARIANT_MAP = {
   tertiary: TertiaryButton,
   underline: UnderlineButton,
   hiddenUnderline: HiddenUnderlineButton,
+  menuItemButton: MenuItemButton,
 };
 
 export type ButtonVariant = keyof typeof VARIANT_MAP;

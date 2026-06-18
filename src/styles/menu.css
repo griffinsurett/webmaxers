@@ -1,5 +1,28 @@
 /* src/styles/menu.css */
 
+/* Menu item spacing utility (used by the mobile drawer list) */
+@utility menu-item-spacing {
+  @apply space-y-0;
+}
+
+/* Content-width wrapper for the mobile drawer (matches inner page width) */
+@utility inner-section {
+  @apply w-9/10 lg:max-w-7xl lg:px-2 mx-auto;
+}
+
+/* Landscape-aware container for short-viewport phones (shared by the drawer) */
+.landscape-hero {
+  @media (orientation: landscape) and (max-height: 700px) and (max-width: 1024px) {
+    padding-top: 6rem;
+    min-height: auto !important;
+  }
+
+  @media (orientation: landscape) and (max-height: 500px) and (max-width: 1024px) {
+    padding-top: 6rem;
+    padding-bottom: 2rem;
+  }
+}
+
 /* Menu hover behavior - works for infinite nesting */
 .menu-item:hover > .menu-dropdown {
   display: block;
@@ -24,4 +47,42 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ============================================================
+ * MOBILE MENU DRAWER
+ * ============================================================ */
+
+/* Base mobile menu content max-height */
+.mobile-menu-content {
+  max-height: calc(100vh - 6rem);
+  max-height: calc(100dvh - 6rem);
+}
+
+/* Landscape adjustments for menu */
+@media (orientation: landscape) and (max-height: 600px) {
+  .mobile-menu-content {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    max-height: calc(100vh - 5rem);
+    max-height: calc(100dvh - 5rem);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 450px) {
+  .mobile-menu-content {
+    max-height: calc(100vh - 4rem);
+    max-height: calc(100dvh - 4rem);
+  }
+}
+
+/* Tint the sticky header while the drawer is open */
+.mobile-menu-open .site-header {
+  background-image: linear-gradient(
+    to right,
+    var(--color-bg3),
+    var(--color-bg)
+  );
 }

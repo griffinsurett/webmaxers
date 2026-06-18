@@ -1,0 +1,34 @@
+---
+// src/components/ContentRenderer/variants/ProcessStepsStatic.astro
+/**
+ * ProcessStepsStatic — the MOBILE fallback for the Process variant.
+ *
+ * Pure Astro, zero heavy JS: just the step cards in a single column. They
+ * "appear" the same way the desktop cards reveal (fade-in + rise) using the
+ * scroll-animations integration's CSS-only scroll-driven animations — no GSAP,
+ * no pinning, no travelling-logo rail, no IntersectionObserver.
+ *
+ * Rendered alongside the desktop React island; CSS (in ProcessVariant) shows
+ * this only below the desktop breakpoint, and the island only at/above it.
+ */
+import { staggeredCSSAnimationProps } from "@/integrations/scroll-animations";
+import type { ProcessStep } from "./Process";
+
+interface Props {
+  steps: ProcessStep[];
+}
+
+const { steps } = Astro.props as Props;
+---
+
+<ol class="process-steps-static" role="list">
+  {steps.map((step, i) => (
+    <li class="process-step-static" {...staggeredCSSAnimationProps("fade-in-up", i, { staggerPercent: 6 })}>
+      <p class="eyebrow-text font-medium text-text process-step-label">
+        Step {String(i + 1)}
+      </p>
+      <h3 class="process-step-title">{step.title}</h3>
+      {step.body && <p class="process-step-body">{step.body}</p>}
+    </li>
+  ))}
+</ol>

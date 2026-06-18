@@ -9,6 +9,7 @@ import FormWrapper from "@/components/Form/FormWrapper";
 import Input from "@/components/Form/inputs/Input";
 import Checkbox from "@/components/Form/inputs/Checkbox";
 import Textarea from "@/components/Form/inputs/Textarea";
+import { siteData } from "@/content/siteData";
 
 interface Props {
   title?: string;
@@ -42,7 +43,7 @@ const handleSubmit = async () => {
     resetOnSuccess={true}
     className="w-full"
   >
-    <input type="hidden" name="formName" value="webmaxers Contact Form" />
+    <input type="hidden" name="formName" value={`${siteData.title} Contact Form`} />
 
     <div class="flex flex-col lg:flex-row justify-between gap-2 mb-4">
       <Input

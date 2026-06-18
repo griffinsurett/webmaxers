@@ -100,13 +100,16 @@ export const collections = {
       }),
   }),
 
-  "services": defineCollection({
-    loader: GlobLoad("services"),
+  "capabilities": defineCollection({
+    loader: GlobLoad("capabilities"),
     schema: ({ image }) =>
       baseSchema({ image }).extend({
         price: z.string().optional(),
         features: z.array(z.string()).default([]),
         tagline: z.string().optional(),
+        /** Solution(s) this capability belongs to — drives the related grid on
+         *  each solution detail page. */
+        solutions: refSchema("solutions").optional(),
         includes: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
         steps: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
       }),

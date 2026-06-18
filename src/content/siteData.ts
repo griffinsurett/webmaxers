@@ -2,8 +2,8 @@
 import { SITE_DOMAIN, SITE_URL } from "./siteDomain.js";
 
 export const siteData = {
-  title: "webmaxers",
-  legalName: "webmaxers LLC",
+  title: "Webmaxxers",
+  legalName: "Griffin's Web Services LLC",
   tagline: "Build fast. Stay typesafe. Ship with confidence.",
   description:
     "Finest Typesafe Static Sites with Astro, dynamically static with content collections.",
@@ -14,6 +14,6 @@ export const siteData = {
 };
 
 export const ctaData = {
-  text: "Get Started with webmaxers",
+  text: `Get Started with ${siteData.title}`,
   link: "/contact-us",
 };

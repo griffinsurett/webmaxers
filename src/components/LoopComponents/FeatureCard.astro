@@ -3,66 +3,79 @@
 /**
  * Feature Card Component
  *
- * Card for displaying product/service features with:
- * - Optional header image
- * - Title and description
- * - Optional CTA link
- * - Hover lift effect
+ * Card for displaying a solution/service: icon + large title + description,
+ * with a circular arrow affordance top-right and a subtle bordered surface.
+ * The whole card is a link when `url` is provided. Hover lifts it slightly.
  *
- * Used in CardVariant for feature showcases, service listings.
+ * Used by CardVariant for solution/service listings.
  */
+import Icon from "@/components/Icon";
 
 export interface Props {
   title: string;
   url?: string;
   description?: string;
-  image?: {
-    src: string;
-    alt: string;
-  };
-  ctaText?: string; // Call-to-action text
+  icon?: string;
+  openInNewTab?: boolean;
 }
 
-const {
-  title,
-  url,
-  description,
-  image,
-  ctaText = "Learn More →",
-} = Astro.props;
+const { title, url, description, icon, openInNewTab = false } = Astro.props;
+
+const Tag = url ? "a" : "div";
+const linkAttrs = url
+  ? {
+      href: url,
+      ...(openInNewTab
+        ? { target: "_blank", rel: "noopener noreferrer" }
+        : {}),
+    }
+  : {};
 ---
 
-<div
-  class="bg-bg rounded-xl overflow-hidden shadow-lg hover:-translate-y-2 hover:shadow-xl transition-all duration-300 flex flex-col"
+<Tag
+  {...linkAttrs}
+  class="group relative flex flex-col h-full min-h-[clamp(16rem,22vw,20rem)] rounded-lg overflow-hidden no-underline bg-bg3 border border-heading/8 p-[clamp(1.25rem,2vw,1.75rem)] [transition:transform_200ms_ease,border-color_200ms_ease] hover:border-heading/18 hover:-translate-y-0.5"
 >
-  {/* Optional header image */}
-  {
-    image && (
-      <img src={image.src} alt={image.alt} class="w-full h-48 object-cover" />
-    )
-  }
-
-  {/* Card content */}
-  <div class="p-6 flex-1 flex flex-col">
-    <h3 class="text-2xl font-bold mb-4">{title}</h3>
-
-    {/* Description takes available space */}
+  {/* Top row: icon (left) + circular arrow (right, only when linkable) */}
+  <div class="flex items-start justify-between gap-4">
     {
-      description && (
-        <p class="text-text mb-6 flex-1 leading-relaxed">{description}</p>
+      icon && (
+        <span class="inline-flex shrink-0 text-heading/55">
+          <Icon icon={icon} size="lg" />
+        </span>
       )
     }
-
-    {/* CTA link at bottom */}
     {
       url && (
-        <a
-          href={url}
-          class="text-primary font-semibold hover:underline self-start"
+        <span
+          class="ml-auto inline-flex items-center justify-center shrink-0 w-7 h-7 rounded-full text-heading/35 border border-heading/10 transition-[color,border-color,transform] duration-200 group-hover:text-heading group-hover:border-heading/30 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+          aria-hidden="true"
         >
-          {ctaText}
-        </a>
+          <svg viewBox="0 0 24 24" fill="none" width="15" height="15">
+            <path
+              d="M7 17L17 7M17 7H8M17 7V16"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
       )
     }
   </div>
-</div>
+
+  {/* Title + description pinned to the bottom of the card */}
+  <div class="mt-auto flex flex-col gap-3 pt-8">
+    <h3 class="text-[clamp(1.75rem,2.4vw,2.5rem)] font-normal leading-[1.05] tracking-[-0.02em] text-heading">
+      {title}
+    </h3>
+    {
+      description && (
+        <p class="text-[clamp(0.9375rem,1vw,1rem)] font-light leading-[1.6] text-heading/45">
+          {description}
+        </p>
+      )
+    }
+  </div>
+</Tag>

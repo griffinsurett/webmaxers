@@ -2,12 +2,13 @@
 /**
  * Mobile Menu Item Component
  *
- * Collapsible menu item for mobile navigation.
+ * Drill-down menu item for mobile navigation. Parents with children open a
+ * nested level (via onOpenSubmenu) rather than expanding inline.
  * Accessible navigation pattern with proper ARIA.
- * Handles parent items with hasPage: false (no URL) by showing expand button only.
  */
 
-import { useState } from "react";
+import Button from "@/components/Button/Button";
+import Icon from "@/components/Icon";
 
 interface MobileMenuItemProps {
   title: string;
@@ -15,122 +16,79 @@ interface MobileMenuItemProps {
   slug: string;
   children?: any[];
   openInNewTab?: boolean;
+  currentPath: string;
   onNavigate: () => void;
-  level?: number;
+  onOpenSubmenu?: (submenu: { title: string; items: any[] }) => void;
 }
 
 export default function MobileMenuItem({
   title,
   url,
-  slug,
   children = [],
   openInNewTab = false,
   onNavigate,
-  level = 0,
+  onOpenSubmenu,
 }: MobileMenuItemProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const hasChildren = children.length > 0;
-  const indent = level * 16; // 16px per level
 
-  // Parent with children - always show expand/collapse button
+  const openSubmenu = () => {
+    if (!hasChildren) return;
+    onOpenSubmenu?.({ title, items: children });
+  };
+
+  const handleParentClick = () => {
+    if (url) {
+      onNavigate();
+      return;
+    }
+
+    openSubmenu();
+  };
+
   if (hasChildren) {
-    // If parent has a URL, show clickable link + expand button
-    // If parent has no URL (hasPage: false), only show expand button
-    const hasUrl = Boolean(url);
-
-    const handleParentClick = () => {
-      if (hasUrl) {
-        onNavigate();
-      } else {
-        setIsExpanded(!isExpanded);
-      }
-    };
-
     return (
-      <li>
-        <div
-          className="flex items-center justify-between hover:bg-text/5 rounded-md transition-colors"
-          style={{ paddingLeft: `${indent + 16}px` }}
-        >
-          {hasUrl ? (
-            <a
-              href={url}
-              onClick={onNavigate}
-              target={openInNewTab ? "_blank" : undefined}
-              rel={openInNewTab ? "noopener noreferrer" : undefined}
-              className="flex-1 py-3 font-medium text-heading hover:text-primary transition-colors"
-            >
-              {title}
-            </a>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="flex-1 py-3 text-left font-medium text-heading hover:text-primary transition-colors"
-            >
-              {title}
-            </button>
-          )}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-3 text-text hover:text-primary transition-colors"
-            aria-expanded={isExpanded}
-            aria-controls={`mobile-submenu-${slug}`}
-            aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
-            type="button"
+      <li className="w-full max-w-full">
+        <div className="inline-flex max-w-full items-center gap-2 align-top">
+          <Button
+            variant="menuItemButton"
+            className="max-w-full text-left"
+            onClick={handleParentClick}
+            {...(url
+              ? {
+                  href: url,
+                  target: openInNewTab ? "_blank" : undefined,
+                  rel: openInNewTab ? "noopener noreferrer" : undefined,
+                }
+              : { type: "button" as const })}
           >
-            <svg
-              className={`w-5 h-5 transition-transform ${
-                isExpanded ? "rotate-180" : ""
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            {title}
+          </Button>
+
+          <button
+            type="button"
+            onClick={openSubmenu}
+            aria-label={`View submenu for ${title}`}
+            className="shrink-0 text-text"
+          >
+            <Icon icon="lu:chevron-right" size="md" className="w-6 h-6" />
           </button>
         </div>
-
-        {isExpanded && (
-          <ul id={`mobile-submenu-${slug}`} className="mt-1 space-y-1">
-            {children.map((child) => (
-              <MobileMenuItem
-                key={child.id}
-                {...child}
-                onNavigate={onNavigate}
-                level={level + 1}
-              />
-            ))}
-          </ul>
-        )}
       </li>
     );
   }
 
-  // Leaf item with no children - must have URL to be clickable
-  if (!url) {
-    return null; // Don't render items without URL and without children
-  }
-
   return (
-    <li>
-      <a
-        href={url}
+    <li className="w-full max-w-full">
+      <Button
+        variant="menuItemButton"
+        href={url || "#"}
         onClick={onNavigate}
         target={openInNewTab ? "_blank" : undefined}
         rel={openInNewTab ? "noopener noreferrer" : undefined}
-        className="block py-3 px-4 text-text hover:text-primary hover:bg-text/5 rounded-md transition-colors"
-        style={{ paddingLeft: `${indent + 16}px` }}
+        className="inline-flex w-full max-w-full text-left"
       >
         {title}
-      </a>
+      </Button>
     </li>
   );
 }

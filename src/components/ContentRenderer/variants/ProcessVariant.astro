@@ -1,0 +1,307 @@
+---
+// src/components/ContentRenderer/variants/ProcessVariant.astro
+/**
+ * Process Variant — "Our Process" / "How we work" section.
+ *
+ * Thin Astro wrapper: it normalizes the process steps, resolves the logo-mark
+ * image URL (astro:assets), and renders the server-side header (EyebrowSection +
+ * heading). The animated body — steps grid, rail, and the pinned-scrub GSAP
+ * timeline that travels a spinning logo across it — lives in the React island
+ * (`Process.tsx`), hydrated `client:visible` since it has many moving parts.
+ */
+import type { BaseVariantProps } from "../ContentRenderer.types";
+import { getImage } from "astro:assets";
+import LOGO_MARK from "@/assets/logo-mark.png";
+import EyebrowSection from "@/layouts/EyebrowSection.astro";
+import Process from "./Process.tsx";
+import ProcessStepsStatic from "./ProcessStepsStatic.astro";
+
+interface Props extends BaseVariantProps {
+  /** Small uppercase label, top-left. */
+  eyebrow?: string;
+  /** Supporting line under the big heading. */
+  description?: string;
+}
+
+const {
+  items = [],
+  id,
+  className = "",
+  eyebrow = "Our Process",
+  title = "How we work",
+  description = "A repeatable method applied across every engagement.",
+} = Astro.props as Props;
+
+// Normalize each step: support {title, body} (frontmatter) or {title, description}.
+const steps = items
+  .map((it: any) => ({
+    title: it?.title ?? "",
+    body: it?.body ?? it?.description ?? "",
+  }))
+  .filter((s) => s.title || s.body);
+
+// Checkpoint X positions (fractions of the rail) where a logo copy is left:
+// the start (0) and each between-steps boundary (k/n). NO end (1) marker —
+// the travelling logo rolls to the end and rests there itself, so a static
+// copy at 1 would just double up under the parked traveller.
+const stepCount = steps.length;
+const checkpoints =
+  stepCount > 0
+    ? [0, ...Array.from({ length: stepCount - 1 }, (_, k) => (k + 1) / stepCount)]
+    : [];
+
+// Resolve the logo-mark to an optimized URL the React island can render.
+const logoImg = await getImage({ src: LOGO_MARK, format: "webp", width: 48 });
+const logoSrc = logoImg.src;
+---
+
+{
+  steps.length > 0 && (
+    <section id={id} class={`process-section ${className}`} aria-label={title}>
+      {/* Shared homepage eyebrow/heading layout. The steps + travelling-logo
+          rail (React island) now live INSIDE the "How we work" content column,
+          directly under the heading/lead — not as a separate block below. */}
+      <EyebrowSection eyebrow={eyebrow}>
+        <div class="process-head-body">
+          <h2 class="process-title heading-display">{title}</h2>
+          {description && <p class="process-lead">{description}</p>}
+        </div>
+
+        {/* Mobile: lightweight static Astro cards (zero heavy JS). */}
+        <div class="process-static-only">
+          <ProcessStepsStatic steps={steps} />
+        </div>
+
+        {/* Desktop: heavy React island (GSAP pinned-scrub). client:media only
+            hydrates — and only downloads — at/above the desktop breakpoint, so
+            mobile ships none of this JS and uses the static cards above. */}
+        <div class="process-island-only">
+          <Process
+            steps={steps}
+            logoSrc={logoSrc}
+            checkpoints={checkpoints}
+            client:media="(min-width: 861px)"
+          />
+        </div>
+      </EyebrowSection>
+    </section>
+  )
+}
+
+<style is:global>
+  /* Global (not scoped): the animated body is rendered by the React island, so
+     its DOM doesn't carry Astro's scope attribute. Everything is namespaced
+     under .process-section to stay contained to this variant. */
+  .process-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4.5rem);
+  }
+
+  /* ── Mobile (static Astro) vs desktop (React island) split ──────────
+     Show exactly one. Mobile shows the lightweight static cards; desktop
+     shows the heavy animated island. Breakpoint matches the grid/rail's
+     own 860px mobile threshold (and the island's DESKTOP_MQ = min-width:861). */
+  .process-island-only {
+    display: none;
+  }
+  @media (min-width: 861px) {
+    .process-static-only {
+      display: none;
+    }
+    .process-island-only {
+      display: block;
+    }
+  }
+
+  /* ── Mobile static steps — single column, "appear" like desktop cards ── */
+  .process-steps-static {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 8vw, 4rem);
+  }
+  .process-step-static {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 2vw, 1.75rem);
+  }
+
+  /* Heading + lead inside the shared EyebrowSection slot. */
+  .process-head-body {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 2vw, 1.5rem);
+    max-width: 60ch;
+  }
+
+  .process-lead {
+    font-size: clamp(1rem, 1.4vw, 1.25rem);
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--color-text) 55%, transparent);
+    max-width: 32ch;
+  }
+
+  /* ── Steps + rail share one positioning context so markers align to columns ── */
+  .process-grid {
+    position: relative;
+  }
+
+  .process-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 clamp(1.25rem, 2.5vw, 2rem);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(1.5rem, 4vw, 4rem);
+  }
+  @media (max-width: 860px) {
+    .process-steps {
+      grid-template-columns: 1fr;
+      gap: clamp(2.5rem, 8vw, 4rem);
+      padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    }
+  }
+
+  .process-step {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 2vw, 1.75rem);
+    /* Reveal state: fully invisible (and slightly raised) until the travelling
+       logo reaches this column, then it animates in to visible. */
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .process-step.is-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .process-step-title {
+    font-size: clamp(1.75rem, 3vw, 2.75rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--color-heading);
+  }
+
+  .process-step-body {
+    font-size: clamp(0.95rem, 1.2vw, 1.0625rem);
+    line-height: 1.6;
+    font-weight: 300;
+    color: color-mix(in srgb, var(--color-text) 60%, transparent);
+    max-width: 34ch;
+  }
+
+  /* ── Rail ── */
+  .process-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+  }
+
+  /* Faint full-width track the line draws over. */
+  .process-rail-track {
+    position: absolute;
+    inset: 0;
+    height: 1px;
+    background: color-mix(in srgb, var(--color-heading) 12%, transparent);
+  }
+
+  /* The drawn line — width is set imperatively to follow the logo (0 → 100%). */
+  .process-rail-line {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 1px;
+    width: 0;
+    background: color-mix(in srgb, var(--color-heading) 45%, transparent);
+  }
+
+  /* A marker centred under each step column (left edge of each column cell). */
+  .process-rail-marker {
+    position: absolute;
+    top: 0;
+    /* `left` is set inline per checkpoint (0, boundaries, 1). */
+    /* A copy of the travelling logo, left behind on the rail. Same padded
+       bg circle so the line reads as passing behind it. */
+    transform: translate(-50%, -50%) scale(0.4);
+    transform-origin: center;
+    display: inline-flex;
+    background: var(--color-bg);
+    border-radius: 9999px;
+    padding: 0.3rem;
+    /* Spawns in when the travelling logo reaches it. */
+    opacity: 0;
+    transition:
+      opacity 0.35s ease,
+      transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .process-rail-marker.is-active {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  @media (max-width: 860px) {
+    /* Single column on mobile: rail is a simple full-width line; hide markers. */
+    .process-rail-marker {
+      display: none;
+    }
+  }
+
+  /* Travelling logo — X is set imperatively (left %). */
+  .process-logo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    background: var(--color-bg);
+    border-radius: 9999px;
+    padding: 0.3rem;
+    will-change: left;
+  }
+  .process-logo-spin {
+    /* inline-flex (not block) so this rotated box shrink-wraps the square mark.
+       As a block flex-item some engines measure its ROTATED bounding box for
+       the parent's main size, which feeds back and collapses the width — the
+       logo then renders as a thin tilted ellipse. inline-flex pins it square. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    will-change: transform;
+  }
+
+  /* Reduced motion: no pin/scrub (JS skips it) — show everything, line full. */
+  @media (prefers-reduced-motion: reduce) {
+    .process-step {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .process-rail-line {
+      width: 100% !important;
+    }
+    .process-logo {
+      display: none;
+    }
+  }
+  [data-a11y-motion="reduced"] .process-step {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  [data-a11y-motion="reduced"] .process-rail-line {
+    width: 100% !important;
+  }
+  [data-a11y-motion="reduced"] .process-logo {
+    display: none;
+  }
+</style>

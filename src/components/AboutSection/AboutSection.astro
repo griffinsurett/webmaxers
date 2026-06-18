@@ -5,6 +5,7 @@ import Button from "@/components/Button/Button";
 import EyebrowSection from "@/layouts/EyebrowSection.astro";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import { query, sortByOrder } from "@/utils/query";
+import { siteData } from "@/content/siteData";
 
 interface Props {
   statement?: string;
@@ -19,7 +20,7 @@ interface Props {
 }
 
 const {
-  statement = "Webmaxers is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology.",
+  statement = `${siteData.title} is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology.`,
   leftText = "We design for longevity, clarity first, craft always, built to scale.",
   rightText = "Our mission is to make technology feel human by designing digital products that are intuitive, purposeful, and meaningful to people.",
   ctaText = "Explore Our Story",

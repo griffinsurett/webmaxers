@@ -8,6 +8,7 @@ import Button from "@/components/Button/Button";
 import FormWrapper from "@/components/Form/FormWrapper";
 import Input from "@/components/Form/inputs/Input";
 import Checkbox from "@/components/Form/inputs/Checkbox";
+import { siteData } from "@/content/siteData";
 
 interface Props {
   title?: string;
@@ -40,7 +41,7 @@ const handleSubmit = async () => {
     resetOnSuccess={true}
     className="w-full gap-0"
   >
-    <input type="hidden" name="formName" value="webmaxers Quote Form" />
+    <input type="hidden" name="formName" value={`${siteData.title} Quote Form`} />
 
     <div class="flex flex-col lg:flex-row justify-between gap-2 mb-4">
       <Input

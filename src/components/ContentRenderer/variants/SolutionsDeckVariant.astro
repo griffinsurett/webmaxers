@@ -59,9 +59,9 @@ const PAD = "p-[clamp(0.875rem,1.2vw,1.125rem)]";
               </div>
 
               {/* Middle content slot — fills the space between the title and
-                  the description. Temporary black fill to visualise the room
-                  we have to work with (swap for real content later). */}
-              <div class="flex-1 bg-black" aria-hidden="true"></div>
+                  the description. Uses the page background token (swap for real
+                  content later). */}
+              <div class="flex-1 bg-bg" aria-hidden="true"></div>
 
               {/* Description pinned to the bottom */}
               <div class={`flex flex-col gap-2.5 ${PAD}`}>

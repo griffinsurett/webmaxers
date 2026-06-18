@@ -2,6 +2,7 @@
 // src/layouts/collections/AboutUsLayout.astro
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { Image } from "astro:assets";
+import { siteData } from "@/content/siteData";
 
 import aboutPortraitBwImg from "@/assets/founder.jpeg";
 import aboutMissionImg from "@/assets/about_mission.png";
@@ -66,20 +67,20 @@ const stats = [
         <figure class="au-about-figure reveal-item">
           <Image
             src={aboutPortraitBwImg}
-            alt="webmaxers founder"
+            alt={`${siteData.title} founder`}
             class="au-about-img"
           />
         </figure>
 
         <div class="au-about-copy">
           <p class="au-eyebrow reveal-item" style="--rv-delay:.06s">
-            About webmaxers
+            About {siteData.title}
           </p>
           <h2 class="au-h2 reveal-item" style="--rv-delay:.12s">
             We Build Websites, Brands, and AI Systems That Work
           </h2>
           <p class="au-body reveal-item" style="--rv-delay:.18s">
-            webmaxers is a full-service digital studio specializing in web
+            {siteData.title} is a full-service digital studio specializing in web
             design, web development, brand identity, and AI agents and
             automation. We build fast, high-converting websites, craft bold
             brand identities, and deploy custom AI systems that save your team

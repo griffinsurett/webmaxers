@@ -2,18 +2,19 @@
 // src/components/ContentRenderer/variants/MenuVariant.astro
 /**
  * Menu Variant - Responsive Navigation Menu
- * 
- * Now expects items to be passed with potential parent relationships.
+ *
  * Builds tree structure from flat items.
+ * Mobile menu hydrates on hover/touch for instant interactivity.
  */
 
 import type { BaseVariantProps } from "../ContentRenderer.types";
-import MenuList from '@/components/LoopTemplates/Menu/MenuList.astro';
-import MobileMenuDrawer from '@/components/Menu/HamburgerMenuDrawer';
-import { buildMenuTree } from '@/utils/menuQueries';
-import { isTopLevelPlacement } from '@/utils/navigation/topLevelCheck';
+import MenuList from "@/components/LoopTemplates/Menu/MenuList.astro";
+import MobileMenuDrawer from "@/components/Menu/HamburgerMenuDrawer";
+import { buildMenuTree } from "@/utils/menuQueries";
+import { toArray } from "@/utils/array";
+import { getCollection } from "astro:content";
 
-type MenuMode = 'responsive' | 'flat-only' | 'hamburger-only';
+type MenuMode = "responsive" | "flat-only" | "hamburger-only";
 
 interface Props extends BaseVariantProps {
   maxDepth?: number;
@@ -27,71 +28,53 @@ const {
   className = "",
   id,
   maxDepth = 3,
-  mode = 'responsive',
-  closeButton = true,
+  mode = "responsive",
+  closeButton = false,
   hamburgerTransform = true,
 } = Astro.props as Props;
 
+const safeItems = toArray(items);
+const socialLinks = await getCollection("social-media");
+const currentPath = Astro.url.pathname;
+
 // Build hierarchical tree from flat items
-const menuTree = buildMenuTree(items);
+const menuTree = buildMenuTree(safeItems);
 
 // Determine which versions to show based on mode
-const showDesktop = mode === 'responsive' || mode === 'flat-only';
-const showMobile = mode === 'responsive' || mode === 'hamburger-only';
+const showDesktop = mode === "responsive" || mode === "flat-only";
+const showMobile = mode === "responsive" || mode === "hamburger-only";
 
 // Responsive visibility classes
-const desktopClasses = mode === 'responsive' ? 'hidden md:block' : '';
-const mobileClasses =
-  showMobile && mode === 'responsive' ? 'md:hidden' : '';
-
-const inferredTopLevel = isTopLevelPlacement({
-  id,
-  className,
-});
-
-const useClientLoad =
-  mode === 'hamburger-only' ? inferredTopLevel : false;
-
-const mobileHydrationStrategy =
-  mode === 'hamburger-only'
-    ? useClientLoad
-      ? 'load'
-      : 'visible'
-    : 'media';
+const desktopClasses = mode === "responsive" ? "hidden md:block" : "";
+const mobileClasses = showMobile && mode === "responsive" ? "md:hidden" : "";
 ---
-<div id={id} class={`menu-variant ${className}`}>
-  {showDesktop && (
-    <nav class={`menu-desktop ${desktopClasses}`} aria-label="Main navigation">
-      <MenuList items={menuTree} level={0} />
-    </nav>
-  )}
-  
-  {showMobile && (
-    <div class={`menu-mobile ${mobileClasses}`}>
-      {mobileHydrationStrategy === 'load' && (
+
+<nav id={id} role="navigation" aria-label="Main navigation" class={`menu-variant ${className}`}>
+  {
+    showDesktop && (
+      <div class={`menu-desktop ${desktopClasses}`}>
+        <MenuList items={menuTree} level={0} />
+      </div>
+    )
+  }
+
+  {
+    showMobile && (
+      <div class={`menu-mobile ${mobileClasses}`}>
         <MobileMenuDrawer
+          client:hover
           items={menuTree}
+          currentPath={currentPath}
+          socialLinks={socialLinks.map((entry) => ({
+            title: entry.data.title,
+            url: entry.data.link,
+            icon: entry.data.icon,
+          }))}
+          className="menu-mobile-inner"
           closeButton={closeButton}
           hamburgerTransform={hamburgerTransform}
-          client:load
         />
-      )}
-      {mobileHydrationStrategy === 'visible' && (
-        <MobileMenuDrawer
-          items={menuTree}
-          closeButton={closeButton}
-          hamburgerTransform={hamburgerTransform}
-          client:visible
-        />
-      )}
-      {mobileHydrationStrategy === 'media' && (
-        <MobileMenuDrawer
-          items={menuTree}
-          closeButton={closeButton}
-          hamburgerTransform={hamburgerTransform}
-          client:media="(max-width: 768px)"
-        />
-      )}
-    </div>
-  )}
-</div>
+      </div>
+    )
+  }
+</nav>

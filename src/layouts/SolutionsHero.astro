@@ -1,16 +1,11 @@
 ---
-// src/layouts/SecondaryHero.astro
+// src/layouts/SolutionsHero.astro
 /**
- * Secondary Hero Layout
+ * Solutions Hero Layout
  *
- * Full-width hero with optimized background media support.
- * Uses BackgroundMedia component for responsive image optimization.
- *
- * Features:
- * - Responsive background images (mobile/tablet/desktop)
- * - Automatic LCP optimization with aboveTheFold
- * - Gradient overlay for text readability
- * - Optional metadata display (date, author, reading time)
+ * Duplicate of SecondaryHero, dedicated to solution pages so it can be
+ * specialized independently. Full-height hero: eyebrow + heading centred,
+ * description pinned to the bottom, scroll arrow on the right.
  */
 
 import { getAuthorName } from "@/layouts/collections/helpers/layoutHelpers";
@@ -152,7 +147,7 @@ const {
             )}
           </div>
 
-          <ScrollIndicator className="sh-scroll-arrow static bottom-auto left-auto shrink-0" />
+          <ScrollIndicator className="solh-scroll-arrow static bottom-auto left-auto shrink-0" />
         </div>
       </div>
     )}
@@ -166,11 +161,11 @@ const {
   /* The shared ScrollIndicator bounces with translateX(-50%) for its default
      centred placement. Here it sits inline on the right, so re-key the bounce
      to move vertically only (no horizontal offset). */
-  :global(.sh-scroll-arrow.scroll-indicator) {
-    animation-name: sh-arrow-bounce;
+  :global(.solh-scroll-arrow.scroll-indicator) {
+    animation-name: solh-arrow-bounce;
   }
 
-  @keyframes sh-arrow-bounce {
+  @keyframes solh-arrow-bounce {
     0%,
     100% {
       transform: translateY(0);
@@ -181,7 +176,7 @@ const {
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :global(.sh-scroll-arrow.scroll-indicator) {
+    :global(.solh-scroll-arrow.scroll-indicator) {
       animation: none;
     }
   }

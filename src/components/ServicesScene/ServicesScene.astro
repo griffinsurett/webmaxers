@@ -49,14 +49,14 @@ interface Props {
 
 const {
   sceneHeight = "100vh",
-  ctaText = "View all services",
-  ctaLink = "/services",
+  ctaText = "View all capabilities",
+  ctaLink = "/capabilities",
 } = Astro.props;
 
-// Load the 6 services.
-const meta = getCollectionMeta("services");
-const result = await query("services").orderBy(sortByOrder()).get();
-const services = await prepareCollectionEntries(result.entries, "services", meta);
+// Load the capabilities.
+const meta = getCollectionMeta("capabilities");
+const result = await query("capabilities").orderBy(sortByOrder()).get();
+const services = await prepareCollectionEntries(result.entries, "capabilities", meta);
 
 // Eyebrow comes from the collection's _meta title (falls back to a label).
 const eyebrow = meta.title ?? "Our Services";

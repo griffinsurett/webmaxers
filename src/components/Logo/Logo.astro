@@ -48,14 +48,18 @@ const hydrationMode =
 
 // Lottie container gets [filter:none] — the parent span carries the invert via logo-class
 const lottieClassName = "[filter:none]";
-// Rendered size is responsive (smaller on mobile, full `size` from sm: up); the
-// underlying <Image> still loads at `size` px for a crisp asset.
-const mediaClasses = `block w-8 h-8 sm:w-[${size}px] sm:h-[${size}px] object-contain animate-spin-once`;
+// Rendered size is responsive: 32px on mobile, full `size` (var) from sm: up.
+// Driven by a CSS var (set inline below) so the dynamic `size` prop survives —
+// Tailwind can't JIT an interpolated arbitrary value like sm:w-[${size}px].
+// The underlying <Image> still loads at `size` px for a crisp asset.
+const mediaClasses =
+  "block w-8 h-8 sm:w-[var(--logo-size)] sm:h-[var(--logo-size)] object-contain animate-spin-once";
 ---
 
 <a
   href="/"
   translate="no"
+  style={`--logo-size:${size}px`}
   class={`notranslate flex justify-center items-center gap-1.5 ${className}`}
 >
   {/* logo-class wrapper: invert(1) in light mode only, via @custom-variant light */}

@@ -5,6 +5,7 @@ import {
   SiOpenai,
   SiPerplexity,
 } from "react-icons/si";
+import { siteData } from "@/content/siteData";
 
 interface AIPlatform {
   name: string;
@@ -50,7 +51,7 @@ export default function AIIconPrompt({
   label = "Ask AI about Us:",
   labelClassName = "",
   listClassName = "",
-  promptSubject = "webmaxers",
+  promptSubject = siteData.title,
 }: AIIconPromptProps) {
   const encodedPrompt = encodeURIComponent(prompt.trim());
 

@@ -2,7 +2,13 @@
 // src/layouts/collections/ServiceLayout.astro
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SecondaryHero from "@/layouts/SecondaryHero.astro";
+import SolutionsHero from "@/layouts/SolutionsHero.astro";
 import Icon from "@/components/Icon";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import FeatureCard from "@/components/LoopComponents/FeatureCard.astro";
+import Marquee from "@/components/Marquee.astro";
+import { related } from "@/utils/query";
+import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
 import { humanizeSlug } from "@/utils/string";
 import type { CollectionLayoutProps } from "./types";
 
@@ -11,17 +17,56 @@ const data = entry?.data || {};
 
 const includes: { title: string; body: string }[] = data.includes ?? [];
 const steps:    { title: string; body: string }[] = data.steps    ?? [];
+
+// Breadcrumb/eyebrow: the page title, falling back to the humanized slug.
+const eyebrow = data.title ?? humanizeSlug(entry?.id ?? "");
+
+// Big hero heading: the `heading` field (string or {before,text,after}),
+// falling back to the title so existing pages without a heading still work.
+const headingText =
+  typeof data.heading === "string"
+    ? data.heading
+    : data.heading
+      ? [data.heading.before, data.heading.text, data.heading.after]
+          .filter(Boolean)
+          .join(" ")
+      : data.title;
+
+// Capabilities that belong to this entry (only solution pages have these —
+// capability pages resolve to an empty set, so the section won't render there).
+const isSolution = entry?.collection === "solutions";
+const relatedCapabilityEntries = isSolution
+  ? (await related("capabilities", "solutions", entry.id).get()).entries
+  : [];
+// Flatten + add URLs so each card has top-level title/description/icon/url.
+const relatedCapabilities = relatedCapabilityEntries.length
+  ? await prepareCollectionEntries(
+      relatedCapabilityEntries,
+      "capabilities",
+      getCollectionMeta("capabilities"),
+    )
+  : [];
 ---
 
 <BaseLayout {...seoProps}>
   <main class="flex-1 bg-bg">
 
-    <!-- ── Hero (kept as-is per brief) ── -->
-    <SecondaryHero
-      eyebrow="What We Do"
-      title={data.title}
-      description={data.description}
-    />
+    <!-- ── Hero: eyebrow = title (slug fallback), h1 = heading.
+         Solutions use the dedicated SolutionsHero; everything else (capabilities)
+         keeps the SecondaryHero. ── -->
+    {isSolution ? (
+      <SolutionsHero
+        eyebrow={eyebrow}
+        title={headingText}
+        description={data.description}
+      />
+    ) : (
+      <SecondaryHero
+        eyebrow={eyebrow}
+        title={headingText}
+        description={data.description}
+      />
+    )}
 
     <!-- ══════════════════════════════════════════
          MIDDLE CONTENT
@@ -38,6 +83,13 @@ const steps:    { title: string; body: string }[] = data.steps    ?? [];
           )}
           <h2 class="sl-tagline">{data.tagline}</h2>
         </section>
+      )}
+
+      <!-- Marquee — full-bleed, sits directly above What's Included -->
+      {includes.length > 0 && (
+        <div class="sl-marquee-fullbleed">
+          <Marquee />
+        </div>
       )}
 
       <!-- 2. WHAT'S INCLUDED ───────────────────── -->
@@ -60,21 +112,33 @@ const steps:    { title: string; body: string }[] = data.steps    ?? [];
         </section>
       )}
 
-      <!-- 3. PROCESS ──────────────────────────── -->
+      <!-- 3. PROCESS — animated "Our Process" renderer ── -->
       {steps.length > 0 && (
-        <section class="sl-section sl-process-section" aria-labelledby="sl-process-heading">
-          <p class="sl-label" id="sl-process-heading">How It Works</p>
-          <ol class="sl-steps" role="list">
-            {steps.map((step, i) => (
-              <li class="sl-step reveal-item" style={`--rv-delay:${i * 0.1}s`}>
-                <span class="sl-step-num" aria-hidden="true">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <h3 class="sl-step-title">{step.title}</h3>
-                <p class="sl-step-body">{step.body}</p>
+        <ContentRenderer
+          variant="ProcessVariant"
+          items={steps}
+          eyebrow="Our Process"
+          title="How we work"
+          description="A repeatable method applied across every engagement."
+        />
+      )}
+
+      <!-- 3b. RELATED CAPABILITIES (solution pages only) ── -->
+      {relatedCapabilities.length > 0 && (
+        <section class="sl-section" aria-labelledby="sl-services-heading">
+          <p class="sl-label" id="sl-services-heading">What This Includes</p>
+          <ul class="sl-services-grid" role="list">
+            {relatedCapabilities.map((capability, i) => (
+              <li class="reveal-item" style={`--rv-delay:${i * 0.07}s`}>
+                <FeatureCard
+                  title={capability.title}
+                  url={capability.url}
+                  description={capability.description}
+                  icon={capability.icon}
+                />
               </li>
             ))}
-          </ol>
+          </ul>
         </section>
       )}
 
@@ -96,6 +160,14 @@ const steps:    { title: string; body: string }[] = data.steps    ?? [];
     display: flex;
     flex-direction: column;
     gap: clamp(4.5rem, 9vw, 8rem);
+  }
+
+  /* Full-bleed escape: break the marquee out of the centered page-container
+     so it spans the full viewport width, like the homepage marquee. */
+  .sl-marquee-fullbleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    overflow: hidden;
   }
 
   /* ── 1. TAGLINE ── */
@@ -186,6 +258,23 @@ const steps:    { title: string; body: string }[] = data.steps    ?? [];
     color: color-mix(in srgb, var(--color-text) 65%, transparent);
     line-height: 1.7;
     font-weight: 300;
+  }
+
+  /* ── 3b. RELATED SERVICES GRID ── */
+  .sl-services-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(1rem, 2vw, 1.25rem);
+  }
+
+  @media (max-width: 900px) {
+    .sl-services-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .sl-services-grid { grid-template-columns: 1fr; }
   }
 
   /* ── 3. PROCESS STEPS ── */
