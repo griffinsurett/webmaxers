@@ -47,9 +47,10 @@ const {
     </div>
   </div>
 
-  <!-- Description — sits UNDER the card. -->
+  <!-- Description — sits UNDER the card (desktop only; on mobile the hero shows
+       this copy under the heading instead). -->
   {description && (
-    <p class="support-text text-muted text-center lg:text-left w-full mt-3.5">
+    <p class="support-text text-muted text-center lg:text-left w-full mt-3.5 hidden lg:block">
       {description}
     </p>
   )}

@@ -7,9 +7,9 @@ type Props = BaseVariantProps;
 
 const { items = [], id, className = "" } = Astro.props as Props;
 
-// Shared card padding — applied to the top row and the body so the card itself
-// has no padding and the middle (future-content slot) can run edge-to-edge.
-const PAD = "p-[clamp(1.5rem,2.2vw,2rem)]";
+// Shared content padding — applied to the top row and the body so the card
+// itself has no padding and the middle (future-content slot) runs edge-to-edge.
+const PAD = "p-[clamp(0.875rem,1.2vw,1.125rem)]";
 ---
 
 <section
@@ -28,10 +28,10 @@ const PAD = "p-[clamp(1.5rem,2.2vw,2rem)]";
           <li>
             <Tag
               {...(item.url ? { href: item.url } : {})}
-              class="group relative flex flex-col h-full min-h-[clamp(22rem,26vw,30rem)] rounded-lg overflow-hidden no-underline bg-bg3 border border-heading/8 transition-[border-color,transform] duration-200 hover:border-heading/18 hover:-translate-y-0.5"
+              class="group relative flex flex-col h-full min-h-[clamp(22rem,26vw,30rem)] rounded-lg overflow-hidden no-underline bg-bg3 border border-heading/8 [transition:transform_200ms_ease,border-color_200ms_ease] hover:border-heading/18 hover:-translate-y-0.5"
             >
               {/* Top row: icon + title (left) inline with the circular arrow (right) */}
-              <div class={`flex items-center justify-between gap-4 ${PAD} pb-0`}>
+              <div class={`flex items-center justify-between gap-4 ${PAD}`}>
                 <div class="flex items-center gap-3 min-w-0">
                   {item.icon && (
                     <span class="inline-flex shrink-0 text-heading/45">
@@ -58,12 +58,13 @@ const PAD = "p-[clamp(1.5rem,2.2vw,2rem)]";
                 </span>
               </div>
 
-              {/* Description + future-content slot pushed to bottom */}
-              <div class={`flex flex-col gap-2.5 mt-auto ${PAD} pt-0`}>
-                {/* Placeholder for future content — intentionally empty/hidden
-                    for now. Reserve the slot above the description. */}
-                <div hidden aria-hidden="true"></div>
+              {/* Middle content slot — fills the space between the title and
+                  the description. Temporary black fill to visualise the room
+                  we have to work with (swap for real content later). */}
+              <div class="flex-1 bg-black" aria-hidden="true"></div>
 
+              {/* Description pinned to the bottom */}
+              <div class={`flex flex-col gap-2.5 ${PAD}`}>
                 {item.description && (
                   <p class="text-[clamp(0.875rem,1vw,0.9375rem)] font-light leading-[1.7] text-heading/42">
                     {item.description}

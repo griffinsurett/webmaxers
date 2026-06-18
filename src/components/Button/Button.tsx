@@ -15,7 +15,7 @@ import GhostButton from './variants/GhostButton';
 import LinkButton from './variants/LinkButton';
 import TertiaryButton from './variants/TertiaryButton';
 import UnderlineButton from './variants/UnderlineButton';
-import HeaderButton from './variants/HeaderButton';
+import HiddenUnderlineButton from './variants/HiddenUnderlineButton';
 
 /**
  * Base props shared by all button variants
@@ -112,7 +112,7 @@ const VARIANT_MAP = {
   link: LinkButton,
   tertiary: TertiaryButton,
   underline: UnderlineButton,
-  header: HeaderButton,
+  hiddenUnderline: HiddenUnderlineButton,
 };
 
 export type ButtonVariant = keyof typeof VARIANT_MAP;

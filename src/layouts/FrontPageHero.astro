@@ -43,10 +43,16 @@ const {
     <div class="flex items-start justify-between gap-8 w-full">
 
       <!-- Left: headline + CTA -->
-      <div class="max-w-3xl pt-8 sm:pt-16 md:pt-20 lg:pt-28">
+      <div class="max-w-3xl md:pt-20 lg:pt-28">
         <h1 class="heading-display">
           {headline}<br />{headlineLine2}
         </h1>
+
+        {/* Mobile only: supporting text under the heading. On desktop this copy
+            lives in the stat card (bottom-right) instead. */}
+        <p class="support-text text-muted mt-5 max-w-[16rem] lg:hidden">
+          {bodyText || statDescription}
+        </p>
 
         <div class="flex flex-wrap items-center gap-6 mt-8">
           <Button

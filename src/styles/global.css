@@ -6,6 +6,8 @@
 @theme inline {
   --animate-marquee: marquee var(--duration) infinite linear;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  /* Underline wipe: collapses out to the right, then re-enters from the left. */
+  --animate-underline-sweep: underline-sweep 600ms ease;
 }
 
 @keyframes marquee {
@@ -16,6 +18,15 @@
 @keyframes marquee-vertical {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(0, calc(-100% - var(--gap)), 0); }
+}
+
+/* Underline disappears (scales out to the right) then animates back in from the
+   left — one continuous sweep on hover. */
+@keyframes underline-sweep {
+  0%   { transform: scaleX(1); transform-origin: right; }
+  50%  { transform: scaleX(0); transform-origin: right; }
+  51%  { transform: scaleX(0); transform-origin: left; }
+  100% { transform: scaleX(1); transform-origin: left; }
 }
 
 /* Tell Tailwind to scan integration components for class usage */
