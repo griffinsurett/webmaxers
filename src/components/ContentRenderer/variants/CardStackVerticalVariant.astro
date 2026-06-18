@@ -1,0 +1,296 @@
+---
+// src/components/ContentRenderer/variants/CardStackVerticalVariant.astro
+/**
+ * Card Stack Vertical Variant — pinned "cover stack" card section.
+ *
+ * Card panels only (no intro / outro). Panels are absolutely stacked full-screen
+ * on a single pin; each later card sits at a higher z-index. On scroll, each
+ * successive card slides UP from below the viewport (yPercent 100 → 0) and
+ * COVERS the card before it — the same "reveal-in-place by covering" feel as the
+ * homepage CurtainStack (testimonials sliding up over the footer). No fade, no
+ * track translate; the covered card stays put underneath.
+ *
+ * Sequence (GSAP ScrollTrigger, self-pinned):
+ *   - card 0 rests full-screen.
+ *   - for each card i ≥ 1: it slides up to cover card i-1 over ~1vh of scroll.
+ *   - finally the whole section slides off the top (~1vh) to reveal what follows.
+ *
+ * Fallbacks:
+ *   - <768px / reduced-motion: static vertical stack, normal scroll, no pin.
+ *
+ * Tokens on [data-cardstack-v] let you override per-section without editing
+ * this file.
+ */
+
+import type { BaseVariantProps } from "../ContentRenderer.types";
+import FilmstripCard from "@/components/LoopComponents/FilmstripCard.astro";
+
+type Props = BaseVariantProps;
+
+const {
+  items = [],
+  title = "",
+  id,
+} = Astro.props as Props;
+
+const totalPanels = items.length;
+---
+
+{/*
+  Vertical cover stack. The section pins itself; each card slides up to cover the
+  previous one, then the whole section peels off the top. Drop it directly into
+  the page — no wrapper.
+*/}
+<section
+  id={id}
+  class="csv-section bg-gradient"
+  style={`--csv-total-panels: ${totalPanels};`}
+  data-cardstack-v
+  aria-label={title?.replace?.("\n", " ") ?? "Cards"}
+>
+  {items.map((item, i) => (
+    <div
+      class="csv-panel csv-panel--card"
+      data-slide-index={i + 1}
+      data-cardstack-v-card
+    >
+      <div class="csv-boundary" aria-hidden="true"></div>
+      <div class="csv-rule" aria-hidden="true"></div>
+      <div class="csv-panel-inner csv-panel-inner--card">
+        <div class="csv-card">
+          <FilmstripCard
+            title={item.title}
+            description={item.description}
+            url={item.url}
+            featuredVideo={item.featuredVideo}
+            fullSiteImage={item.fullSiteImage}
+            bannerImage={item.bannerImage}
+            featuredImage={item.featuredImage}
+            industry={item.industry}
+            client={item.client}
+            technologies={item.technologies}
+            link={item.link}
+            projectUrl={item.projectUrl}
+          />
+        </div>
+      </div>
+    </div>
+  ))}
+</section>
+
+<style>
+  /* ── Design tokens ────────────────────────────────────────────── */
+  [data-cardstack-v] {
+    --csv-heading-col: currentColor;
+    --csv-text-col:    currentColor;
+    --csv-muted-col:   color-mix(in srgb, currentColor 45%, transparent);
+    --csv-rule-col:    color-mix(in srgb, currentColor 10%, transparent);
+    --csv-border-col:  color-mix(in srgb, currentColor 12%, transparent);
+    --csv-link-col:    currentColor;
+    --csv-pad-x:       clamp(2.5rem, 8vw, 9rem);
+    --csv-pad-y:       clamp(2rem, 4vh, 4rem);
+    /* Cards sit in a centred column so they don't stretch full-bleed. Wider than
+       a stacked card because each is split into two columns (media | text). */
+    --csv-card-w:      min(1100px, 92vw);
+  }
+
+  @media (max-width: 767px) {
+    [data-cardstack-v] {
+      --csv-pad-x: clamp(1.5rem, 6vw, 2.5rem);
+      --csv-card-w: min(560px, 92vw);
+    }
+  }
+
+  /* ── Surface ─────────────────────────────────────────────────────
+     Pinned full-viewport frame. Cards are stacked absolutely inside it; GSAP
+     slides each one up to cover the previous, then peels the whole frame up.
+     Opaque background = it curtains whatever section follows. */
+  .csv-section {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid var(--csv-border-col);
+    will-change: transform;
+  }
+
+  /* ── Panel: a full-screen layer stacked on top of the previous ── */
+  .csv-panel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    /* Each layer carries the site gradient (bg3 → bg, same as .bg-gradient) so
+       it's fully opaque and hides the card beneath once it covers it. The
+       direction alternates per card below for a back-and-forth rhythm. */
+    background: linear-gradient(
+      to right,
+      var(--color-bg3) 0%,
+      var(--color-bg) 100%
+    );
+    will-change: transform;
+  }
+
+  /* Reverse the gradient on every other (even) card so the dark edge flips
+     side-to-side as cards stack — odd: dark-left → light-right, even: the
+     mirror. Uses the panel's 1-based data-slide-index for parity. */
+  .csv-panel[data-slide-index]:nth-of-type(even),
+  .csv-panel:nth-child(even) {
+    background: linear-gradient(
+      to left,
+      var(--color-bg3) 0%,
+      var(--color-bg) 100%
+    );
+  }
+
+  /* Per-panel boundary line: full-width horizontal hairline at the panel's top
+     edge — visible as the card slides up to cover the one beneath (the leading
+     edge of the incoming layer). */
+  .csv-boundary {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 1px;
+    background: var(--csv-rule-col);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Full-height VERTICAL rule splitting each card's two halves (media | text). */
+  .csv-rule {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 1px;
+    background: var(--csv-rule-col);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* ── Panel inner ─────────────────────────────────────────────── */
+  .csv-panel-inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: var(--csv-pad-y) var(--csv-pad-x);
+  }
+
+  .csv-card {
+    width: var(--csv-card-w);
+  }
+
+  /* ── Half-and-half card layout (media left | text right) ──────────
+     FilmstripCard ships as a vertical stack (media on top, text below). Here we
+     re-flow it into two columns: media fills the left column, the title/meta
+     footer + description sit in the right column, vertically centred. Scoped via
+     :global so the shared card component is untouched. */
+  .csv-card :global(.fs-card) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    column-gap: clamp(1.5rem, 3vw, 2.75rem);
+    row-gap: 0.75rem;
+    height: auto;
+  }
+
+  .csv-card :global(.fs-card__media) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    height: 100%;
+  }
+
+  .csv-card :global(.fs-card__footer) { grid-column: 2; grid-row: 1; align-self: end; }
+  .csv-card :global(.fs-card__desc)   { grid-column: 2; grid-row: 2; align-self: start; max-width: none; }
+
+  /* On phones, fall back to the card's native stacked layout (media over text). */
+  @media (max-width: 767px) {
+    .csv-card :global(.fs-card) {
+      display: flex;
+      flex-direction: column;
+    }
+    .csv-card :global(.fs-card__media) { grid-row: auto; }
+    .csv-rule { display: none; }
+  }
+
+  /* ── Reduced motion: static vertical stack, no pinning ───────── */
+  @media (prefers-reduced-motion: reduce) {
+    .csv-section { height: auto; overflow: visible; }
+    .csv-panel {
+      position: static;
+      inset: auto;
+      height: auto;
+      min-height: 60vh;
+      transform: none !important;
+      will-change: auto;
+    }
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Cover-stack sequencer: cards are absolutely stacked; each later card slides
+  // up from below (yPercent 100 → 0) to cover the previous one, then the whole
+  // section peels off the top. One pinned, scrubbed timeline drives it all.
+  function buildStandalone(section: HTMLElement) {
+    const cards = Array.from(
+      section.querySelectorAll<HTMLElement>("[data-cardstack-v-card]"),
+    );
+    if (!cards.length) return;
+
+    // Stack order: later cards sit on top so they cover earlier ones.
+    // Card 0 rests in place (yPercent 0); every other card starts just below the
+    // viewport (yPercent 100) ready to slide up over the one before it.
+    cards.forEach((card, i) => {
+      card.style.zIndex = String(i + 1);
+      gsap.set(card, { yPercent: i === 0 ? 0 : 100 });
+    });
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: "top top",
+        // One viewport of scroll per cover transition + one for the final peel.
+        end: "+=" + window.innerHeight * cards.length,
+        pin: true,
+        scrub: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+      },
+    });
+
+    // Each card after the first slides up from below to cover the previous one
+    // (yPercent 100 → 0 lands it flush over the card beneath).
+    for (let i = 1; i < cards.length; i++) {
+      tl.to(cards[i], { yPercent: 0, ease: "none", duration: 1 }, ">");
+    }
+
+    // Finally, peel the whole section off the top to reveal what follows.
+    tl.to(section, { yPercent: -100, ease: "none", duration: 1 }, ">");
+  }
+
+  function init() {
+    const sections = document.querySelectorAll<HTMLElement>("[data-cardstack-v]");
+    if (!sections.length) return;
+
+    sections.forEach((section) => {
+      // Only reduced-motion users get the static CSS fallback.
+      ScrollTrigger.matchMedia({
+        "(prefers-reduced-motion: no-preference)": () => {
+          buildStandalone(section);
+        },
+      });
+    });
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>

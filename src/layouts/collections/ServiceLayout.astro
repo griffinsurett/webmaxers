@@ -7,6 +7,7 @@ import Icon from "@/components/Icon";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import FeatureCard from "@/components/LoopComponents/FeatureCard.astro";
 import Marquee from "@/components/Marquee.astro";
+import PortfolioSectionVertical from "@/components/Portfolio/PortfolioSectionVertical.astro";
 import { related } from "@/utils/query";
 import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
 import { humanizeSlug } from "@/utils/string";
@@ -35,6 +36,8 @@ const headingText =
 // Capabilities that belong to this entry (only solution pages have these —
 // capability pages resolve to an empty set, so the section won't render there).
 const isSolution = entry?.collection === "solutions";
+// The vertical filmstrip portfolio only shows on the Websites solution page.
+const showPortfolioFilmstrip = isSolution && entry?.id === "websites";
 const relatedCapabilityEntries = isSolution
   ? (await related("capabilities", "solutions", entry.id).get()).entries
   : [];
@@ -112,6 +115,14 @@ const relatedCapabilities = relatedCapabilityEntries.length
         </section>
       )}
 
+      <!-- 2b. PORTFOLIO FILMSTRIP (Websites page only) — full-bleed, pins and
+           peels off the top on scroll, revealing the process section below. ── -->
+      {showPortfolioFilmstrip && (
+        <div class="sl-filmstrip-fullbleed">
+          <PortfolioSectionVertical ctaLink="/projects" />
+        </div>
+      )}
+
       <!-- 3. PROCESS — animated "Our Process" renderer ── -->
       {steps.length > 0 && (
         <ContentRenderer
@@ -168,6 +179,16 @@ const relatedCapabilities = relatedCapabilityEntries.length
     width: 100vw;
     margin-left: calc(50% - 50vw);
     overflow: hidden;
+  }
+
+  /* Full-bleed escape for the pinned vertical filmstrip so it spans the full
+     viewport width and pins/peels cleanly outside the centered page flow. The
+     parent flex `gap` would otherwise add space around the pinned frame, so we
+     cancel it with negative margins matching .sl-page's gap. */
+  .sl-filmstrip-fullbleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-block: calc(-1 * clamp(4.5rem, 9vw, 8rem));
   }
 
   /* ── 1. TAGLINE ── */

@@ -1,0 +1,27 @@
+---
+// src/components/Portfolio/PortfolioSectionVertical.astro
+// Vertical-scroll twin of PortfolioSection.astro — same featured-projects query,
+// rendered through CardStackVerticalVariant (half-and-half cards glide
+// bottom→top, then the whole section peels off the top to reveal what follows).
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query, whereArrayContains, sortByOrder } from "@/utils/query";
+
+interface Props {
+  heading?: string;
+  ctaLink?: string;
+}
+
+const { heading = "Selected work\n& explorations", ctaLink } = Astro.props;
+
+const featuredProjects = query("projects")
+  .where(whereArrayContains("tags", "featured"))
+  .orderBy(sortByOrder());
+---
+
+<ContentRenderer
+  id="portfolio-filmstrip-vertical-section"
+  query={featuredProjects}
+  variant="CardStackVerticalVariant"
+  title={heading}
+  collectionUrl={ctaLink}
+/>
