@@ -134,9 +134,9 @@ const totalPanels = items.length;
   }
 
   /* Reverse the gradient on every other (even) card so the dark edge flips
-     side-to-side as cards stack — odd: dark-left → light-right, even: the
-     mirror. Uses the panel's 1-based data-slide-index for parity. */
-  .csv-panel[data-slide-index]:nth-of-type(even),
+     side-to-side as cards stack — odd cards: dark-left → light-right, even
+     cards: the mirror. The panels are the only children of the section, so
+     :nth-child parity == the card's 1-based slide index parity. */
   .csv-panel:nth-child(even) {
     background: linear-gradient(
       to left,
@@ -187,26 +187,49 @@ const totalPanels = items.length;
 
   /* ── Half-and-half card layout (media left | text right) ──────────
      FilmstripCard ships as a vertical stack (media on top, text below). Here we
-     re-flow it into two columns: media fills the left column, the title/meta
-     footer + description sit in the right column, vertically centred. Scoped via
+     re-flow it into two columns: media in the left column, the title/meta footer
+     + description grouped in the right column. Both columns are centred against
+     each other (align-items:center), and the text group is centred within its
+     own column so the whole card reads as one balanced, centred unit. Scoped via
      :global so the shared card component is untouched. */
   .csv-card :global(.fs-card) {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    /* Two rows split at the card's vertical centre: the text footer sits in the
+       upper row (bottom-aligned to the centre) and the description in the lower
+       row (top-aligned to the centre), so the text group straddles the centre
+       line — level with the media, which spans both rows and is centred. */
+    grid-template-rows: 1fr 1fr;
     align-items: center;
     column-gap: clamp(1.5rem, 3vw, 2.75rem);
-    row-gap: 0.75rem;
     height: auto;
   }
 
+  /* Media: left column, spans both rows, centred; keeps its natural 20:13 frame
+     (no forced height, so it doesn't stretch taller than its content). */
   .csv-card :global(.fs-card__media) {
     grid-column: 1;
     grid-row: 1 / span 2;
-    height: 100%;
+    align-self: center;
+    height: auto;
+    margin: 0;
   }
 
-  .csv-card :global(.fs-card__footer) { grid-column: 2; grid-row: 1; align-self: end; }
-  .csv-card :global(.fs-card__desc)   { grid-column: 2; grid-row: 2; align-self: start; max-width: none; }
+  .csv-card :global(.fs-card__footer) {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding-bottom: 0.5rem;
+  }
+  .csv-card :global(.fs-card__desc) {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    max-width: none;
+  }
 
   /* On phones, fall back to the card's native stacked layout (media over text). */
   @media (max-width: 767px) {

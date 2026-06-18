@@ -1,0 +1,120 @@
+---
+// src/components/LoopComponents/FilmstripCardMedia.astro
+// The media frame for a project card: video (priority) → hover-scroll image →
+// placeholder. Extracted so both FilmstripCard (horizontal) and the vertical
+// card-stack variant render identical media without duplicating the logic.
+//
+// Renders ONLY the inner media (video/image/placeholder). The caller owns the
+// outer frame (aspect ratio, sizing) so each layout can size it as it needs.
+
+import HoverScrollImage from "@/components/Portfolio/HoverScrollImage";
+import HoverPlayVideo from "@/components/Video/HoverPlayVideo/HoverPlayVideo.astro";
+import { resolveImageMetadata, getImageAlt } from "@/utils/images";
+import { getImage } from "astro:assets";
+
+export interface Props {
+  title: string;
+  featuredVideo?: string;
+  fullSiteImage?: unknown;
+  bannerImage?: unknown;
+  featuredImage?: unknown;
+  /** Extra classes for the placeholder fallback box. */
+  class?: string;
+}
+
+const {
+  title,
+  featuredVideo,
+  fullSiteImage,
+  bannerImage,
+  featuredImage,
+  class: className = "",
+} = Astro.props;
+
+const imageSource = fullSiteImage ?? bannerImage ?? featuredImage;
+const imageMetadata = resolveImageMetadata(imageSource);
+const imageAlt = getImageAlt(imageSource, `${title} website preview`);
+
+// Cropped placeholder shown until the full image loads.
+let croppedSrc: string | undefined;
+if (imageMetadata) {
+  const cropped = await getImage({
+    src: imageMetadata,
+    width: 860,
+    height: 559,
+    format: "webp",
+    quality: 70,
+    fit: "cover",
+    position: "top",
+  });
+  croppedSrc = cropped.src;
+}
+
+// Full-height image for the hover-scroll interaction.
+let fullSrc: string | undefined;
+let fullWidth: number | undefined;
+let fullHeight: number | undefined;
+if (imageMetadata) {
+  const full = await getImage({
+    src: imageMetadata,
+    width: 1280,
+    format: "webp",
+    quality: 75,
+  });
+  fullSrc = full.src;
+  fullWidth = imageMetadata.width;
+  fullHeight = imageMetadata.height;
+}
+---
+
+{featuredVideo ? (
+  <HoverPlayVideo
+    src={featuredVideo}
+    alt={imageAlt}
+    muted={true}
+    loop={true}
+    controls={false}
+    lazy={true}
+    playsInline={true}
+    posterWidth={1280}
+    generateThumbAt={0.75}
+    wrapperClass="h-full w-full overflow-hidden"
+    mediaClass="block !h-auto !w-full !object-contain object-top"
+    clientWrapperClass="h-full w-full overflow-hidden items-start"
+    class="m-0 h-full w-full"
+  />
+) : imageMetadata && fullSrc ? (
+  <div class="relative h-full w-full" data-hover-scroll-tile>
+    {croppedSrc && (
+      <figure
+        class="absolute inset-0 overflow-hidden"
+        data-hover-scroll-placeholder
+        aria-hidden="true"
+      >
+        <img
+          src={croppedSrc}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          class="block h-full w-full select-none object-cover object-top"
+        />
+      </figure>
+    )}
+    <div class="relative z-10 h-full">
+      <HoverScrollImage
+        client:visible
+        src={fullSrc}
+        alt={imageAlt}
+        width={fullWidth}
+        height={fullHeight}
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  </div>
+) : (
+  <div class:list={["flex h-full w-full items-center justify-center bg-bg3 text-[0.7rem] uppercase tracking-[0.22em] text-text/45", className]}>
+    Preview coming soon
+  </div>
+)}
