@@ -4,6 +4,7 @@ import LogoMark from "@/components/Logo/LogoMark.astro";
 import Button from "@/components/Button/Button";
 import EyebrowSection from "@/layouts/EyebrowSection.astro";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import Video from "@/components/Video/Video.astro";
 import { query, sortByOrder } from "@/utils/query";
 import { siteData } from "@/content/siteData";
 
@@ -16,6 +17,11 @@ interface Props {
   ctaLink?: string;
   stickyHeight?: string;
   logoSize?: number;
+  videoSrc?: string;
+  videoPoster?: string;
+  videoAlt?: string;
+  videoWrapperClass?: string;
+  videoClass?: string;
   /** Show the `stats` counters (bottom-left on desktop). */
   showStats?: boolean;
 }
@@ -29,6 +35,11 @@ const {
   ctaLink = "/about-us",
   stickyHeight = "250svh",
   logoSize = 56,
+  videoSrc,
+  videoPoster,
+  videoAlt = "About section video",
+  videoWrapperClass = "",
+  videoClass = "",
   showStats = false,
 } = Astro.props;
 
@@ -97,12 +108,30 @@ const words = splitTextIntoAnimatedWords(statement);
 
   <!-- About Bottom Section -->
   <section class="about-bottom section-container">
-    <!-- Mobile: single column stack. md+: leftText | spacer | rightText+CTA -->
+    <!-- Mobile: single column stack. md+: leftText | video | rightText+CTA -->
     <div class="grid grid-cols-1 gap-10 md:gap-0 md:grid-cols-[1fr_2fr_1fr]">
       <p class="text-base font-light leading-relaxed text-text">
         {leftText}
       </p>
-      <div class="hidden md:block"></div>
+      {videoSrc ? (
+        <div class="flex items-center justify-center">
+          <Video
+            src={videoSrc}
+            poster={videoPoster}
+            alt={videoAlt}
+            wrapperClass={`about-video-shell !h-auto aspect-square overflow-hidden bg-black ${videoWrapperClass}`.trim()}
+            class={`about-video-media ${videoClass}`.trim()}
+            autoplay={true}
+            muted={true}
+            loop={true}
+            controls={false}
+            playsinline={true}
+            lazy={true}
+          />
+        </div>
+      ) : (
+        <div class="hidden md:block"></div>
+      )}
       <div class="flex flex-col justify-between gap-8">
         <p class="text-base font-light leading-relaxed text-text">
           {rightText}
@@ -180,6 +209,15 @@ const words = splitTextIntoAnimatedWords(statement);
 
   .about-space {
     white-space: pre;
+  }
+
+  .about-video-shell {
+    width: 100%;
+    max-width: min(100%, 24rem);
+  }
+
+  .about-video-media {
+    object-fit: cover;
   }
 
   @media (prefers-reduced-motion: reduce) {
