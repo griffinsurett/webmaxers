@@ -23,7 +23,7 @@ const contactFormId =
 
 const handleSubmit = async () => {
   throw new Error(
-    "Contact form is not configured. Set PUBLIC_FORMSPREE_CONTACT_ID or PUBLIC_FORMSPREE_ID."
+    "Contact form is not configured. Set PUBLIC_FORMSPREE_CONTACT_ID or PUBLIC_FORMSPREE_ID.",
   );
 };
 ---
@@ -42,7 +42,7 @@ const handleSubmit = async () => {
     resetOnSuccess={true}
     className="w-full"
   >
-    <input type="hidden" name="formName" value="Webmaxers Contact Form" />
+    <input type="hidden" name="formName" value="webmaxers Contact Form" />
 
     <div class="flex flex-col lg:flex-row justify-between gap-2 mb-4">
       <Input

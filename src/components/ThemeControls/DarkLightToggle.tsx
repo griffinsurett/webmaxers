@@ -12,7 +12,7 @@ export default function DarkLightToggle({ gradientId, onApplied }: DarkLightTogg
   const [isLight, setIsLight] = UseMode();
 
   return (
-    <div className="flex h-9 shrink-0 items-center">
+    <div className="flex h-8 sm:h-9 shrink-0 items-center">
       <CircleCheckbox
         checked={isLight}
         onChange={(event) => {

@@ -12,7 +12,7 @@ export default function ThemeControls({ className = "" }: ThemeControlsProps) {
   return (
     <div
       className={[
-        "relative flex h-9 shrink-0 items-center justify-center gap-1.5 sm:h-10 z-[999999]",
+        "relative flex h-8 shrink-0 items-center justify-center gap-1 sm:h-10 sm:gap-1.5 z-[999999]",
         className,
       ]
         .filter(Boolean)

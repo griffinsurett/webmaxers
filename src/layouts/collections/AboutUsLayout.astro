@@ -4,8 +4,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import { Image } from "astro:assets";
 
 import aboutPortraitBwImg from "@/assets/founder.jpeg";
-import aboutMissionImg    from "@/assets/about_mission.png";
-import aboutVisionImg     from "@/assets/about_vision.png";
+import aboutMissionImg from "@/assets/about_mission.png";
+import aboutVisionImg from "@/assets/about_vision.png";
 
 export interface Props {
   seoProps: any;
@@ -16,34 +16,41 @@ const { seoProps } = Astro.props;
 
 const capabilities = [
   { label: "Web Design & UI/UX", pct: 95 },
-  { label: "Web Development",    pct: 92 },
+  { label: "Web Development", pct: 92 },
   { label: "AI Automation & Agents", pct: 87 },
-  { label: "Brand Identity",     pct: 83 },
+  { label: "Brand Identity", pct: 83 },
 ] as const;
 
 const stats = [
-  { value: "50+",  label: "Projects Delivered"  },
+  { value: "50+", label: "Projects Delivered" },
   { value: "100%", label: "Client Satisfaction" },
-  { value: "7+",   label: "Years of Expertise"  },
-  { value: "20+",  label: "Brands Elevated"     },
+  { value: "7+", label: "Years of Expertise" },
+  { value: "20+", label: "Brands Elevated" },
 ] as const;
 ---
 
 <BaseLayout {...seoProps}>
   <main class="au-page">
-
     <!-- ═══════════════════════════════════════
          1. HERO — full-width dark image header
     ═══════════════════════════════════════ -->
     <section class="au-hero" aria-label="Page header">
       <div class="au-hero-media" aria-hidden="true">
-        <Image src={aboutMissionImg} alt="" class="au-hero-img" loading="eager" />
+        <Image
+          src={aboutMissionImg}
+          alt=""
+          class="au-hero-img"
+          loading="eager"
+        />
         <div class="au-hero-veil"></div>
       </div>
       <div class="au-hero-body">
         <h1 class="au-hero-heading reveal-item">About Us</h1>
-        <nav class="au-breadcrumb reveal-item" style="--rv-delay:.12s"
-             aria-label="Breadcrumb">
+        <nav
+          class="au-breadcrumb reveal-item"
+          style="--rv-delay:.12s"
+          aria-label="Breadcrumb"
+        >
           <a href="/">Home</a>
           <span aria-hidden="true">/</span>
           <span>About Us</span>
@@ -56,43 +63,43 @@ const stats = [
     ═══════════════════════════════════════ -->
     <section class="au-about au-pad" aria-label="Who we are">
       <div class="page-container au-about-grid">
-
         <figure class="au-about-figure reveal-item">
           <Image
             src={aboutPortraitBwImg}
-            alt="Webmaxers founder"
+            alt="webmaxers founder"
             class="au-about-img"
           />
         </figure>
 
         <div class="au-about-copy">
           <p class="au-eyebrow reveal-item" style="--rv-delay:.06s">
-            About Webmaxers
+            About webmaxers
           </p>
           <h2 class="au-h2 reveal-item" style="--rv-delay:.12s">
             We Build Websites, Brands, and AI Systems That Work
           </h2>
           <p class="au-body reveal-item" style="--rv-delay:.18s">
-            Webmaxers is a full-service digital studio specializing in web
+            webmaxers is a full-service digital studio specializing in web
             design, web development, brand identity, and AI agents and
             automation. We build fast, high-converting websites, craft bold
-            brand identities, and deploy custom AI systems that save your
-            team hours every week.
+            brand identities, and deploy custom AI systems that save your team
+            hours every week.
           </p>
           <div class="reveal-item" style="--rv-delay:.24s">
             <a href="/contact-us" class="au-btn">Get In Touch</a>
           </div>
         </div>
-
       </div>
     </section>
 
     <!-- ═══════════════════════════════════════
          3. CRAFT + STATS — capabilities & numbers
     ═══════════════════════════════════════ -->
-    <section class="au-craft-stats au-pad" aria-label="Capabilities and statistics">
+    <section
+      class="au-craft-stats au-pad"
+      aria-label="Capabilities and statistics"
+    >
       <div class="page-container au-cs-grid">
-
         <!-- ── Capabilities ── -->
         <div class="au-craft">
           <h2 class="au-h2 reveal-item">The Craft Behind The Work</h2>
@@ -103,41 +110,53 @@ const stats = [
           </p>
 
           <ul class="cap-list" aria-label="Capability levels">
-            {capabilities.map((cap, i) => (
-              <li
-                class="cap-item reveal-bar"
-                style={`--bar-i:${i}`}
-                role="group"
-                aria-label={`${cap.label}: ${cap.pct}%`}
-              >
-                <div class="cap-row">
-                  <span class="cap-label">{cap.label}</span>
-                  <span class="cap-pct" aria-hidden="true" data-target={cap.pct}>0%</span>
-                </div>
-                <div
-                  class="cap-track"
-                  role="progressbar"
-                  aria-valuenow={cap.pct}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
+            {
+              capabilities.map((cap, i) => (
+                <li
+                  class="cap-item reveal-bar"
+                  style={`--bar-i:${i}`}
+                  role="group"
+                  aria-label={`${cap.label}: ${cap.pct}%`}
                 >
-                  <div class="cap-fill" style={`--pct:${cap.pct}%`}></div>
-                </div>
-              </li>
-            ))}
+                  <div class="cap-row">
+                    <span class="cap-label">{cap.label}</span>
+                    <span
+                      class="cap-pct"
+                      aria-hidden="true"
+                      data-target={cap.pct}
+                    >
+                      0%
+                    </span>
+                  </div>
+                  <div
+                    class="cap-track"
+                    role="progressbar"
+                    aria-valuenow={cap.pct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div class="cap-fill" style={`--pct:${cap.pct}%`} />
+                  </div>
+                </li>
+              ))
+            }
           </ul>
         </div>
 
         <!-- ── Stats ── -->
         <div class="au-stats" aria-label="Agency statistics">
-          {stats.map((s, i) => (
-            <div class="stat-card reveal-item" style={`--rv-delay:${i * 0.08}s`}>
-              <p class="stat-val">{s.value}</p>
-              <p class="stat-lbl">{s.label}</p>
-            </div>
-          ))}
+          {
+            stats.map((s, i) => (
+              <div
+                class="stat-card reveal-item"
+                style={`--rv-delay:${i * 0.08}s`}
+              >
+                <p class="stat-val">{s.value}</p>
+                <p class="stat-lbl">{s.label}</p>
+              </div>
+            ))
+          }
         </div>
-
       </div>
     </section>
 
@@ -159,13 +178,11 @@ const stats = [
         </div>
       </div>
     </section>
-
   </main>
 </BaseLayout>
 
 <!---------------------------------------------------------------------------->
 <style>
-
   /* ═══ PAGE BASE ═══ */
   .au-page {
     background-color: var(--color-bg);
@@ -203,12 +220,12 @@ const stats = [
   .au-hero-veil {
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(to bottom,
-        rgba(8,8,8,0.42) 0%,
-        rgba(8,8,8,0.78) 80%,
-        rgba(8,8,8,0.92) 100%
-      );
+    background: linear-gradient(
+      to bottom,
+      rgba(8, 8, 8, 0.42) 0%,
+      rgba(8, 8, 8, 0.78) 80%,
+      rgba(8, 8, 8, 0.92) 100%
+    );
   }
 
   .au-hero-body {
@@ -242,7 +259,9 @@ const stats = [
     text-decoration: none;
     transition: color 0.2s;
   }
-  .au-breadcrumb a:hover { color: rgba(255,255,255,0.85); }
+  .au-breadcrumb a:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
 
   /* ═══ 2. WHO WE ARE ═══ */
   .au-about-grid {
@@ -253,7 +272,9 @@ const stats = [
   }
 
   @media (max-width: 860px) {
-    .au-about-grid { grid-template-columns: 1fr; }
+    .au-about-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .au-about-figure {
@@ -326,9 +347,9 @@ const stats = [
     color: var(--color-heading);
     background: transparent;
     transition:
-      background  0.25s ease,
+      background 0.25s ease,
       border-color 0.25s ease,
-      color        0.25s ease;
+      color 0.25s ease;
   }
   .au-btn:hover {
     background: #ffffff;
@@ -348,8 +369,10 @@ const stats = [
 
   /* ═══ 3. CRAFT + STATS ═══ */
   .au-craft-stats {
-    border-top: 1px solid color-mix(in srgb, var(--color-heading) 8%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--color-heading) 8%, transparent);
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-heading) 8%, transparent);
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-heading) 8%, transparent);
   }
 
   .au-cs-grid {
@@ -360,7 +383,9 @@ const stats = [
   }
 
   @media (max-width: 860px) {
-    .au-cs-grid { grid-template-columns: 1fr; }
+    .au-cs-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   /* ── Capability bars ── */
@@ -414,10 +439,12 @@ const stats = [
     );
     /* bar-i is 0,1,2,3 — staggers the animation per bar */
     transition: width 1.15s cubic-bezier(0.16, 1, 0.3, 1)
-                calc(var(--bar-i, 0) * 0.12s);
+      calc(var(--bar-i, 0) * 0.12s);
   }
 
-  .cap-item.bars-go .cap-fill { width: var(--pct); }
+  .cap-item.bars-go .cap-fill {
+    width: var(--pct);
+  }
 
   /* ── Stats grid ── */
   .au-stats {
@@ -431,7 +458,9 @@ const stats = [
     border: 1px solid color-mix(in srgb, var(--color-heading) 10%, transparent);
     border-radius: 0.75rem;
     background: color-mix(in srgb, var(--color-heading) 3%, transparent);
-    transition: border-color 0.3s ease, background 0.3s ease;
+    transition:
+      border-color 0.3s ease,
+      background 0.3s ease;
   }
   .stat-card:hover {
     border-color: rgba(255, 255, 255, 0.22);
@@ -515,7 +544,7 @@ const stats = [
     opacity: 0;
     transform: translateY(24px);
     transition:
-      opacity   0.72s cubic-bezier(0.16, 1, 0.3, 1) var(--rv-delay, 0s),
+      opacity 0.72s cubic-bezier(0.16, 1, 0.3, 1) var(--rv-delay, 0s),
       transform 0.72s cubic-bezier(0.16, 1, 0.3, 1) var(--rv-delay, 0s);
   }
   .reveal-item.is-visible {
@@ -525,22 +554,40 @@ const stats = [
 
   /* No-JS / scripting:none fallback */
   @media (scripting: none) {
-    .reveal-item         { opacity: 1; transform: none; transition: none; }
-    .cap-fill            { width: var(--pct) !important; }
+    .reveal-item {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .cap-fill {
+      width: var(--pct) !important;
+    }
   }
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
-    .reveal-item         { opacity: 1; transform: none; transition: none; }
-    .cap-fill            { transition: none !important; width: var(--pct) !important; }
-    .au-about-img        { transition: none; }
+    .reveal-item {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .cap-fill {
+      transition: none !important;
+      width: var(--pct) !important;
+    }
+    .au-about-img {
+      transition: none;
+    }
   }
 
   :global([data-a11y-motion="reduced"]) .reveal-item {
-    opacity: 1; transform: none; transition: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
   :global([data-a11y-motion="reduced"]) .cap-fill {
-    transition: none !important; width: var(--pct) !important;
+    transition: none !important;
+    width: var(--pct) !important;
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -550,29 +597,46 @@ const stats = [
   /* ── Tablet: grid just collapsed to single column (≤ 860px) ── */
   @media (max-width: 860px) {
     /* Tighter gaps in single-column stacks */
-    .au-about-grid { gap: clamp(2rem, 4vw, 3rem); }
-    .au-cs-grid    { gap: clamp(2.5rem, 4vw, 3.5rem); }
+    .au-about-grid {
+      gap: clamp(2rem, 4vw, 3rem);
+    }
+    .au-cs-grid {
+      gap: clamp(2.5rem, 4vw, 3.5rem);
+    }
 
     /* Portrait editorial → cinematic 16:9 for full-width banner image */
-    .au-about-img  { aspect-ratio: 16 / 9; }
+    .au-about-img {
+      aspect-ratio: 16 / 9;
+    }
 
     /* Body text can stretch to full column width */
-    .au-body       { max-width: 100%; font-size: clamp(0.9rem, 1.6vw, 1rem); }
+    .au-body {
+      max-width: 100%;
+      font-size: clamp(0.9rem, 1.6vw, 1rem);
+    }
 
     /* Headings benefit from slightly more vw-responsiveness mid-range */
-    .au-h2         { font-size: clamp(1.65rem, 4.2vw, 2.5rem); }
+    .au-h2 {
+      font-size: clamp(1.65rem, 4.2vw, 2.5rem);
+    }
   }
 
   /* ── Mobile (≤ 640px) ── */
   @media (max-width: 640px) {
     /* Tighter vertical rhythm on phone */
-    .au-pad { padding-block: clamp(3rem, 7vw, 4rem); }
+    .au-pad {
+      padding-block: clamp(3rem, 7vw, 4rem);
+    }
 
     /* Less top-offset in hero so heading stays well-centered */
-    .au-hero-body { padding-top: clamp(2.5rem, 7vw, 3.5rem); }
+    .au-hero-body {
+      padding-top: clamp(2.5rem, 7vw, 3.5rem);
+    }
 
     /* More compact image ratio for phone — avoids a wall-of-image effect */
-    .au-about-img  { aspect-ratio: 4 / 3; }
+    .au-about-img {
+      aspect-ratio: 4 / 3;
+    }
 
     /* WCAG 2.5.5 — minimum 44px touch target */
     .au-btn {
@@ -594,19 +658,34 @@ const stats = [
   /* ── Small mobile (≤ 430px) ── */
   @media (max-width: 430px) {
     /* Hero heading — prevent overflow on very narrow viewports */
-    .au-hero-heading { font-size: clamp(2.2rem, 10vw, 2.8rem); }
+    .au-hero-heading {
+      font-size: clamp(2.2rem, 10vw, 2.8rem);
+    }
 
     /* Compact stat cards on narrow screens */
-    .stat-card { padding: 0.875rem 1rem; }
-    .stat-val  { font-size: clamp(1.75rem, 7.5vw, 2.2rem); }
-    .stat-lbl  { font-size: 0.7rem; letter-spacing: 0.03em; }
+    .stat-card {
+      padding: 0.875rem 1rem;
+    }
+    .stat-val {
+      font-size: clamp(1.75rem, 7.5vw, 2.2rem);
+    }
+    .stat-lbl {
+      font-size: 0.7rem;
+      letter-spacing: 0.03em;
+    }
 
     /* Tighter capability list */
-    .cap-list  { gap: 1.25rem; margin-top: 2rem; }
-    .cap-label { font-size: 0.8rem; }
-    .cap-pct   { font-size: 0.72rem; }
+    .cap-list {
+      gap: 1.25rem;
+      margin-top: 2rem;
+    }
+    .cap-label {
+      font-size: 0.8rem;
+    }
+    .cap-pct {
+      font-size: 0.72rem;
+    }
   }
-
 </style>
 
 <!---------------------------------------------------------------------------->
@@ -616,19 +695,22 @@ const stats = [
     const revEls = document.querySelectorAll<HTMLElement>(".reveal-item");
     if (revEls.length) {
       const revObs = new IntersectionObserver(
-        (entries) => entries.forEach((e) => {
-          if (e.isIntersecting) {
-            (e.target as HTMLElement).classList.add("is-visible");
-            revObs.unobserve(e.target);
-          }
-        }),
-        { threshold: 0.12, rootMargin: "0px 0px -30px 0px" }
+        (entries) =>
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              (e.target as HTMLElement).classList.add("is-visible");
+              revObs.unobserve(e.target);
+            }
+          }),
+        { threshold: 0.12, rootMargin: "0px 0px -30px 0px" },
       );
       revEls.forEach((el) => revObs.observe(el));
     }
 
     /* ── capability bars ────────────────────────────────── */
-    const capItems = document.querySelectorAll<HTMLElement>(".cap-item.reveal-bar");
+    const capItems = document.querySelectorAll<HTMLElement>(
+      ".cap-item.reveal-bar",
+    );
     if (capItems.length) {
       const barObs = new IntersectionObserver(
         (entries) => {
@@ -651,15 +733,22 @@ const stats = [
               return;
             }
 
-            const barIndex = parseInt(item.style.getPropertyValue("--bar-i") ?? "0", 10);
-            const delay = barIndex * 120; /* match CSS stagger: --bar-i * 0.12s */
+            const barIndex = parseInt(
+              item.style.getPropertyValue("--bar-i") ?? "0",
+              10,
+            );
+            const delay =
+              barIndex * 120; /* match CSS stagger: --bar-i * 0.12s */
             const duration = 1300;
 
             let startTime: number | null = null;
             function tick(now: number) {
               if (startTime === null) startTime = now;
               const elapsed = now - startTime - delay;
-              if (elapsed < 0) { requestAnimationFrame(tick); return; }
+              if (elapsed < 0) {
+                requestAnimationFrame(tick);
+                return;
+              }
               const t = Math.min(elapsed / duration, 1);
               /* ease-out-expo */
               const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
@@ -669,7 +758,7 @@ const stats = [
             requestAnimationFrame(tick);
           });
         },
-        { threshold: 0.35 }
+        { threshold: 0.35 },
       );
       capItems.forEach((el) => barObs.observe(el));
     }

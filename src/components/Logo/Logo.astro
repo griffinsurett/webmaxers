@@ -48,7 +48,9 @@ const hydrationMode =
 
 // Lottie container gets [filter:none] — the parent span carries the invert via logo-class
 const lottieClassName = "[filter:none]";
-const mediaClasses = `block w-[${size}px] h-[${size}px] object-contain animate-spin-once`;
+// Rendered size is responsive (smaller on mobile, full `size` from sm: up); the
+// underlying <Image> still loads at `size` px for a crisp asset.
+const mediaClasses = `block w-8 h-8 sm:w-[${size}px] sm:h-[${size}px] object-contain animate-spin-once`;
 ---
 
 <a

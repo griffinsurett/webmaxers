@@ -18,7 +18,7 @@ export default function ReducedMotionToggle({ gradientId, onApplied }: ReducedMo
   const reduced = preferences.content.reducedMotion;
 
   return (
-    <div className="flex h-9 shrink-0 items-center">
+    <div className="flex h-8 sm:h-9 shrink-0 items-center">
       <CircleCheckbox
         checked={reduced}
         onChange={(event) => {

@@ -17,16 +17,20 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
 
 <BaseLayout title="Home" description={siteData.description} hideFooter>
   <main class="flex-1 relative z-10">
-    {/* HeroLogo3D renders the fracturing logo; THIS wrapper decides when it
+    {
+      /* HeroLogo3D renders the fracturing logo; THIS wrapper decides when it
         breaks. The logo goes from whole (top) to shattered across the wrapper's
-        height — i.e. fully broken when the projects section begins below it. */}
+        height — i.e. fully broken when the projects section begins below it. */
+    }
     <div class="relative" data-logo-break>
       <HeroLogo3D class="fixed inset-0 -z-10 opacity-40 dark:invert">
-        {/* Poster: a render of the 3D logo at progress 0, captured on a SQUARE
+        {
+          /* Poster: a render of the 3D logo at progress 0, captured on a SQUARE
             canvas with the same perspective camera. The live canvas frames the
             logo by VERTICAL fov (its on-screen height is a fixed fraction of the
             viewport height at any width), so we size the poster by height and
-            centre it — matching the live logo's size exactly, seamless swap. */}
+            centre it — matching the live logo's size exactly, seamless swap. */
+        }
         <Image
           src={heroLogo3dPoster}
           alt=""
@@ -52,7 +56,7 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
 
       <!-- About Section (includes both top reveal and bottom content) -->
       <AboutSection
-        statement="Webmaxers is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology."
+        statement="webmaxers is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology."
         leftText="We design for longevity, clarity first, craft always, built to scale."
         rightText="Our mission is to make technology feel human by designing digital products that are intuitive, purposeful, and meaningful to people."
         ctaText="Explore Our Story"
@@ -87,7 +91,6 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
         <Footer />
       </div>
     </CurtainStack>
-
   </main>
 </BaseLayout>
 

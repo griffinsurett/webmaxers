@@ -1,6 +1,6 @@
 # Scroll Sections — Build Spec
 
-This document describes two scroll-animated sections on the Webmaxers homepage. It covers what they look like, how they behave, and how they relate to each other. Build this however you see fit — the only constraint is the visual result and behavior described below.
+This document describes two scroll-animated sections on the webmaxxers homepage. It covers what they look like, how they behave, and how they relate to each other. Build this however you see fit — the only constraint is the visual result and behavior described below.
 
 ---
 

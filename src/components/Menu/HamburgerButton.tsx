@@ -42,13 +42,13 @@ function HamburgerButton({
       {/* Label styled as hamburger button */}
       <label
         htmlFor={id}
-        className="cursor-pointer p-2 text-text hover:text-primary transition-colors inline-flex items-center justify-center"
+        className="cursor-pointer p-1.5 sm:p-2 text-text hover:text-primary transition-colors inline-flex items-center justify-center"
       >
-        <div className="w-6 h-5 relative flex items-center justify-center">
+        <div className="w-5 h-4 sm:w-6 sm:h-5 relative flex items-center justify-center">
           {/* Top line */}
           <span
             className={`absolute h-0.5 w-full bg-current rounded-full transition-all duration-300 ease-in-out origin-center ${
-              shouldTransform ? "rotate-45" : "-translate-y-2"
+              shouldTransform ? "rotate-45" : "-translate-y-1.5 sm:-translate-y-2"
             }`}
           />
 
@@ -62,7 +62,7 @@ function HamburgerButton({
           {/* Bottom line */}
           <span
             className={`absolute h-0.5 w-full bg-current rounded-full transition-all duration-300 ease-in-out origin-center ${
-              shouldTransform ? "-rotate-45" : "translate-y-2"
+              shouldTransform ? "-rotate-45" : "translate-y-1.5 sm:translate-y-2"
             }`}
           />
         </div>

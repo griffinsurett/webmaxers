@@ -44,19 +44,28 @@ const legalColClass = [
 ].join(" ");
 ---
 
-<footer class="relative bg-bg text-text mt-auto border-t border-border-soft" role="contentinfo" aria-label="Site footer" data-footer-logo-break>
-  {/* Centered 3D brand mark — same scroll-driven spin → shatter → vacuum as the
+<footer
+  class="relative bg-bg text-text mt-auto border-t border-border-soft"
+  role="contentinfo"
+  aria-label="Site footer"
+  data-footer-logo-break
+>
+  {
+    /* Centered 3D brand mark — same scroll-driven spin → shatter → vacuum as the
       hero, absolutely positioned to fill the footer container behind the
       content (pointer-events-none, aria-hidden). The break scrubs across the
-      footer itself (data-footer-logo-break). */}
+      footer itself (data-footer-logo-break). */
+  }
   <HeroLogo3D
     class="absolute inset-0 z-0 opacity-40 dark:invert"
     contained
     hideOnLeave={false}
     breakSelector="[data-footer-logo-break]"
   >
-    {/* Poster sized to match the live canvas framing (viewport-tall, centred),
-        so the poster → 3D swap is seamless and at the hero's scale. */}
+    {
+      /* Poster sized to match the live canvas framing (viewport-tall, centred),
+        so the poster → 3D swap is seamless and at the hero's scale. */
+    }
     <Image
       src={heroLogo3dPoster}
       alt=""
@@ -66,7 +75,9 @@ const legalColClass = [
     />
   </HeroLogo3D>
 
-  <div class="relative z-10 section-container grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2">
+  <div
+    class="relative z-10 section-container grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2"
+  >
     {/* Top-left — eyebrow + heading */}
     <div class="lg:col-start-1 lg:row-start-1">
       <p class="footer__eyebrow">{eyebrow}</p>
@@ -76,14 +87,21 @@ const legalColClass = [
     </div>
 
     {/* Top-right — CTA, dropped toward the bottom of its cell */}
-    <div class="flex items-end justify-start lg:col-start-2 lg:row-start-1 lg:justify-end">
-      <Button variant="underline" href={ctaData.link} client:load>{ctaData.text}</Button>
+    <div
+      class="flex items-end justify-start lg:col-start-2 lg:row-start-1 lg:justify-end"
+    >
+      <Button variant="underline" href={ctaData.link} client:load
+        >{ctaData.text}</Button
+      >
     </div>
 
-    {/* Lower-left — copyright + Ask-AI prompt buttons (replaces the tagline) */}
+    {
+      /* Lower-left — copyright + Ask-AI prompt buttons (replaces the tagline) */
+    }
     <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2">
       <p class="text-sm text-muted">
-        &copy; {new Date().getFullYear()} {siteData.legalName}
+        &copy; {new Date().getFullYear()}
+        {siteData.legalName}
       </p>
       <AIIconPrompt
         prompt={aiFooterPrompt}
@@ -93,8 +111,12 @@ const legalColClass = [
       />
     </div>
 
-    {/* Lower-right — LEGAL (left) + SOCIAL (far right), aligned under the CTA */}
-    <div class="flex flex-wrap gap-x-16 gap-y-10 lg:col-start-2 lg:row-start-2 lg:justify-end">
+    {
+      /* Lower-right — LEGAL (left) + SOCIAL (far right), aligned under the CTA */
+    }
+    <div
+      class="flex flex-wrap gap-x-16 gap-y-10 lg:col-start-2 lg:row-start-2 lg:justify-end"
+    >
       <ContentRenderer
         id="footer-legal-section"
         query={query("legal")}
@@ -116,9 +138,11 @@ const legalColClass = [
     </div>
   </div>
 
-  {/* Full-bleed giant logo + wordmark lockup — spans the viewport, clipped at
+  {
+    /* Full-bleed giant logo + wordmark lockup — spans the viewport, clipped at
       both edges. Desktop/tablet only (hidden on mobile). The mark reuses the
-      header's scroll-driven animated logo (no text portion). */}
+      header's scroll-driven animated logo (no text portion). */
+  }
   <div class="footer-wordmark" aria-hidden="true">
     <div class="footer-wordmark__mark">
       <Logo

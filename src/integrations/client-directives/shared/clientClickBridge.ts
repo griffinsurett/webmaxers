@@ -1,4 +1,5 @@
-export const CLIENT_CLICK_HANDLER_STORE_KEY = "__WEBMAXERS_CLIENT_CLICK_HANDLERS__";
+export const CLIENT_CLICK_HANDLER_STORE_KEY =
+  "__webmaxers_CLIENT_CLICK_HANDLERS__";
 export const CLIENT_CLICK_HANDLER_EVENT = "webmaxers-custom-hydrations";
 
 type HandlerEntry = {
@@ -7,7 +8,7 @@ type HandlerEntry = {
 
 type HandlerStoreTarget = typeof globalThis & {
   [CLIENT_CLICK_HANDLER_STORE_KEY]?: Map<string, HandlerEntry>;
-  __WEBMAXERS_CLIENT_CLICK_PENDING__?: Map<
+  __webmaxers_CLIENT_CLICK_PENDING__?: Map<
     string,
     Array<(handler: ClientClickHandler | null) => void>
   >;
@@ -20,7 +21,7 @@ export type ClientClickHandlerContext = {
 };
 
 export type ClientClickHandler = (
-  context: ClientClickHandlerContext
+  context: ClientClickHandlerContext,
 ) => void | boolean;
 
 const getHandlerStore = (): Map<string, HandlerEntry> => {
@@ -37,15 +38,15 @@ const getPendingStore = (): Map<
   Array<(handler: ClientClickHandler | null) => void>
 > => {
   const target = globalThis as HandlerStoreTarget;
-  if (!target.__WEBMAXERS_CLIENT_CLICK_PENDING__) {
-    target.__WEBMAXERS_CLIENT_CLICK_PENDING__ = new Map();
+  if (!target.__webmaxers_CLIENT_CLICK_PENDING__) {
+    target.__webmaxers_CLIENT_CLICK_PENDING__ = new Map();
   }
-  return target.__WEBMAXERS_CLIENT_CLICK_PENDING__!;
+  return target.__webmaxers_CLIENT_CLICK_PENDING__!;
 };
 
 const flushPendingInvocations = (
   key: string,
-  handler: ClientClickHandler | null
+  handler: ClientClickHandler | null,
 ) => {
   const pendingStore = getPendingStore();
   const queue = pendingStore.get(key);
@@ -71,7 +72,7 @@ const dispatchHandlerReady = (key: string) => {
   window.dispatchEvent(
     new CustomEvent(CLIENT_CLICK_HANDLER_EVENT, {
       detail: { key },
-    })
+    }),
   );
 };
 
@@ -88,7 +89,8 @@ const scheduleHandlerReady = (key: string, entry: HandlerEntry) => {
   };
 
   const win =
-    typeof window !== "undefined" && typeof window.requestAnimationFrame === "function"
+    typeof window !== "undefined" &&
+    typeof window.requestAnimationFrame === "function"
       ? window
       : null;
 
@@ -111,7 +113,7 @@ const scheduleHandlerReady = (key: string, entry: HandlerEntry) => {
 
 export const enqueuePendingClientClickInvocation = (
   key: string | undefined | null,
-  invocation: (handler: ClientClickHandler | null) => void
+  invocation: (handler: ClientClickHandler | null) => void,
 ) => {
   if (!key) {
     return () => false;
@@ -145,7 +147,7 @@ export const enqueuePendingClientClickInvocation = (
 
 export const registerClientClickHandler = (
   key: string | undefined | null,
-  handler: ClientClickHandler
+  handler: ClientClickHandler,
 ) => {
   if (!key) return;
 
@@ -157,7 +159,7 @@ export const registerClientClickHandler = (
 
 export const unregisterClientClickHandler = (
   key: string | undefined | null,
-  handler: ClientClickHandler
+  handler: ClientClickHandler,
 ) => {
   if (!key) return;
 
@@ -171,7 +173,7 @@ export const unregisterClientClickHandler = (
 };
 
 export const getRegisteredClientClickHandler = (
-  key: string | undefined | null
+  key: string | undefined | null,
 ): ClientClickHandler | null => {
   if (!key) return null;
   return getHandlerStore().get(key)?.handler ?? null;
@@ -179,7 +181,7 @@ export const getRegisteredClientClickHandler = (
 
 export const waitForClientClickHandler = (
   key: string | undefined | null,
-  timeout = 1500
+  timeout = 1500,
 ): Promise<ClientClickHandler | null> => {
   if (!key) return Promise.resolve(null);
 
@@ -202,7 +204,7 @@ export const waitForClientClickHandler = (
       }
       window.removeEventListener(
         CLIENT_CLICK_HANDLER_EVENT,
-        handleReady as EventListener
+        handleReady as EventListener,
       );
     };
 
@@ -215,7 +217,7 @@ export const waitForClientClickHandler = (
 
     window.addEventListener(
       CLIENT_CLICK_HANDLER_EVENT,
-      handleReady as EventListener
+      handleReady as EventListener,
     );
 
     timer = window.setTimeout(() => {

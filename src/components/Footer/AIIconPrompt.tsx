@@ -50,7 +50,7 @@ export default function AIIconPrompt({
   label = "Ask AI about Us:",
   labelClassName = "",
   listClassName = "",
-  promptSubject = "Webmaxers",
+  promptSubject = "webmaxers",
 }: AIIconPromptProps) {
   const encodedPrompt = encodeURIComponent(prompt.trim());
 

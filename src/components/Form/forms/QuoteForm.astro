@@ -22,7 +22,7 @@ const quoteFormId =
 
 const handleSubmit = async () => {
   throw new Error(
-    "Quote form is not configured. Set PUBLIC_FORMSPREE_QUOTE_ID or PUBLIC_FORMSPREE_ID."
+    "Quote form is not configured. Set PUBLIC_FORMSPREE_QUOTE_ID or PUBLIC_FORMSPREE_ID.",
   );
 };
 ---
@@ -40,7 +40,7 @@ const handleSubmit = async () => {
     resetOnSuccess={true}
     className="w-full gap-0"
   >
-    <input type="hidden" name="formName" value="Webmaxers Quote Form" />
+    <input type="hidden" name="formName" value="webmaxers Quote Form" />
 
     <div class="flex flex-col lg:flex-row justify-between gap-2 mb-4">
       <Input
