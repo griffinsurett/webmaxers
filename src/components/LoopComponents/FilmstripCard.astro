@@ -3,11 +3,8 @@
 // One panel card for FilmstripVariant.
 // Owns all media rendering (video takes priority over image).
 
-import HoverScrollImage from "@/components/Portfolio/HoverScrollImage";
-import HoverPlayVideo from "@/components/Video/HoverPlayVideo/HoverPlayVideo.astro";
+import FilmstripCardMedia from "@/components/LoopComponents/FilmstripCardMedia.astro";
 import Button from "@/components/Button/Button";
-import { resolveImageMetadata, getImageAlt } from "@/utils/images";
-import { getImage } from "astro:assets";
 
 export interface Props {
   title: string;
@@ -40,98 +37,20 @@ const {
 
 const externalUrl = link?.url ?? projectUrl ?? url;
 const externalLabel = link?.label ?? "Visit ↗";
-
-const imageSource = fullSiteImage ?? bannerImage ?? featuredImage;
-const imageMetadata = resolveImageMetadata(imageSource);
-const imageAlt = getImageAlt(imageSource, `${title} website preview`);
-
-// Cropped placeholder shown until full image loads
-let croppedSrc: string | undefined;
-if (imageMetadata) {
-  const cropped = await getImage({
-    src: imageMetadata,
-    width: 860,
-    height: 559,
-    format: "webp",
-    quality: 70,
-    fit: "cover",
-    position: "top",
-  });
-  croppedSrc = cropped.src;
-}
-
-// Full-height image for hover-scroll
-let fullSrc: string | undefined;
-let fullWidth: number | undefined;
-let fullHeight: number | undefined;
-if (imageMetadata) {
-  const full = await getImage({
-    src: imageMetadata,
-    width: 1280,
-    format: "webp",
-    quality: 75,
-  });
-  fullSrc = full.src;
-  fullWidth = imageMetadata.width;
-  fullHeight = imageMetadata.height;
-}
 ---
 
 <article class="fs-card">
 
   <!-- Media frame -->
   <div class="fs-card__media">
-    {featuredVideo ? (
-      <HoverPlayVideo
-        src={featuredVideo}
-        alt={imageAlt}
-        muted={true}
-        loop={true}
-        controls={false}
-        lazy={true}
-        playsInline={true}
-        posterWidth={1280}
-        generateThumbAt={0.75}
-        wrapperClass="h-full w-full overflow-hidden"
-        mediaClass="block !h-auto !w-full !object-contain object-top"
-        clientWrapperClass="h-full w-full overflow-hidden items-start"
-        class="m-0 h-full w-full"
-      />
-    ) : imageMetadata && fullSrc ? (
-      <div class="relative h-full w-full" data-hover-scroll-tile>
-        {croppedSrc && (
-          <figure
-            class="absolute inset-0 overflow-hidden"
-            data-hover-scroll-placeholder
-            aria-hidden="true"
-          >
-            <img
-              src={croppedSrc}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              draggable={false}
-              class="block h-full w-full select-none object-cover object-top"
-            />
-          </figure>
-        )}
-        <div class="relative z-10 h-full">
-          <HoverScrollImage
-            client:visible
-            src={fullSrc}
-            alt={imageAlt}
-            width={fullWidth}
-            height={fullHeight}
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-      </div>
-    ) : (
-      <div class="fs-card__placeholder">
-        Preview coming soon
-      </div>
-    )}
+    <FilmstripCardMedia
+      title={title}
+      featuredVideo={featuredVideo}
+      fullSiteImage={fullSiteImage}
+      bannerImage={bannerImage}
+      featuredImage={featuredImage}
+      class="fs-card__placeholder"
+    />
   </div>
 
   <!-- Card footer: title + meta + CTA -->

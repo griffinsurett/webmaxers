@@ -11,6 +11,7 @@ import PortfolioSectionVertical from "@/components/Portfolio/PortfolioSectionVer
 import { related } from "@/utils/query";
 import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
 import { humanizeSlug } from "@/utils/string";
+import { buildTree } from "@/utils/tree";
 import type { CollectionLayoutProps } from "./types";
 
 const { entry, seoProps = {} } = Astro.props as CollectionLayoutProps;
@@ -49,6 +50,13 @@ const relatedCapabilities = relatedCapabilityEntries.length
       getCollectionMeta("capabilities"),
     )
   : [];
+const capabilityTree = relatedCapabilities.length
+  ? buildTree(relatedCapabilities, { parentField: "parent", sortBy: "order" })
+  : [];
+
+const displayCapabilities = capabilityTree.flatMap((node) =>
+  node.children.length > 0 ? node.children : [node]
+);
 ---
 
 <BaseLayout {...seoProps}>
@@ -135,11 +143,11 @@ const relatedCapabilities = relatedCapabilityEntries.length
       )}
 
       <!-- 3b. RELATED CAPABILITIES (solution pages only) ── -->
-      {relatedCapabilities.length > 0 && (
-        <section class="sl-section" aria-labelledby="sl-services-heading">
-          <p class="sl-label" id="sl-services-heading">What This Includes</p>
+      {displayCapabilities.length > 0 && (
+        <section class="sl-section" aria-labelledby="sl-capabilities-heading">
+          <p class="sl-label" id="sl-capabilities-heading">Capabilities</p>
           <ul class="sl-services-grid" role="list">
-            {relatedCapabilities.map((capability, i) => (
+            {displayCapabilities.map((capability, i) => (
               <li class="reveal-item" style={`--rv-delay:${i * 0.07}s`}>
                 <FeatureCard
                   title={capability.title}
