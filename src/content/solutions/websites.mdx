@@ -4,14 +4,6 @@ heading: "Launch a Website That Actually Works. Fast. Clear. Built to Grow."
 description: "Fast performing, beautiful sites built around your business, designed to convert and engineered to scale."
 icon: "lu:globe"
 order: 1
-tagline: "Your website is your business, online."
-aboutEyebrow: "Websites"
-aboutStatement: "We build websites that turn your online presence into a clear, fast, and trustworthy part of the business."
-aboutLeftText: "We design for longevity, clarity first, and a site structure that supports real growth."
-aboutRightText: "Our mission is to make your website feel sharp, easy to manage, and effective at bringing in the right work."
-aboutCtaText: "Explore Our Story"
-aboutCtaLink: "/about-us"
-aboutShowStats: true
 steps:
   - title: "Discovery"
     body: "We get into your goals, audience, and competitors before touching any tools. No assumptions, all context."
@@ -20,3 +12,18 @@ steps:
   - title: "Launch and Grow"
     body: "We go live tested, and we stay available after. Ongoing support, monitoring, and improvements built into the relationship."
 ---
+import AboutSection from "@/components/AboutSection/AboutSection.astro";
+import Marquee from "@/components/Marquee.astro";
+
+<AboutSection
+  eyebrow="Websites"
+  statement="We build websites that turn your online presence into a clear, fast, and trustworthy part of the business."
+  leftText="We design for longevity, clarity first, and a site structure that supports real growth."
+  rightText="Our mission is to make your website feel sharp, easy to manage, and effective at bringing in the right work."
+  ctaText="Explore Our Story"
+  ctaLink="/about-us"
+  stickyHeight="220svh"
+  showStats={true}
+/>
+
+<Marquee />

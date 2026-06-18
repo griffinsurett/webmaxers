@@ -3,19 +3,16 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SecondaryHero from "@/layouts/SecondaryHero.astro";
 import SolutionsHero from "@/layouts/SolutionsHero.astro";
-import AboutSection from "@/components/AboutSection/AboutSection.astro";
 import Icon from "@/components/Icon";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import Marquee from "@/components/Marquee.astro";
 import PortfolioSectionVertical from "@/components/Portfolio/PortfolioSectionVertical.astro";
 import { children } from "@/utils/query/snippets";
 import { humanizeSlug } from "@/utils/string";
 import type { CollectionLayoutProps } from "./types";
 
-const { entry, seoProps = {} } = Astro.props as CollectionLayoutProps;
+const { entry, seoProps = {}, Content } = Astro.props as CollectionLayoutProps;
 const data = entry?.data || {};
 
-const includes: { title: string; body: string }[] = data.includes ?? [];
 const steps:    { title: string; body: string }[] = data.steps    ?? [];
 
 // Breadcrumb/eyebrow: the page title, falling back to the humanized slug.
@@ -35,24 +32,8 @@ const headingText =
 // Capabilities that belong to this entry (only solution pages have these —
 // capability pages resolve to an empty set, so the section won't render there).
 const isSolution = entry?.collection === "solutions";
-const showHomepageAbout = isSolution && entry?.id === "websites";
 // The vertical filmstrip portfolio only shows on the Websites solution page.
 const showPortfolioFilmstrip = isSolution && entry?.id === "websites";
-
-const aboutEyebrow = data.aboutEyebrow ?? "About";
-const aboutStatement =
-  data.aboutStatement ??
-  "We build websites that turn your online presence into a clear, fast, and trustworthy part of the business.";
-const aboutLeftText =
-  data.aboutLeftText ??
-  "We design for longevity, clarity first, and a site structure that supports real growth.";
-const aboutRightText =
-  data.aboutRightText ??
-  "Our mission is to make your website feel sharp, easy to manage, and effective at bringing in the right work.";
-const aboutCtaText = data.aboutCtaText ?? "Explore Our Story";
-const aboutCtaLink = data.aboutCtaLink ?? "/about-us";
-const aboutStickyHeight = data.aboutStickyHeight ?? "220svh";
-const aboutShowStats = data.aboutShowStats ?? true;
 ---
 
 <BaseLayout {...seoProps}>
@@ -75,32 +56,15 @@ const aboutShowStats = data.aboutShowStats ?? true;
       />
     )}
 
-    {showHomepageAbout && (
-      <>
-        <AboutSection
-          eyebrow={aboutEyebrow}
-          statement={aboutStatement}
-          leftText={aboutLeftText}
-          rightText={aboutRightText}
-          ctaText={aboutCtaText}
-          ctaLink={aboutCtaLink}
-          stickyHeight={aboutStickyHeight}
-          showStats={aboutShowStats}
-        />
-
-        <div class="sl-marquee-fullbleed">
-          <Marquee />
-        </div>
-      </>
-    )}
+    {Content && <Content />}
 
     <!-- ══════════════════════════════════════════
          MIDDLE CONTENT
     ══════════════════════════════════════════ -->
-    <div class:list={["page-container", "sl-page", showHomepageAbout && "sl-page--websites"]}>
+    <div class:list={["page-container", "sl-page"]}>
 
       <!-- 1. TAGLINE / ABOUT FALLBACK ───────────────────── -->
-      {!showHomepageAbout && data.tagline && (
+      {!Content && data.tagline && (
         <section class="sl-tagline-section" aria-label="Service tagline">
           {data.icon && (
             <div class="sl-tagline-icon" aria-hidden="true">
@@ -112,13 +76,13 @@ const aboutShowStats = data.aboutShowStats ?? true;
       )}
 
       <!-- 2. WHAT'S INCLUDED ───────────────────── -->
-      {!showHomepageAbout && includes.length > 0 && (
+      {!Content && data.includes?.length > 0 && (
         <section class="sl-section" aria-labelledby="sl-includes-heading">
           <p class="sl-label" id="sl-includes-heading" aria-label="What is included">
             What's Included
           </p>
           <ul class="sl-includes-grid" role="list">
-            {includes.map((item, i) => (
+            {data.includes.map((item, i) => (
               <li class="sl-include-card reveal-item" style={`--rv-delay:${i * 0.07}s`}>
                 <span class="sl-include-num" aria-hidden="true">
                   {String(i + 1).padStart(2, "0")}
@@ -168,18 +132,6 @@ const aboutShowStats = data.aboutShowStats ?? true;
     display: flex;
     flex-direction: column;
     gap: clamp(3rem, 6vw, 5rem);
-  }
-
-  .sl-page--websites {
-    gap: clamp(2rem, 4vw, 3rem);
-  }
-
-  /* Full-bleed escape: break the marquee out of the centered page-container
-     so it spans the full viewport width, like the homepage marquee. */
-  .sl-marquee-fullbleed {
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-    overflow: hidden;
   }
 
   /* Full-bleed escape for the pinned vertical filmstrip so it spans the full
