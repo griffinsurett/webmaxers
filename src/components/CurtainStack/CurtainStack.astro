@@ -96,7 +96,7 @@ const { class: className = "" } = Astro.props;
   // animated descendants (filmstrip / services attach it to their own root).
   function contractOf(layer: HTMLElement): LayerContract | null {
     if ((layer as any).__curtainLayer) return (layer as any).__curtainLayer;
-    const inner = layer.querySelector<HTMLElement>("[data-filmstrip], [data-services-scene], [data-logo-scene]");
+    const inner = layer.querySelector<HTMLElement>("[data-filmstrip], [data-cardstack-v], [data-services-scene], [data-logo-scene]");
     return inner ? ((inner as any).__curtainLayer ?? null) : null;
   }
 

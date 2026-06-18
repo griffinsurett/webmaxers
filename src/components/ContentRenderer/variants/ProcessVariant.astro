@@ -97,6 +97,17 @@ const logoSrc = logoImg.src;
     gap: clamp(2.5rem, 5vw, 4.5rem);
   }
 
+  /* Desktop: the section is pinned (start: center center) while the rail/logo
+     scrubs, so fill the viewport and centre the content vertically — otherwise
+     the heading + steps sit at the top of the pinned frame with empty space
+     below. Mobile (static, no pin) stays in natural flow. */
+  @media (min-width: 861px) {
+    .process-section {
+      min-height: 100vh;
+      justify-content: center;
+    }
+  }
+
   /* Desktop-island vs mobile-static split is handled by HydrateResponsive
      (min-width: 861px). */
 

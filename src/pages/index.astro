@@ -11,8 +11,16 @@ import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
 import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
 import SolutionsScroll from "@/components/SolutionsScroll/SolutionsScroll.astro";
 import Footer from "@/layouts/Footer.astro";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query, sortByDate } from "@/utils/query";
 import { Image } from "astro:assets";
 import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
+
+// Latest 3 blog posts for the homepage preview curtain layer.
+const latestPosts = query("blog")
+  .where((e) => !e.data.draft)
+  .orderBy(sortByDate("publishDate", "desc"))
+  .limit(3);
 ---
 
 <BaseLayout title="Home" description={siteData.description} hideFooter>
@@ -87,31 +95,43 @@ import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
       <div data-curtain-layer data-move="up" id="logo-scene">
         <TestimonialCarousel withBackground />
       </div>
-      <div data-curtain-layer data-move="none" class="curtain-footer-layer">
-        <Footer />
+      {/* Blog preview — the curtain's resting layer (revealed when testimonials
+          slides up). The footer is NOT in the curtain; it's a normal 2D section
+          below. */}
+      <div data-curtain-layer data-move="none" class="curtain-blog-layer">
+        <ContentRenderer
+          query={latestPosts}
+          variant="BlogVariant"
+          appearance="dark"
+          eyebrow="From the journal"
+          title="Latest writing"
+          columns={3}
+          collectionUrl="/blog"
+        />
       </div>
     </CurtainStack>
   </main>
+
+  {/* Footer — plain 2D, scrolls normally after the curtain releases. */}
+  <Footer />
 </BaseLayout>
 
 <style>
-  /* The footer is the final curtain layer (revealed when testimonials slides
-     up). Let its content fill the pinned frame and sit flush to the bottom, and
-     make the inner <footer> fill the layer height. */
-  :global(.curtain-footer-layer) {
+  /* Blog layer = the curtain's resting layer (revealed when testimonials slides
+     up). Opaque page bg so it fully covers what's behind during the reveal, and
+     its content is vertically centred in the pinned frame. */
+  :global(.curtain-blog-layer) {
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    overflow: hidden;
-  }
-  :global(.curtain-footer-layer) > :global(footer) {
-    width: 100%;
+    justify-content: center;
+    overflow-y: auto;
+    background: var(--color-bg);
   }
 
-  /* Reduced motion: the stack flattens to normal flow — the footer layer returns
-     to a normal block (no forced height / justify). */
+  /* Reduced motion: the stack flattens to normal flow — the blog layer returns
+     to a normal block (no forced height / centring). */
   @media (prefers-reduced-motion: reduce) {
-    :global(.curtain-footer-layer) {
+    :global(.curtain-blog-layer) {
       display: block;
       overflow: visible;
     }

@@ -15,17 +15,37 @@
  */
 
 import { find, isCollectionReference } from "@/utils/query";
+import { resolveImageMetadata, getImageAlt } from "@/utils/images";
+import { getImage } from "astro:assets";
+import Button from "@/components/Button/Button";
 
 export interface Props {
   title: string;
   url?: string;
   description?: string;
   date?: Date | string;
+  /** Blog frontmatter date (used when `date` isn't passed). */
+  publishDate?: Date | string;
   tags?: string[];
   author?: any; // Reference object: { collection: 'authors', id: 'jane-doe' }
+  featuredImage?: unknown;
+  /** "default" = starter card; "dark" = homepage dark-editorial card. */
+  appearance?: "default" | "dark";
 }
 
-const { title, url, description, date, tags, author } = Astro.props;
+const {
+  title,
+  url,
+  description,
+  date,
+  publishDate,
+  tags,
+  author,
+  featuredImage,
+  appearance = "default",
+} = Astro.props;
+
+const displayDate = date ?? publishDate;
 
 // Query for author data if reference exists
 let authorData: Record<string, any> | null = null;
@@ -50,7 +70,78 @@ const authorInitials =
         .join("")
         .toUpperCase()
     : "??");
+
+// Resolve the featured image (dark/editorial card shows it; default doesn't).
+const imageMeta = resolveImageMetadata(featuredImage);
+let imgSrc: string | undefined;
+if (appearance === "dark" && imageMeta) {
+  const img = await getImage({
+    src: imageMeta,
+    width: 800,
+    height: 500,
+    format: "webp",
+    quality: 72,
+    fit: "cover",
+    position: "top",
+  });
+  imgSrc = img.src;
+}
+const imgAlt = getImageAlt(featuredImage, `${title} cover image`);
+
+const dateLabel = displayDate
+  ? new Date(displayDate).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  : "";
 ---
+
+{appearance === "dark" ? (
+  <article class="ac-dark group flex h-full flex-col">
+    {/* Media */}
+    <a href={url} class="ac-dark__media block w-full overflow-hidden" aria-hidden={!url}>
+      {imgSrc ? (
+        <img
+          src={imgSrc}
+          alt={imgAlt}
+          loading="lazy"
+          decoding="async"
+          class="block h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+        />
+      ) : (
+        <div class="ac-dark__placeholder">Article</div>
+      )}
+    </a>
+
+    {/* Meta row */}
+    <div class="ac-dark__meta">
+      {dateLabel && <time class="ac-dark__date">{dateLabel}</time>}
+      {tags && tags.length > 0 && (
+        <span class="ac-dark__tag">{tags[0]}</span>
+      )}
+    </div>
+
+    {/* Title */}
+    <h3 class="ac-dark__title">
+      {url ? <a href={url}>{title}</a> : <span>{title}</span>}
+    </h3>
+
+    {description && <p class="ac-dark__desc">{description}</p>}
+
+    {url && (
+      <Button
+        variant="underline"
+        href={url}
+        size="sm"
+        className="ac-dark__link mt-4 self-start"
+        client:load
+      >
+        Read article
+      </Button>
+    )}
+  </article>
+) : (
 
 <article
   class="bg-bg rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
@@ -117,6 +208,7 @@ const authorInitials =
     }
   </div>
 </article>
+)}
 
 <style>
   /* CSS for 2-line text truncation */
@@ -126,4 +218,73 @@ const authorInitials =
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
+
+  /* ── Dark editorial card (homepage) — hairline, light type, cover image ── */
+  .ac-dark {
+    --ac-rule: color-mix(in srgb, currentColor 12%, transparent);
+    --ac-muted: color-mix(in srgb, currentColor 45%, transparent);
+    color: var(--color-heading);
+  }
+
+  .ac-dark__media {
+    aspect-ratio: 16 / 10;
+    border: 1px solid var(--ac-rule);
+  }
+  .ac-dark__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg3, #18181b);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--ac-muted);
+  }
+
+  .ac-dark__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.1rem;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ac-muted);
+  }
+  .ac-dark__tag::before {
+    content: "·";
+    margin-right: 0.75rem;
+    color: var(--ac-muted);
+  }
+
+  .ac-dark__title {
+    margin-top: 0.55rem;
+    font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: var(--color-heading);
+  }
+  .ac-dark__title a {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+  .ac-dark__title a:hover { opacity: 0.7; }
+
+  .ac-dark__desc {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 300;
+    line-height: 1.55;
+    color: color-mix(in srgb, var(--color-text) 60%, transparent);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
 </style>

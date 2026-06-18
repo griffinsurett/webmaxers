@@ -12,5 +12,14 @@
       "github": "https://github.com/janedoe",
       "linkedin": "https://linkedin.com/in/janedoe"
     }
+  },
+  {
+    "id": "griffin-surett",
+    "title": "Griffin Surett",
+    "description": "Web Designer / Developer and Founder of Griffin's Web Services",
+    "order": 2,
+    "featuredImage": "@/assets/griffin.JPG",
+    "publishDate": "2023-01-15",
+    "role": "Senior Developer"
   }
 ]

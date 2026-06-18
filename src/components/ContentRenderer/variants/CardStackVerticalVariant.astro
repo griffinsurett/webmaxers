@@ -197,86 +197,89 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
     });
   }
 
-  // Cover-stack sequencer (desktop): slides are absolutely stacked; each later
-  // slide rises up (yPercent 100 → 0) to cover the previous one, then the whole
-  // section peels off the top. One pinned, scrubbed timeline drives it all.
-  function buildStandalone(section: HTMLElement) {
+  // Cover-stack driver: slides are absolutely stacked; each later slide rises up
+  // (yPercent 100 → 0) to cover the previous one. Driving is by a 0→1 progress,
+  // so the SAME logic works whether we self-pin (standalone) or a CurtainStack
+  // feeds the progress and adds its own move-off (peel) on top. Returns the
+  // uniform { getScrubPx, setProgress } layer contract.
+  function makeDriver(section: HTMLElement) {
     const slides = Array.from(
       section.querySelectorAll<HTMLElement>("[data-cardstack-v-card]"),
     );
-    if (!slides.length) return;
 
     slides.forEach((slide, i) => {
       slide.style.zIndex = String(i + 1);
       gsap.set(slide, { yPercent: i === 0 ? 0 : 100 });
-      // Child rows start hidden; they reveal as their card becomes active.
-      hideChildren(slide);
+      hideChildren(slide); // rows reveal as each card becomes active
     });
 
-    // Track which card last triggered its child reveal (-1 = none yet).
-    let lastActive = -1;
+    // (slides.length - 1) card-to-card cover transitions, one viewport each.
+    const coverCount = Math.max(slides.length - 1, 0);
 
-    // Switch the active card and (re)play its child reveal, hiding the previous
-    // one so re-entering it later replays from scratch. Declared before the
-    // timeline because ScrollTrigger may call onEnter/onUpdate synchronously
-    // during create() when the section is already in view at load.
+    // Replay a card's child rows whenever it becomes the active (top) card.
+    let lastActive = -1;
     const setActive = (active: number) => {
       if (active === lastActive) return;
       if (lastActive >= 0 && slides[lastActive]) hideChildren(slides[lastActive]);
-      playChildren(slides[active]);
+      if (slides[active]) playChildren(slides[active]);
       lastActive = active;
     };
 
-    // The cover-stack itself stays scrubbed (deterministic with scroll position).
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: section,
-        start: "top top",
-        end: "+=" + window.innerHeight * slides.length,
-        pin: true,
-        scrub: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        // Card 0 reveals when the pinned section first reaches the top (and
-        // again when scrolling back up to it) — not at page-load, so you see it
-        // animate in rather than already settled.
-        onEnter: () => setActive(0),
-        onEnterBack: () => setActive(0),
-        onUpdate: (self) => {
-          // Active card = the topmost one that has finished sliding up. Each
-          // card i≥1 owns a 1-unit slide in a (slides.length)-unit timeline; the
-          // final unit is the peel. Card i is "covered/active" once progress
-          // passes its slide's end (i / total).
-          const total = slides.length; // (slides.length-1) slides + 1 peel
-          const p = self.progress * total;
-          let active = 0;
-          for (let i = 1; i < slides.length; i++) {
-            // Card i's slide runs progress (i-1)→i. Activate ~halfway through the
-            // cover so the rows start revealing well before the card lands.
-            if (p >= i - 0.5) active = i;
-          }
-          setActive(active);
-        },
+    return {
+      // Scroll budget the covers need (the stack adds its move-off on top).
+      getScrubPx: () => window.innerHeight * Math.max(coverCount, 1),
+      // Drive the stack to a 0→1 progress: position each card + activate rows.
+      setProgress: (p: number) => {
+        const total = Math.max(coverCount, 1);
+        const t = Math.min(Math.max(p, 0), 1) * total;
+        let active = 0;
+        for (let i = 1; i < slides.length; i++) {
+          // Card i's cover runs t in (i-1)→i; yPercent 100→0 across that unit.
+          const local = Math.min(Math.max(t - (i - 1), 0), 1);
+          gsap.set(slides[i], { yPercent: (1 - local) * 100 });
+          if (t >= i - 0.5) active = i; // activate ~halfway through its cover
+        }
+        setActive(active);
       },
+    };
+  }
+
+  // Standalone (not in a CurtainStack): self-pin and scrub the driver. The last
+  // card rests in place and the pin releases into normal flow — no trailing peel.
+  function buildStandalone(section: HTMLElement) {
+    const driver = makeDriver(section);
+    const scrubPx = driver.getScrubPx();
+    ScrollTrigger.create({
+      trigger: section,
+      start: "top top",
+      end: "+=" + scrubPx,
+      pin: true,
+      scrub: true,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      onRefreshInit: () => driver.setProgress(0),
+      onUpdate: (self) => driver.setProgress(self.progress),
     });
-
-    // Each later card rises up to cover the previous one.
-    for (let i = 1; i < slides.length; i++) {
-      tl.to(slides[i], { yPercent: 0, ease: "none", duration: 1 }, ">");
-    }
-
-    // Finally, peel the whole section off the top to reveal what follows.
-    tl.to(section, { yPercent: -100, ease: "none", duration: 1 }, ">");
-
-    // Note: card 0's rows are NOT played here — they start hidden (set above)
-    // and reveal via the ScrollTrigger onEnter/onEnterBack, so the first card
-    // animates in when its section reaches the viewport, not at page-load.
   }
 
   function init() {
     const sections = document.querySelectorAll<HTMLElement>("[data-cardstack-v]");
     if (!sections.length) return;
     sections.forEach((section) => {
+      // Inside a CurtainStack: don't self-pin. Expose the uniform layer contract
+      // so the stack drives the covers as one leg of its shared timeline, then
+      // peels this whole layer off to reveal the section beneath (testimonials).
+      // (Desktop, motion OK only — mobile/reduced-motion fall through to flat.)
+      const stack = section.closest("[data-curtain-stack]");
+      if (stack && window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)").matches) {
+        const driver = makeDriver(section);
+        (section as any).__curtainLayer = {
+          getScrubPx: () => driver.getScrubPx(),
+          setProgress: (p: number) => driver.setProgress(p),
+        };
+        return;
+      }
+
       // matchMedia auto-reverts/reruns each setup when crossing a breakpoint.
       ScrollTrigger.matchMedia({
         // Desktop, motion OK → the full 3D pinned cover-stack (rows animate as

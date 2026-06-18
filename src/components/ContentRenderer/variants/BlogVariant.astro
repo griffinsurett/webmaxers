@@ -12,6 +12,10 @@ import { shouldShowCollectionCTA } from "../utils/helpers";
 
 interface Props extends BaseVariantProps {
   columns?: 1 | 2 | 3;
+  /** "default" = starter cards; "dark" = homepage dark-editorial cards. */
+  appearance?: "default" | "dark";
+  /** Small uppercase eyebrow (dark appearance). */
+  eyebrow?: string;
 }
 
 const {
@@ -20,12 +24,15 @@ const {
   description,
   className = "",
   columns = 2,
+  appearance = "default",
+  eyebrow,
   collectionUrl,
   collectionTitle,
   id,
 } = Astro.props as Props;
 
 const viewAllText = `View All ${collectionTitle || "Articles"}`;
+const isDark = appearance === "dark";
 
 const columnClasses = {
   1: "grid-cols-1",
@@ -34,30 +41,48 @@ const columnClasses = {
 };
 ---
 
-<section id={id} class={`py-16 ${className}`}>
-  {
-    (title || description) && (
+{isDark ? (
+  <section id={id} class:list={["bv-dark", className]} aria-label={title ?? "Blog"}>
+    <div class="bv-dark__head">
+      <div>
+        {eyebrow && <p class="bv-dark__eyebrow">{eyebrow}</p>}
+        {title && <h2 class="bv-dark__title">{title}</h2>}
+      </div>
+      {shouldShowCollectionCTA(collectionUrl, items.length) && (
+        <Button variant="underline" href={collectionUrl} size="sm" client:load>
+          {viewAllText}
+        </Button>
+      )}
+    </div>
+
+    <ul class:list={["grid list-none gap-8", columnClasses[columns]]}>
+      {items.map((item) => (
+        <li>
+          <ArticleCard {...item} appearance="dark" />
+        </li>
+      ))}
+    </ul>
+  </section>
+) : (
+  <section id={id} class={`py-16 ${className}`}>
+    {(title || description) && (
       <div class="text-center mb-12">
         {title && <h2 class="text-4xl font-bold mb-4">{title}</h2>}
         {description && (
           <p class="text-lg text-text max-w-2xl mx-auto">{description}</p>
         )}
       </div>
-    )
-  }
+    )}
 
-  <ul class={`grid ${columnClasses[columns]} gap-8 list-none`}>
-    {
-      items.map((item) => (
+    <ul class={`grid ${columnClasses[columns]} gap-8 list-none`}>
+      {items.map((item) => (
         <li>
           <ArticleCard {...item} />
         </li>
-      ))
-    }
-  </ul>
+      ))}
+    </ul>
 
-  {
-    shouldShowCollectionCTA(collectionUrl, items.length) && (
+    {shouldShowCollectionCTA(collectionUrl, items.length) && (
       <div class="mt-12 text-center">
         <Button
           href={collectionUrl}
@@ -68,6 +93,36 @@ const columnClasses = {
           {viewAllText}
         </Button>
       </div>
-    )
+    )}
+  </section>
+)}
+
+<style>
+  .bv-dark {
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+    padding-inline: clamp(1.5rem, 6vw, 6rem);
   }
-</section>
+  .bv-dark__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  }
+  .bv-dark__eyebrow {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-text) 45%, transparent);
+    margin-bottom: 0.9rem;
+  }
+  .bv-dark__title {
+    font-size: clamp(2rem, 4.5vw, 3.25rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--color-heading);
+  }
+</style>

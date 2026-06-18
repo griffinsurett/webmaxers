@@ -6,6 +6,8 @@ import SolutionsHero from "@/layouts/SolutionsHero.astro";
 import Icon from "@/components/Icon";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import PortfolioSectionVertical from "@/components/Portfolio/PortfolioSectionVertical.astro";
+import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
+import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
 import { humanizeSlug } from "@/utils/string";
 import type { CollectionLayoutProps } from "./types";
 
@@ -94,11 +96,20 @@ const showPortfolioFilmstrip = isSolution && entry?.id === "websites";
         </section>
       )}
 
-      <!-- 2b. PORTFOLIO FILMSTRIP (Websites page only) — full-bleed, pins and
-           peels off the top on scroll, revealing the process section below. ── -->
+      <!-- 2b. CAPABILITIES + TESTIMONIALS curtain (Websites page only) — the
+           capability card-stack is a curtain layer pinned on top; as its last
+           card peels UP, the testimonials beneath are revealed in place (same
+           CurtainStack mechanic as the homepage filmstrip → testimonials). ── -->
       {showPortfolioFilmstrip && (
         <div class="sl-filmstrip-fullbleed">
-          <PortfolioSectionVertical ctaLink="/projects" placeholderMedia={true} />
+          <CurtainStack>
+            <div data-curtain-layer data-move="up">
+              <PortfolioSectionVertical ctaLink="/projects" placeholderMedia={true} />
+            </div>
+            <div data-curtain-layer data-move="none">
+              <TestimonialCarousel withBackground />
+            </div>
+          </CurtainStack>
         </div>
       )}
 
