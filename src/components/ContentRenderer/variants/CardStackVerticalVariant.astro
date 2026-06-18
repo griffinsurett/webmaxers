@@ -26,7 +26,9 @@ import Button from "@/components/Button/Button";
 
 type Props = BaseVariantProps;
 
-const { items = [], title = "", id } = Astro.props as Props;
+const { items = [], title = "", id, placeholderMedia = false } = Astro.props as Props & {
+  placeholderMedia?: boolean;
+};
 ---
 
 <section
@@ -56,13 +58,17 @@ const { items = [], title = "", id } = Astro.props as Props;
           {/* ── Media half (left) ── */}
           <div class="flex h-full min-h-0 items-center justify-center px-(--csv-half-pad) py-(--csv-half-pad)">
             <div class="aspect-[20/13] w-full max-w-[52rem] overflow-hidden">
-              <FilmstripCardMedia
-                title={item.title}
-                featuredVideo={item.featuredVideo}
-                fullSiteImage={item.fullSiteImage}
-                bannerImage={item.bannerImage}
-                featuredImage={item.featuredImage}
-              />
+              {placeholderMedia ? (
+                <div class="h-full w-full bg-bg" aria-hidden="true"></div>
+              ) : (
+                <FilmstripCardMedia
+                  title={item.title}
+                  featuredVideo={item.featuredVideo}
+                  fullSiteImage={item.fullSiteImage}
+                  bannerImage={item.bannerImage}
+                  featuredImage={item.featuredImage}
+                />
+              )}
             </div>
           </div>
 
@@ -80,6 +86,8 @@ const { items = [], title = "", id } = Astro.props as Props;
               {item.description && (
                 <p class="text-sm font-light leading-relaxed text-text/65">{item.description}</p>
               )}
+
+              {i === 0 && <slot name="under-text" />}
 
               {externalUrl && (
                 <Button

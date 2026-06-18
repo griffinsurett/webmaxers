@@ -1,27 +1,31 @@
 ---
 // src/components/Portfolio/PortfolioSectionVertical.astro
-// Vertical-scroll twin of PortfolioSection.astro — same featured-projects query,
-// rendered through CardStackVerticalVariant (half-and-half cards glide
-// bottom→top, then the whole section peels off the top to reveal what follows).
+// Vertical-scroll twin of PortfolioSection.astro — same card stack shell,
+// now driven by the Websites capability set and rendered through
+// CardStackVerticalVariant (half-and-half cards glide bottom→top, then the
+// whole section peels off the top to reveal what follows).
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import { query, whereArrayContains, sortByOrder } from "@/utils/query";
+import { related } from "@/utils/query/snippets";
 
 interface Props {
   heading?: string;
   ctaLink?: string;
+  placeholderMedia?: boolean;
 }
 
-const { heading = "Selected work\n& explorations", ctaLink } = Astro.props;
+const { heading = "Capabilities", ctaLink, placeholderMedia = false } = Astro.props;
 
-const featuredProjects = query("projects")
-  .where(whereArrayContains("tags", "featured"))
-  .orderBy(sortByOrder());
+const websiteCapabilities = related("capabilities", "solutions", "websites");
 ---
 
 <ContentRenderer
   id="portfolio-filmstrip-vertical-section"
-  query={featuredProjects}
+  query={websiteCapabilities}
   variant="CardStackVerticalVariant"
   title={heading}
   collectionUrl={ctaLink}
-/>
+  placeholderMedia={placeholderMedia}
+>
+  <slot />
+  <slot name="under-text" slot="under-text" />
+</ContentRenderer>

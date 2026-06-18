@@ -3,15 +3,13 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SecondaryHero from "@/layouts/SecondaryHero.astro";
 import SolutionsHero from "@/layouts/SolutionsHero.astro";
+import AboutSection from "@/components/AboutSection/AboutSection.astro";
 import Icon from "@/components/Icon";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import FeatureCard from "@/components/LoopComponents/FeatureCard.astro";
 import Marquee from "@/components/Marquee.astro";
 import PortfolioSectionVertical from "@/components/Portfolio/PortfolioSectionVertical.astro";
-import { related } from "@/utils/query";
-import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
+import { children } from "@/utils/query/snippets";
 import { humanizeSlug } from "@/utils/string";
-import { buildTree } from "@/utils/tree";
 import type { CollectionLayoutProps } from "./types";
 
 const { entry, seoProps = {} } = Astro.props as CollectionLayoutProps;
@@ -37,26 +35,24 @@ const headingText =
 // Capabilities that belong to this entry (only solution pages have these —
 // capability pages resolve to an empty set, so the section won't render there).
 const isSolution = entry?.collection === "solutions";
+const showHomepageAbout = isSolution && entry?.id === "websites";
 // The vertical filmstrip portfolio only shows on the Websites solution page.
 const showPortfolioFilmstrip = isSolution && entry?.id === "websites";
-const relatedCapabilityEntries = isSolution
-  ? (await related("capabilities", "solutions", entry.id).get()).entries
-  : [];
-// Flatten + add URLs so each card has top-level title/description/icon/url.
-const relatedCapabilities = relatedCapabilityEntries.length
-  ? await prepareCollectionEntries(
-      relatedCapabilityEntries,
-      "capabilities",
-      getCollectionMeta("capabilities"),
-    )
-  : [];
-const capabilityTree = relatedCapabilities.length
-  ? buildTree(relatedCapabilities, { parentField: "parent", sortBy: "order" })
-  : [];
 
-const displayCapabilities = capabilityTree.flatMap((node) =>
-  node.children.length > 0 ? node.children : [node]
-);
+const aboutEyebrow = data.aboutEyebrow ?? "About";
+const aboutStatement =
+  data.aboutStatement ??
+  "We build websites that turn your online presence into a clear, fast, and trustworthy part of the business.";
+const aboutLeftText =
+  data.aboutLeftText ??
+  "We design for longevity, clarity first, and a site structure that supports real growth.";
+const aboutRightText =
+  data.aboutRightText ??
+  "Our mission is to make your website feel sharp, easy to manage, and effective at bringing in the right work.";
+const aboutCtaText = data.aboutCtaText ?? "Explore Our Story";
+const aboutCtaLink = data.aboutCtaLink ?? "/about-us";
+const aboutStickyHeight = data.aboutStickyHeight ?? "220svh";
+const aboutShowStats = data.aboutShowStats ?? true;
 ---
 
 <BaseLayout {...seoProps}>
@@ -79,13 +75,32 @@ const displayCapabilities = capabilityTree.flatMap((node) =>
       />
     )}
 
+    {showHomepageAbout && (
+      <>
+        <AboutSection
+          eyebrow={aboutEyebrow}
+          statement={aboutStatement}
+          leftText={aboutLeftText}
+          rightText={aboutRightText}
+          ctaText={aboutCtaText}
+          ctaLink={aboutCtaLink}
+          stickyHeight={aboutStickyHeight}
+          showStats={aboutShowStats}
+        />
+
+        <div class="sl-marquee-fullbleed">
+          <Marquee />
+        </div>
+      </>
+    )}
+
     <!-- ══════════════════════════════════════════
          MIDDLE CONTENT
     ══════════════════════════════════════════ -->
-    <div class="sl-page page-container">
+    <div class:list={["page-container", "sl-page", showHomepageAbout && "sl-page--websites"]}>
 
-      <!-- 1. TAGLINE ──────────────────────────── -->
-      {data.tagline && (
+      <!-- 1. TAGLINE / ABOUT FALLBACK ───────────────────── -->
+      {!showHomepageAbout && data.tagline && (
         <section class="sl-tagline-section" aria-label="Service tagline">
           {data.icon && (
             <div class="sl-tagline-icon" aria-hidden="true">
@@ -96,15 +111,8 @@ const displayCapabilities = capabilityTree.flatMap((node) =>
         </section>
       )}
 
-      <!-- Marquee — full-bleed, sits directly above What's Included -->
-      {includes.length > 0 && (
-        <div class="sl-marquee-fullbleed">
-          <Marquee />
-        </div>
-      )}
-
       <!-- 2. WHAT'S INCLUDED ───────────────────── -->
-      {includes.length > 0 && (
+      {!showHomepageAbout && includes.length > 0 && (
         <section class="sl-section" aria-labelledby="sl-includes-heading">
           <p class="sl-label" id="sl-includes-heading" aria-label="What is included">
             What's Included
@@ -127,7 +135,13 @@ const displayCapabilities = capabilityTree.flatMap((node) =>
            peels off the top on scroll, revealing the process section below. ── -->
       {showPortfolioFilmstrip && (
         <div class="sl-filmstrip-fullbleed">
-          <PortfolioSectionVertical ctaLink="/projects" />
+          <PortfolioSectionVertical ctaLink="/projects" placeholderMedia={true}>
+            <ContentRenderer
+              slot="under-text"
+              query={children("capabilities", entry.id)}
+              variant="CapabilitiesListVariant"
+            />
+          </PortfolioSectionVertical>
         </div>
       )}
 
@@ -142,31 +156,6 @@ const displayCapabilities = capabilityTree.flatMap((node) =>
         />
       )}
 
-      <!-- 3b. RELATED CAPABILITIES (solution pages only) ── -->
-      {displayCapabilities.length > 0 && (
-        <section class="sl-section" aria-labelledby="sl-capabilities-heading">
-          <p class="sl-label" id="sl-capabilities-heading">Capabilities</p>
-          <ul class="sl-services-grid" role="list">
-            {displayCapabilities.map((capability, i) => (
-              <li class="reveal-item" style={`--rv-delay:${i * 0.07}s`}>
-                <FeatureCard
-                  title={capability.title}
-                  url={capability.url}
-                  description={capability.description}
-                  icon={capability.icon}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <!-- 4. CTA STRIP ─────────────────────────── -->
-      <section class="sl-cta-strip" aria-label="Call to action">
-        <p class="sl-cta-text">Ready to get started?</p>
-        <a href="/contact-us" class="sl-cta-btn">Let's Talk</a>
-      </section>
-
     </div>
   </main>
 </BaseLayout>
@@ -175,10 +164,14 @@ const displayCapabilities = capabilityTree.flatMap((node) =>
 <style>
 
   .sl-page {
-    padding-block: clamp(4rem, 8vw, 7rem);
+    padding-block: clamp(3rem, 6vw, 5rem);
     display: flex;
     flex-direction: column;
-    gap: clamp(4.5rem, 9vw, 8rem);
+    gap: clamp(3rem, 6vw, 5rem);
+  }
+
+  .sl-page--websites {
+    gap: clamp(2rem, 4vw, 3rem);
   }
 
   /* Full-bleed escape: break the marquee out of the centered page-container
@@ -196,7 +189,7 @@ const displayCapabilities = capabilityTree.flatMap((node) =>
   .sl-filmstrip-fullbleed {
     width: 100vw;
     margin-left: calc(50% - 50vw);
-    margin-block: calc(-1 * clamp(4.5rem, 9vw, 8rem));
+    margin-block: calc(-1 * clamp(3rem, 6vw, 5rem));
   }
 
   /* ── 1. TAGLINE ── */
@@ -289,23 +282,6 @@ const displayCapabilities = capabilityTree.flatMap((node) =>
     font-weight: 300;
   }
 
-  /* ── 3b. RELATED SERVICES GRID ── */
-  .sl-services-grid {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(1rem, 2vw, 1.25rem);
-  }
-
-  @media (max-width: 900px) {
-    .sl-services-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 600px) {
-    .sl-services-grid { grid-template-columns: 1fr; }
-  }
-
   /* ── 3. PROCESS STEPS ── */
   .sl-process-section {
     border-top: 1px solid color-mix(in srgb, var(--color-heading) 8%, transparent);
@@ -359,42 +335,6 @@ const displayCapabilities = capabilityTree.flatMap((node) =>
     line-height: 1.75;
     font-weight: 300;
   }
-
-  /* ── 4. CTA STRIP ── */
-  .sl-cta-strip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-    padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.5rem, 3vw, 2.5rem);
-    border: 1px solid color-mix(in srgb, var(--color-heading) 10%, transparent);
-    border-radius: 0.875rem;
-    flex-wrap: wrap;
-  }
-
-  .sl-cta-text {
-    font-size: clamp(1.1rem, 2vw, 1.5rem);
-    font-weight: 600;
-    color: var(--color-heading);
-    letter-spacing: -0.02em;
-  }
-
-  .sl-cta-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.75rem 1.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    border-radius: 0.4rem;
-    text-decoration: none;
-    background: var(--color-heading);
-    color: var(--color-bg);
-    transition: opacity 0.2s ease;
-    white-space: nowrap;
-  }
-  .sl-cta-btn:hover { opacity: 0.85; }
 
   /* ── REVEAL ANIMATIONS ── */
   .reveal-item {

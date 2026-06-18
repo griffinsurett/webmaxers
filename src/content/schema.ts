@@ -337,6 +337,14 @@ export const baseSchema = ({ image }: { image: Function }) =>
     // Parent reference for content hierarchy (slug of parent item in same collection)
     parent: z.union([z.string(), z.array(z.string())]).optional(),
     heading: headingSchema.optional(),
+    aboutEyebrow: z.string().optional(),
+    aboutStatement: z.string().optional(),
+    aboutLeftText: z.string().optional(),
+    aboutRightText: z.string().optional(),
+    aboutCtaText: z.string().optional(),
+    aboutCtaLink: z.string().optional(),
+    aboutShowStats: z.boolean().optional(),
+    aboutStickyHeight: z.string().optional(),
     // Tags for filtering (e.g., "featured")
     tags: z.array(z.string()).default([]),
     // Per-item link behavior override (takes priority over collection's itemsLinkBehavior)

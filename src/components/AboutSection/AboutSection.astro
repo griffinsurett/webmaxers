@@ -8,6 +8,7 @@ import { query, sortByOrder } from "@/utils/query";
 import { siteData } from "@/content/siteData";
 
 interface Props {
+  eyebrow?: string;
   statement?: string;
   leftText?: string;
   rightText?: string;
@@ -20,6 +21,7 @@ interface Props {
 }
 
 const {
+  eyebrow = "About",
   statement = `${siteData.title} is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology.`,
   leftText = "We design for longevity, clarity first, craft always, built to scale.",
   rightText = "Our mission is to make technology feel human by designing digital products that are intuitive, purposeful, and meaningful to people.",
@@ -44,7 +46,7 @@ const words = splitTextIntoAnimatedWords(statement);
   >
     <div class:list={["about-sticky-pin", showStats && "about-sticky-pin--with-stats"]} data-about-sticky-inner>
       <section class="relative w-full">
-        <EyebrowSection eyebrow="About">
+        <EyebrowSection eyebrow={eyebrow}>
           <!-- Animated statement -->
           <h2
             class="about-statement max-w-4xl text-[clamp(1.75rem,7vw,4.5rem)] font-light leading-[1.1]"
@@ -328,4 +330,3 @@ const words = splitTextIntoAnimatedWords(statement);
   init();
   document.addEventListener("astro:page-load", init);
 </script>
-
