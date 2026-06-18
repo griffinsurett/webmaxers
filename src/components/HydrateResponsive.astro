@@ -1,0 +1,63 @@
+---
+/**
+ * HydrateResponsive — show a desktop (hydrated) island and a mobile (static)
+ * fallback per breakpoint, for optimal hydration cost on every device.
+ *
+ * Astro can't attach a `client:*` directive to a component received as a prop
+ * (the compiler must see the import statically), so YOU author both copies in
+ * slots and this wrapper handles the responsive show/hide:
+ *
+ *   - `desktop` slot — your island WITH a client directive (typically
+ *     `client:visible`, so it lazy-hydrates on scroll — the perf win). Shown
+ *     only at/above `min`.
+ *   - `mobile` slot — a STATIC copy (no client directive → its JS is never
+ *     hydrated). Shown only below `min`. Optional; omit it to render nothing on
+ *     mobile.
+ *
+ * Because the swap is CSS, the desktop island below `min` stays `display:none`,
+ * so its `client:visible` IntersectionObserver never fires → it never hydrates
+ * on mobile. (Astro still emits the island's JS bundle to the page; the static
+ * mobile slot is what guarantees a no-JS render for small screens.)
+ *
+ * `min` is the desktop breakpoint (CSS length, default 768px = Tailwind `md`).
+ *
+ * @example
+ *   <HydrateResponsive min="768px">
+ *     <Chart data={data} client:visible slot="desktop" />
+ *     <ChartStatic data={data} slot="mobile" />
+ *   </HydrateResponsive>
+ */
+interface Props {
+  /** Desktop breakpoint (CSS length). Default 768px. */
+  min?: string;
+  /** Extra classes for the wrapper elements. */
+  class?: string;
+}
+
+const { min = "768px", class: className = "" } = Astro.props as Props;
+const hasMobile = Astro.slots.has("mobile");
+---
+
+{/* Desktop: the hydrated island (caller adds client:visible). Hidden < min. */}
+<div class:list={["hr-desktop", className]} data-hydrate-desktop>
+  <slot name="desktop" />
+</div>
+
+{/* Mobile: the static fallback (no directive). Hidden ≥ min. */}
+{hasMobile && (
+  <div class:list={["hr-mobile", className]} data-hydrate-mobile>
+    <slot name="mobile" />
+  </div>
+)}
+
+{/* `min` is known at build, so the breakpoint is interpolated straight into the
+    media query — CSS media features can't read a custom property, and is:inline
+    keeps the literal query intact through the build. */}
+<style is:inline set:html={`
+  [data-hydrate-desktop] { display: none; }
+  [data-hydrate-mobile]  { display: contents; }
+  @media (min-width: ${min}) {
+    [data-hydrate-desktop] { display: contents; }
+    [data-hydrate-mobile]  { display: none; }
+  }
+`} />

@@ -22,7 +22,7 @@
 
 import type { BaseVariantProps } from "../ContentRenderer.types";
 import FilmstripCardMedia from "@/components/LoopComponents/FilmstripCardMedia.astro";
-import Button from "@/components/Button/Button";
+import CapabilityChildrenVariant from "./CapabilityChildrenVariant.astro";
 
 type Props = BaseVariantProps;
 
@@ -38,18 +38,12 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
   aria-label={title?.replace?.("\n", " ") ?? "Cards"}
 >
   {items.map((item, i) => {
-    const externalUrl = item.link?.url ?? item.projectUrl ?? item.url;
-    const externalLabel = item.link?.label ?? "Visit ↗";
-    const tags = [item.industry, ...(item.technologies ?? [])].filter(Boolean);
-    // Alternate the background gradient direction per slide.
-    const gradient = i % 2 === 0 ? "bg-linear-to-r" : "bg-linear-to-l";
+    // This capability's child sub-capabilities — at most 6 lines.
+    const childItems = (item.includes ?? []).slice(0, 6);
 
     return (
       <article
-        class:list={[
-          "csv-slide absolute inset-0 flex h-full w-full items-stretch border border-text/12 from-bg3 to-bg",
-          gradient,
-        ]}
+        class="csv-slide absolute inset-0 flex h-full w-full items-stretch border border-text/12 bg-linear-to-r from-bg3 to-bg"
         data-cardstack-v-card
         data-slide-index={i + 1}
       >
@@ -72,36 +66,22 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
             </div>
           </div>
 
-          {/* ── Text half (right) — real left border = the divider ── */}
-          <div class="flex h-full min-h-0 border-t border-text/12 px-(--csv-half-pad) py-(--csv-half-pad) md:border-l md:border-t-0 md:border-text/12">
-            <div class="flex w-full flex-col justify-center gap-3 text-left md:max-w-[34rem]">
-              <h3 class="text-base font-medium leading-tight text-heading">{item.title}</h3>
-
-              {tags.length > 0 && (
-                <p class="text-[0.65rem] uppercase tracking-[0.12em] text-text/45">
-                  {tags.join(" · ")}
-                </p>
-              )}
+          {/* ── Text half (right) — divider is a real left border on desktop
+              only; on mobile (stacked) there's no divider between the halves. ── */}
+          <div class="flex h-full min-h-0 px-(--csv-half-pad) py-(--csv-half-pad) md:border-l md:border-text/12">
+            <div class="flex w-full flex-col justify-center gap-4 text-left md:max-w-[34rem]">
+              {/* Parent capability: title (large) + description */}
+              <h3 class="text-2xl font-medium leading-tight tracking-tight text-heading md:text-3xl">{item.title}</h3>
 
               {item.description && (
                 <p class="text-sm font-light leading-relaxed text-text/65">{item.description}</p>
               )}
 
-              {i === 0 && <slot name="under-text" />}
-
-              {externalUrl && (
-                <Button
-                  variant="underline"
-                  href={externalUrl}
-                  size="sm"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 self-start"
-                  client:load
-                >
-                  {externalLabel}
-                </Button>
-              )}
+              {/* Child sub-capabilities (max 6) — its own variant of React rows.
+                  Each row's text staggers in and its divider line draws in
+                  left→right; that animation is driven by this card's GSAP
+                  timeline below via the rows' data-csv-child-* markers. */}
+              <CapabilityChildrenVariant items={childItems} max={6} />
             </div>
           </div>
         </div>
@@ -124,15 +104,40 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
 
   .csv-slide { will-change: transform; }
 
-  /* ── Reduced motion: static vertical stack, no pinning ───────── */
-  @media (prefers-reduced-motion: reduce) {
-    .csv-section { height: auto; overflow: visible; }
+  /* Hide the child text + collapse the divider lines up front for motion-OK
+     users (BOTH desktop and mobile — the row reveal animation runs on both;
+     only the 3D pin is desktop-only) so they don't flash before GSAP sets their
+     start state. Reduced-motion users skip this and see everything immediately. */
+  @media (prefers-reduced-motion: no-preference) {
+    .csv-child-text { opacity: 0; }
+    .csv-child-line { transform: scaleX(0); transform-origin: left center; }
+  }
+
+  /* ── Static fallback: mobile (<768px) OR reduced-motion ───────────
+     The desktop cover-stack (pin + slide-up-to-cover) only runs at ≥768px for
+     motion-OK users; everywhere else there is NO 3D effect. The slides drop out
+     of the absolute stack into normal document flow — just one card on top of
+     the next, scrolling the page normally. Mirrors the JS matchMedia gate so the
+     two never disagree. */
+  @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+    .csv-section {
+      height: auto;
+      overflow: visible;
+    }
     .csv-slide {
       position: static;
       inset: auto;
-      min-height: 60vh;
+      min-height: auto;
       transform: none !important;
       will-change: auto;
+      /* z-index from the desktop JS is irrelevant in flow, but reset it anyway. */
+      z-index: auto !important;
+    }
+    /* Give each stacked card breathing room and its own top divider so the
+       boundaries still read in the flat layout (the slide's own border-y does
+       most of the work; this just keeps adjacent borders from doubling oddly). */
+    .csv-slide + .csv-slide {
+      border-top: 0;
     }
   }
 </style>
@@ -142,8 +147,58 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
   import { ScrollTrigger } from "gsap/ScrollTrigger";
   gsap.registerPlugin(ScrollTrigger);
 
-  // Cover-stack sequencer: slides are absolutely stacked; each later slide rises
-  // up from below (yPercent 100 → 0) to cover the previous one, then the whole
+  // ── Shared row-reveal helpers (used by both the desktop cover-stack and the
+  //    flat mobile path — the row animation runs on both; only the 3D pin is
+  //    desktop-only). ──────────────────────────────────────────────────────
+  const textsOf = (slide: HTMLElement) =>
+    Array.from(slide.querySelectorAll<HTMLElement>("[data-csv-child-text]"));
+  const linesOf = (slide: HTMLElement) =>
+    Array.from(slide.querySelectorAll<HTMLElement>("[data-csv-child-line]"));
+
+  // Reset a card's child rows to their hidden start state.
+  const hideChildren = (slide: HTMLElement) => {
+    gsap.set(textsOf(slide), { autoAlpha: 0, y: 16 });
+    gsap.set(linesOf(slide), { scaleX: 0, transformOrigin: "left center" });
+  };
+
+  // Play a card's child rows IN: each line draws left→right, each text fades +
+  // rises, staggered row by row (line leads slightly, like the process rail).
+  // A fresh tween each time, so it replays whenever the card is (re)entered.
+  const playChildren = (slide: HTMLElement) => {
+    const texts = textsOf(slide);
+    const lines = linesOf(slide);
+    gsap.killTweensOf([...texts, ...lines]);
+    gsap.set(texts, { autoAlpha: 0, y: 16 });
+    gsap.set(lines, { scaleX: 0, transformOrigin: "left center" });
+    const t = gsap.timeline();
+    t.to(lines, { scaleX: 1, ease: "power2.out", duration: 0.5, stagger: 0.1 }, 0);
+    t.to(texts, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.55, stagger: 0.1 }, 0.08);
+    return t;
+  };
+
+  // Flat (mobile) path: NO 3D pin/cover-stack — slides are in normal flow (CSS
+  // fallback). Each card just plays its row reveal when it scrolls into view,
+  // and replays on re-entry (both scroll directions). Same text/line animation.
+  function buildFlat(section: HTMLElement) {
+    const slides = Array.from(
+      section.querySelectorAll<HTMLElement>("[data-cardstack-v-card]"),
+    );
+    slides.forEach((slide) => {
+      hideChildren(slide);
+      ScrollTrigger.create({
+        trigger: slide,
+        start: "top 80%",
+        end: "bottom 20%",
+        onEnter: () => playChildren(slide),
+        onEnterBack: () => playChildren(slide),
+        onLeave: () => hideChildren(slide),
+        onLeaveBack: () => hideChildren(slide),
+      });
+    });
+  }
+
+  // Cover-stack sequencer (desktop): slides are absolutely stacked; each later
+  // slide rises up (yPercent 100 → 0) to cover the previous one, then the whole
   // section peels off the top. One pinned, scrubbed timeline drives it all.
   function buildStandalone(section: HTMLElement) {
     const slides = Array.from(
@@ -151,12 +206,28 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
     );
     if (!slides.length) return;
 
-    // Later slides sit on top; slide 0 rests in place, the rest wait below.
     slides.forEach((slide, i) => {
       slide.style.zIndex = String(i + 1);
       gsap.set(slide, { yPercent: i === 0 ? 0 : 100 });
+      // Child rows start hidden; they reveal as their card becomes active.
+      hideChildren(slide);
     });
 
+    // Track which card last triggered its child reveal (-1 = none yet).
+    let lastActive = -1;
+
+    // Switch the active card and (re)play its child reveal, hiding the previous
+    // one so re-entering it later replays from scratch. Declared before the
+    // timeline because ScrollTrigger may call onEnter/onUpdate synchronously
+    // during create() when the section is already in view at load.
+    const setActive = (active: number) => {
+      if (active === lastActive) return;
+      if (lastActive >= 0 && slides[lastActive]) hideChildren(slides[lastActive]);
+      playChildren(slides[active]);
+      lastActive = active;
+    };
+
+    // The cover-stack itself stays scrubbed (deterministic with scroll position).
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: section,
@@ -166,24 +237,57 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
         scrub: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
+        // Card 0 reveals when the pinned section first reaches the top (and
+        // again when scrolling back up to it) — not at page-load, so you see it
+        // animate in rather than already settled.
+        onEnter: () => setActive(0),
+        onEnterBack: () => setActive(0),
+        onUpdate: (self) => {
+          // Active card = the topmost one that has finished sliding up. Each
+          // card i≥1 owns a 1-unit slide in a (slides.length)-unit timeline; the
+          // final unit is the peel. Card i is "covered/active" once progress
+          // passes its slide's end (i / total).
+          const total = slides.length; // (slides.length-1) slides + 1 peel
+          const p = self.progress * total;
+          let active = 0;
+          for (let i = 1; i < slides.length; i++) {
+            // Card i's slide runs progress (i-1)→i. Activate ~halfway through the
+            // cover so the rows start revealing well before the card lands.
+            if (p >= i - 0.5) active = i;
+          }
+          setActive(active);
+        },
       },
     });
 
-    // Each slide after the first rises up to cover the previous one.
+    // Each later card rises up to cover the previous one.
     for (let i = 1; i < slides.length; i++) {
       tl.to(slides[i], { yPercent: 0, ease: "none", duration: 1 }, ">");
     }
 
     // Finally, peel the whole section off the top to reveal what follows.
     tl.to(section, { yPercent: -100, ease: "none", duration: 1 }, ">");
+
+    // Note: card 0's rows are NOT played here — they start hidden (set above)
+    // and reveal via the ScrollTrigger onEnter/onEnterBack, so the first card
+    // animates in when its section reaches the viewport, not at page-load.
   }
 
   function init() {
     const sections = document.querySelectorAll<HTMLElement>("[data-cardstack-v]");
     if (!sections.length) return;
     sections.forEach((section) => {
+      // matchMedia auto-reverts/reruns each setup when crossing a breakpoint.
       ScrollTrigger.matchMedia({
-        "(prefers-reduced-motion: no-preference)": () => buildStandalone(section),
+        // Desktop, motion OK → the full 3D pinned cover-stack (rows animate as
+        // each card covers).
+        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () =>
+          buildStandalone(section),
+        // Mobile, motion OK → NO 3D pin; cards sit in normal flow (CSS flatten)
+        // and each card's rows still animate in as it scrolls into view.
+        "(max-width: 767px) and (prefers-reduced-motion: no-preference)": () =>
+          buildFlat(section),
+        // Reduced motion (any width) → nothing animates; the CSS keeps rows shown.
       });
     });
   }

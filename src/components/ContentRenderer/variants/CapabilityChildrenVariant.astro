@@ -1,0 +1,39 @@
+---
+// src/components/ContentRenderer/variants/CapabilityChildrenVariant.astro
+/**
+ * Capability Children Variant — the small line list of a capability's child
+ * sub-capabilities, used inside each CardStackVerticalVariant card's text half.
+ *
+ * Each row is a CapabilityChildItem React island. The in/out animation (text
+ * fade + line draw-in) is driven by the parent CardStackVerticalVariant GSAP
+ * code via the data-csv-child-* markers each item exposes — that animation runs
+ * on BOTH desktop and mobile (only the heavy 3D pin/cover-stack is desktop-only),
+ * so the rows hydrate on all sizes; this variant just renders the list.
+ *
+ * Accepts a plain `items` array of { title } (e.g. a capability's `includes`),
+ * capped to `max` rows.
+ */
+import CapabilityChildItem from "@/components/LoopComponents/CapabilityChildItem.tsx";
+
+interface ChildItem {
+  title: string;
+}
+
+interface Props {
+  items?: ChildItem[];
+  /** Hard cap on rows shown. */
+  max?: number;
+  id?: string;
+}
+
+const { items = [], max = 6, id } = Astro.props as Props;
+const rows = items.filter((it) => it?.title).slice(0, max);
+---
+
+{rows.length > 0 && (
+  <ul id={id} class="csv-children mt-1 flex flex-col" role="list">
+    {rows.map((child) => (
+      <CapabilityChildItem title={child.title} client:visible />
+    ))}
+  </ul>
+)}

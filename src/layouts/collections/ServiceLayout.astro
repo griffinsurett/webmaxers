@@ -6,7 +6,6 @@ import SolutionsHero from "@/layouts/SolutionsHero.astro";
 import Icon from "@/components/Icon";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import PortfolioSectionVertical from "@/components/Portfolio/PortfolioSectionVertical.astro";
-import { children } from "@/utils/query/snippets";
 import { humanizeSlug } from "@/utils/string";
 import type { CollectionLayoutProps } from "./types";
 
@@ -99,13 +98,7 @@ const showPortfolioFilmstrip = isSolution && entry?.id === "websites";
            peels off the top on scroll, revealing the process section below. ── -->
       {showPortfolioFilmstrip && (
         <div class="sl-filmstrip-fullbleed">
-          <PortfolioSectionVertical ctaLink="/projects" placeholderMedia={true}>
-            <ContentRenderer
-              slot="under-text"
-              query={children("capabilities", entry.id)}
-              variant="CapabilitiesListVariant"
-            />
-          </PortfolioSectionVertical>
+          <PortfolioSectionVertical ctaLink="/projects" placeholderMedia={true} />
         </div>
       )}
 

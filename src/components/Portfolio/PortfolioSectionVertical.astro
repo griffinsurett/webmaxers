@@ -5,7 +5,7 @@
 // CardStackVerticalVariant (half-and-half cards glide bottom→top, then the
 // whole section peels off the top to reveal what follows).
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import { related } from "@/utils/query/snippets";
+import { children } from "@/utils/query/snippets";
 
 interface Props {
   heading?: string;
@@ -15,7 +15,10 @@ interface Props {
 
 const { heading = "Capabilities", ctaLink, placeholderMedia = false } = Astro.props;
 
-const websiteCapabilities = related("capabilities", "solutions", "websites");
+// The child capabilities under the "websites" parent (Performance Optimization,
+// Website Design, …) — one card each. We deliberately query the children, NOT
+// related(…), so the parent "Website Capabilities" index entry is excluded.
+const websiteCapabilities = children("capabilities", "websites");
 ---
 
 <ContentRenderer
@@ -25,7 +28,4 @@ const websiteCapabilities = related("capabilities", "solutions", "websites");
   title={heading}
   collectionUrl={ctaLink}
   placeholderMedia={placeholderMedia}
->
-  <slot />
-  <slot name="under-text" slot="under-text" />
-</ContentRenderer>
+/>

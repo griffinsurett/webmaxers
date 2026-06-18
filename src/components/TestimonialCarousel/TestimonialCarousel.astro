@@ -149,6 +149,11 @@ const items: SerializedItem[] = await Promise.all(
 
   /* ── Float layout ── */
   :global(.tc-quote-wrap) {
+    /* Quote size — single source of truth, shared by the quote text and the
+       float image (which sizes itself to exactly two text lines). Defined on
+       the wrapper so both the floated image and the quote inherit it.
+       min = mobile (a lot smaller), max = desktop (a little smaller). */
+    --tc-quote-size: clamp(1.35rem, 4vw, 3.25rem);
     /* overflow:hidden creates a block formatting context — contains the float */
     overflow: hidden;
     margin-bottom: clamp(2rem, 4vw, 3.5rem);
@@ -163,8 +168,9 @@ const items: SerializedItem[] = await Promise.all(
   :global(.tc-float-img),
   :global(.tc-float-initials) {
     float: left;
-    /* 2 lines × line-height — matches quote font metrics exactly */
-    --tc-img-size: calc(clamp(2rem, 4.5vw, 3.75rem) * 1.18 * 2.1);
+    /* ~2 lines tall — font-size × line-height (1.18) × lines, trimmed slightly
+       so it sits a touch under two full lines. */
+    --tc-img-size: calc(var(--tc-quote-size) * 1.18 * 1.8);
     width: var(--tc-img-size);
     height: var(--tc-img-size);
     object-fit: cover;
@@ -189,7 +195,7 @@ const items: SerializedItem[] = await Promise.all(
 
   :global(.tc-quote) {
     margin: 0;
-    font-size: clamp(2rem, 4.5vw, 3.75rem);
+    font-size: var(--tc-quote-size);
     font-weight: 300;
     line-height: 1.18;
     letter-spacing: -0.02em;

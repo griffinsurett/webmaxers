@@ -13,6 +13,7 @@ import type { BaseVariantProps } from "../ContentRenderer.types";
 import { getImage } from "astro:assets";
 import LOGO_MARK from "@/assets/logo-mark.png";
 import EyebrowSection from "@/layouts/EyebrowSection.astro";
+import HydrateResponsive from "@/components/HydrateResponsive.astro";
 import Process from "./Process.tsx";
 import ProcessStepsStatic from "./ProcessStepsStatic.astro";
 
@@ -67,22 +68,19 @@ const logoSrc = logoImg.src;
           {description && <p class="process-lead">{description}</p>}
         </div>
 
-        {/* Mobile: lightweight static Astro cards (zero heavy JS). */}
-        <div class="process-static-only">
-          <ProcessStepsStatic steps={steps} />
-        </div>
-
-        {/* Desktop: heavy React island (GSAP pinned-scrub). client:media only
-            hydrates — and only downloads — at/above the desktop breakpoint, so
-            mobile ships none of this JS and uses the static cards above. */}
-        <div class="process-island-only">
+        {/* Desktop: heavy React island (GSAP pinned-scrub), lazy-hydrated on
+            scroll via client:visible. Mobile: lightweight static Astro cards
+            (no heavy JS). HydrateResponsive shows exactly one per breakpoint. */}
+        <HydrateResponsive min="861px">
           <Process
             steps={steps}
             logoSrc={logoSrc}
             checkpoints={checkpoints}
-            client:media="(min-width: 861px)"
+            client:visible
+            slot="desktop"
           />
-        </div>
+          <ProcessStepsStatic steps={steps} slot="mobile" />
+        </HydrateResponsive>
       </EyebrowSection>
     </section>
   )
@@ -99,21 +97,8 @@ const logoSrc = logoImg.src;
     gap: clamp(2.5rem, 5vw, 4.5rem);
   }
 
-  /* ── Mobile (static Astro) vs desktop (React island) split ──────────
-     Show exactly one. Mobile shows the lightweight static cards; desktop
-     shows the heavy animated island. Breakpoint matches the grid/rail's
-     own 860px mobile threshold (and the island's DESKTOP_MQ = min-width:861). */
-  .process-island-only {
-    display: none;
-  }
-  @media (min-width: 861px) {
-    .process-static-only {
-      display: none;
-    }
-    .process-island-only {
-      display: block;
-    }
-  }
+  /* Desktop-island vs mobile-static split is handled by HydrateResponsive
+     (min-width: 861px). */
 
   /* ── Mobile static steps — single column, "appear" like desktop cards ── */
   .process-steps-static {
