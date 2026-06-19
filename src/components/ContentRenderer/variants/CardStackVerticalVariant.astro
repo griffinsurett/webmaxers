@@ -127,7 +127,10 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
     .csv-slide {
       position: static;
       inset: auto;
-      min-height: auto;
+      /* Each flattened card is at least a full viewport tall; if its content is
+         taller it just grows and pushes the next card down (no clipping). */
+      min-height: 100svh;
+      height: auto;
       transform: none !important;
       will-change: auto;
       /* z-index from the desktop JS is irrelevant in flow, but reset it anyway. */

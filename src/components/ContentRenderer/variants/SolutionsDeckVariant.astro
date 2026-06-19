@@ -2,6 +2,9 @@
 // src/components/ContentRenderer/variants/SolutionsDeckVariant.astro
 import type { BaseVariantProps } from "../ContentRenderer.types";
 import Icon from "@/components/Icon";
+import WebsitesDemo from "@/components/AnimatedExamples/WebsitesDemo";
+import BrandingDemo from "@/components/AnimatedExamples/BrandingDemo";
+import AiAgentsDemo from "@/components/AnimatedExamples/AiAgentsDemo";
 
 type Props = BaseVariantProps;
 
@@ -19,13 +22,14 @@ const PAD = "p-[clamp(0.875rem,1.2vw,1.125rem)]";
     className,
   ]}
   aria-label="Our solutions"
+  data-solutions-deck
 >
   <ul class="list-none grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 m-0 p-0">
     {
-      items.map((item) => {
+      items.map((item, i) => {
         const Tag = item.url ? "a" : "div";
         return (
-          <li>
+          <li class="solutions-card" data-solutions-card style={`--sc-i:${i}`}>
             <Tag
               {...(item.url ? { href: item.url } : {})}
               class="group relative flex flex-col h-full min-h-[clamp(22rem,26vw,30rem)] rounded-lg overflow-hidden no-underline bg-bg3 border border-heading/8 [transition:transform_200ms_ease,border-color_200ms_ease] hover:border-heading/18 hover:-translate-y-0.5"
@@ -58,10 +62,14 @@ const PAD = "p-[clamp(0.875rem,1.2vw,1.125rem)]";
                 </span>
               </div>
 
-              {/* Middle content slot — fills the space between the title and
-                  the description. Uses the page background token (swap for real
-                  content later). */}
-              <div class="flex-1 bg-bg" aria-hidden="true"></div>
+              {/* Middle content slot — the solution's animated example, keyed by
+                  slug. Each demo is a literal element (Astro needs the import
+                  statically to attach client:visible). Blank bg if no match. */}
+              <div class="flex-1 bg-bg" aria-hidden="true">
+                {item.id === "websites" && <WebsitesDemo client:visible className="h-full w-full" />}
+                {item.id === "branding" && <BrandingDemo client:visible className="h-full w-full" />}
+                {item.id === "ai-agents" && <AiAgentsDemo client:visible className="h-full w-full" />}
+              </div>
 
               {/* Description pinned to the bottom */}
               <div class={`flex flex-col gap-2.5 ${PAD}`}>
@@ -78,3 +86,63 @@ const PAD = "p-[clamp(0.875rem,1.2vw,1.125rem)]";
     }
   </ul>
 </section>
+
+<style>
+  /* Cards start hidden + nudged down for motion-OK users so GSAP can reveal
+     them on view (in AND out). Reduced-motion users see them immediately. */
+  @media (prefers-reduced-motion: no-preference) {
+    .solutions-card { opacity: 0; }
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Reveal the deck's cards as they scroll into view: each card fades + rises in,
+  // staggered left→right; reverses (out) when it leaves, and replays on re-entry
+  // in either direction. Per-section so multiple decks each animate their own.
+  function initDeck() {
+    const decks = document.querySelectorAll<HTMLElement>("[data-solutions-deck]");
+    if (!decks.length) return;
+
+    decks.forEach((deck) => {
+      const cards = Array.from(
+        deck.querySelectorAll<HTMLElement>("[data-solutions-card]"),
+      );
+      if (!cards.length) return;
+
+      ScrollTrigger.matchMedia({
+        "(prefers-reduced-motion: no-preference)": () => {
+          gsap.set(cards, { autoAlpha: 0, y: 40 });
+
+          const play = () =>
+            gsap.to(cards, {
+              autoAlpha: 1,
+              y: 0,
+              ease: "power3.out",
+              duration: 0.7,
+              stagger: 0.12,
+              overwrite: true,
+            });
+          const hide = () =>
+            gsap.set(cards, { autoAlpha: 0, y: 40, overwrite: true });
+
+          ScrollTrigger.create({
+            trigger: deck,
+            start: "top 80%",
+            end: "bottom 20%",
+            onEnter: play,
+            onEnterBack: play,
+            onLeave: hide,
+            onLeaveBack: hide,
+          });
+        },
+      });
+    });
+  }
+
+  initDeck();
+  document.addEventListener("astro:page-load", initDeck);
+</script>

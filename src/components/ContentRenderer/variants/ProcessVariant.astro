@@ -90,22 +90,17 @@ const logoSrc = logoImg.src;
   /* Global (not scoped): the animated body is rendered by the React island, so
      its DOM doesn't carry Astro's scope attribute. Everything is namespaced
      under .process-section to stay contained to this variant. */
+  /* At least a full viewport tall and vertically centred — if the content is
+     taller it simply grows and pushes what follows down (no clipping). On
+     desktop this also frames the pinned rail/logo scrub; on mobile (static
+     steps) it keeps the section from collapsing short. */
   .process-section {
     position: relative;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    min-height: 100svh;
     gap: clamp(2.5rem, 5vw, 4.5rem);
-  }
-
-  /* Desktop: the section is pinned (start: center center) while the rail/logo
-     scrubs, so fill the viewport and centre the content vertically — otherwise
-     the heading + steps sit at the top of the pinned frame with empty space
-     below. Mobile (static, no pin) stays in natural flow. */
-  @media (min-width: 861px) {
-    .process-section {
-      min-height: 100vh;
-      justify-content: center;
-    }
   }
 
   /* Desktop-island vs mobile-static split is handled by HydrateResponsive
