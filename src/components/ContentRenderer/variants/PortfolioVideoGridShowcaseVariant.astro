@@ -1,0 +1,90 @@
+---
+// src/components/ContentRenderer/variants/PortfolioVideoGridShowcaseVariant.astro
+/**
+ * Portfolio Video Grid Showcase — responsive 1/2/3-column grid of project media
+ * tiles (video previews or hover-scroll site screenshots). Ported from Griffin's
+ * Web Services. Each tile fades up on scroll into view via the project's
+ * scroll-animations integration (data-animate). Used as the /projects index.
+ */
+import type { BaseVariantProps } from "../ContentRenderer.types";
+import PortfolioMediaTile from "@/components/LoopComponents/Portfolio/PortfolioMediaTile.astro";
+import { animationProps } from "@/integrations/scroll-animations/props";
+import { toArray } from "@/utils/array";
+
+interface ProjectItem extends Record<string, any> {
+  featuredVideo?: string;
+  fullSiteImage?: unknown;
+  bannerImage?: unknown;
+  image?: unknown;
+  featuredImage?: unknown;
+}
+
+interface Props extends BaseVariantProps {
+  maxItems?: number;
+  showMetadata?: boolean;
+}
+
+const {
+  items = [],
+  className = "",
+  id,
+  maxItems = 999,
+  showMetadata = false,
+} = Astro.props as Props;
+
+// Only tiles that actually have media (video or some image) — capped at maxItems.
+const gridProjects = (toArray(items) as ProjectItem[])
+  .filter((item) => {
+    const hasVideo =
+      typeof item.featuredVideo === "string" && item.featuredVideo.length > 0;
+    const hasImage =
+      item.fullSiteImage || item.bannerImage || item.image || item.featuredImage;
+    return Boolean(hasVideo || hasImage);
+  })
+  .slice(0, maxItems);
+---
+
+{gridProjects.length > 0 && (
+  <section id={id} class:list={["relative", className]}>
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-0">
+      <div class="portfolio-video-grid">
+        {gridProjects.map((item, index) => (
+          <div
+            class="portfolio-video-grid__item"
+            {...animationProps("fade-in-up", {
+              once: false,
+              threshold: 0.18,
+              rootMargin: "-6% 0px -10% 0px",
+              delay: Math.min(index * 80, 240),
+            })}
+          >
+            <PortfolioMediaTile item={item} showMetadata={showMetadata} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .portfolio-video-grid {
+    display: grid;
+    gap: clamp(1.25rem, 2.5vw, 2rem);
+  }
+
+  .portfolio-video-grid__item {
+    display: block;
+  }
+
+  @media (min-width: 768px) {
+    .portfolio-video-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .portfolio-video-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

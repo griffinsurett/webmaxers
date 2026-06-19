@@ -11,3 +11,12 @@ addToMenu:
   - menu: "links-menu"
     order: 2
 ---
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query, sortByOrder } from "@/utils/query";
+
+<ContentRenderer
+  query={query("projects").orderBy(sortByOrder())}
+  variant="PortfolioVideoGridShowcaseVariant"
+  maxItems={999}
+  showMetadata={true}
+/>

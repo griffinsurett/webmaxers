@@ -1,0 +1,87 @@
+---
+// src/components/LoopComponents/Portfolio/PortfolioMediaTile.astro
+// One media tile for the portfolio grid (ported from Griffin's Web Services).
+// Media (video / hover-scroll image / placeholder) is delegated to the shared
+// FilmstripCardMedia so we don't duplicate the image-resolution logic, and the
+// 20:13 frame matches the filmstrip cards. Optional metadata row (title + visit
+// link) below the media when `showMetadata` is set.
+import FilmstripCardMedia from "@/components/LoopComponents/FilmstripCardMedia.astro";
+import Button from "@/components/Button/Button";
+
+interface Props {
+  item: Record<string, any>;
+  className?: string;
+  showMetadata?: boolean;
+  [key: string]: unknown;
+}
+
+const { item, className = "", showMetadata = false, ...rest } = Astro.props as Props;
+
+// Items may arrive as a prepared entry ({ ...data, ...meta }) or raw data.
+const entry = item?.data ? { ...item.data, ...item } : item;
+const title = entry?.title ?? "Project preview";
+const projectLink = entry?.projectUrl ?? entry?.url;
+const metadataLink =
+  entry?.link &&
+  typeof entry.link.label === "string" &&
+  entry.link.label.trim().length > 0 &&
+  typeof entry.link.url === "string" &&
+  entry.link.url.trim().length > 0
+    ? { label: entry.link.label, url: entry.link.url }
+    : undefined;
+---
+
+<article
+  class:list={[
+    "relative isolate overflow-hidden bg-transparent shadow-[0_35px_90px_-48px_rgba(0,0,0,0.55)]",
+    className,
+  ]}
+  {...rest}
+>
+  <div class={showMetadata ? "space-y-5" : undefined}>
+    {/* Media frame — 20:13, shared media renderer (video → hover image → fallback) */}
+    <div class="block w-full overflow-hidden aspect-[20/13]">
+      <FilmstripCardMedia
+        title={title}
+        featuredVideo={entry?.featuredVideo}
+        fullSiteImage={entry?.fullSiteImage}
+        bannerImage={entry?.bannerImage}
+        featuredImage={entry?.image ?? entry?.featuredImage}
+      />
+    </div>
+
+    {showMetadata && (
+      <div class="flex flex-col items-start gap-2 px-1 pb-1 text-left">
+        <h3 class="text-xl font-semibold leading-tight text-heading sm:text-2xl">
+          {title}
+        </h3>
+
+        {metadataLink ? (
+          <Button
+            href={metadataLink.url}
+            variant="link"
+            rightIcon="lu:arrow-up-right"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-0 text-base font-medium text-heading"
+          >
+            {metadataLink.label}
+          </Button>
+        ) : (
+          projectLink && (
+            <Button
+              href={projectLink}
+              variant="link"
+              rightIcon="lu:arrow-up-right"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-0 text-base font-medium text-heading"
+            >
+              Website
+            </Button>
+          )
+        )}
+      </div>
+    )}
+  </div>
+</article>
