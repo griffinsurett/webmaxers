@@ -149,7 +149,7 @@ const legalColClass = [
         showText={false}
         trigger="scroll"
         loading="lazy"
-        size={320}
+        size={240}
         altContext="Footer"
       />
     </div>
@@ -169,7 +169,7 @@ const legalColClass = [
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 2vw;
+      gap: 1.25vw;
       overflow: hidden;
       line-height: 0.72;
     }
@@ -178,8 +178,8 @@ const legalColClass = [
      reused <Logo> bakes a fixed pixel size into its inner media, so we override
      the wrapper + descendants to fill this fluid box. */
   .footer-wordmark__mark {
-    width: 14vw;
-    height: 14vw;
+    width: 10vw;
+    height: 10vw;
     flex-shrink: 0;
   }
   /* The reused <Logo> nests: a > span.logo-class > div[w-320px] > svg/img.
@@ -199,7 +199,7 @@ const legalColClass = [
   }
   .footer-wordmark__text {
     white-space: nowrap;
-    font-size: 15vw;
+    font-size: 13vw;
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--color-heading);
