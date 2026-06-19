@@ -33,12 +33,24 @@
 
 interface Props {
   class?: string;
+  /**
+   * Also flatten the stack below 768px (in addition to reduced-motion). Use when
+   * the layers have their own mobile-static fallbacks that expect NORMAL flow on
+   * phones (e.g. the capability card-stack), so the 100vh-clipped curtain frame
+   * doesn't cut them off. Leave false for curtains whose layers run their own
+   * pin/scrub at every width (e.g. the homepage filmstrip).
+   */
+  flattenMobile?: boolean;
 }
 
-const { class: className = "" } = Astro.props;
+const { class: className = "", flattenMobile = false } = Astro.props;
 ---
 
-<div class:list={["curtain-stack", className]} data-curtain-stack>
+<div
+  class:list={["curtain-stack", flattenMobile && "curtain-stack--flatten-mobile", className]}
+  data-curtain-stack
+  data-flatten-mobile={flattenMobile ? "" : undefined}
+>
   <slot />
 </div>
 
@@ -61,14 +73,30 @@ const { class: className = "" } = Astro.props;
     will-change: transform;
   }
 
-  /* Reduced motion only: drop the stack — normal vertical flow, each layer
-     flattens itself. The curtain runs on every screen size otherwise. */
+  /* Reduced motion: drop the stack — normal vertical flow, each layer flattens
+     itself. By default the curtain runs on every screen size otherwise. */
   @media (prefers-reduced-motion: reduce) {
     .curtain-stack {
       height: auto;
       overflow: visible;
     }
     .curtain-stack :global([data-curtain-layer]) {
+      position: static;
+      inset: auto;
+      height: auto;
+      will-change: auto;
+    }
+  }
+
+  /* Opt-in (flattenMobile): also flatten below 768px so layers with their own
+     mobile-static fallbacks sit in normal flow instead of being clipped by the
+     100vh curtain frame. */
+  @media (max-width: 767px) {
+    .curtain-stack--flatten-mobile {
+      height: auto;
+      overflow: visible;
+    }
+    .curtain-stack--flatten-mobile :global([data-curtain-layer]) {
       position: static;
       inset: auto;
       height: auto;
@@ -218,14 +246,21 @@ const { class: className = "" } = Astro.props;
     const stacks = document.querySelectorAll<HTMLElement>("[data-curtain-stack]");
     if (!stacks.length) return;
 
-    // Runs on every screen size (reduced-motion users get the static flatten).
     // Layers attach their __curtainLayer contracts in their own init() — bundled
     // module-script order isn't guaranteed, so defer one frame to be sure they've
     // all run before we read them.
     requestAnimationFrame(() => {
+      // Default stacks run at every width (reduced-motion gets the static flatten).
+      const normal = Array.from(stacks).filter((s) => !s.hasAttribute("data-flatten-mobile"));
+      // Opt-in stacks ALSO flatten below 768px → only build at desktop width.
+      const flatten = Array.from(stacks).filter((s) => s.hasAttribute("data-flatten-mobile"));
+
       ScrollTrigger.matchMedia({
         "(prefers-reduced-motion: no-preference)": () => {
-          stacks.forEach(buildStack);
+          normal.forEach(buildStack);
+        },
+        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () => {
+          flatten.forEach(buildStack);
         },
       });
     });

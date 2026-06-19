@@ -102,7 +102,7 @@ const showPortfolioFilmstrip = isSolution && entry?.id === "websites";
            CurtainStack mechanic as the homepage filmstrip → testimonials). ── -->
       {showPortfolioFilmstrip && (
         <div class="sl-filmstrip-fullbleed">
-          <CurtainStack>
+          <CurtainStack flattenMobile>
             <div data-curtain-layer data-move="up">
               <PortfolioSectionVertical ctaLink="/projects" placeholderMedia={true} />
             </div>
