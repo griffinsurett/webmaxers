@@ -1,0 +1,310 @@
+---
+// src/layouts/collections/AiAgentsLayout.astro
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Button from "@/components/Button/Button";
+import Icon from "@/components/Icon";
+import AiAgentsWorkflow from "@/components/AnimatedExamples/AiAgentsWorkflow";
+import VideoShowcase from "@/components/AI/VideoShowcase";
+import EcosystemScene from "@/components/AI/EcosystemScene";
+import type { CollectionLayoutProps } from "./types";
+
+const { entry, seoProps = {} } = Astro.props as CollectionLayoutProps;
+const data = entry?.data || {};
+
+const headingText = data.heading || data.title || "AI Agents for your Business";
+const descriptionText = data.description || "Custom AI automations that handle the busywork so you can focus on growth.";
+---
+
+<BaseLayout {...seoProps}>
+  <main class="flex-1 bg-zinc-950 text-zinc-100 overflow-hidden">
+    
+    <!-- ── SECTION 1: HERO ── -->
+    <section class="relative min-h-[92vh] flex items-center justify-center pt-24 pb-16 px-4 md:px-8 border-b border-white/5 bg-zinc-950">
+
+      <div class="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        {/* Left Column: Headline, Subtitle, CTA */}
+        <div class="lg:col-span-5 flex flex-col items-start gap-6 text-left">
+          <span class="eyebrow-text font-semibold text-text/50">✦ AI Agent Automation</span>
+
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-white leading-[1.05] text-wrap-balance">
+            {headingText}
+          </h1>
+
+          <p class="text-base md:text-lg text-zinc-400 font-light leading-relaxed max-w-xl">
+            {descriptionText}
+          </p>
+
+          <div class="flex flex-wrap items-center gap-4 mt-2">
+            <Button variant="primary" href="/contact-us">
+              Get Started
+            </Button>
+            <Button variant="secondary" href="#demo-video">
+              Watch Video
+            </Button>
+          </div>
+        </div>
+
+        {/* Right Column: Workflow Animation */}
+        <div class="lg:col-span-7 w-full flex items-center justify-center">
+          <AiAgentsWorkflow client:load />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: VIDEO SHOWCASE ── -->
+    <section id="demo-video" class="relative py-20 px-4 md:px-8 border-b border-white/5 bg-zinc-950">
+
+      <div class="relative z-10 w-full max-w-5xl mx-auto flex flex-col gap-10 items-center text-center">
+        <div class="max-w-2xl flex flex-col gap-3">
+          <span class="eyebrow-text font-bold text-text/45">What is an AI Agent?</span>
+          <h2 class="text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-tight">
+            Scaling Beyond the Human Ceiling
+          </h2>
+          <p class="text-sm md:text-base text-zinc-400 font-light leading-relaxed">
+            See how AI agents run your operations, book customers, and draft invoices on autopilot.
+          </p>
+        </div>
+
+        {/* Customs Video Showcase component */}
+        <div class="video-scroll-target w-full will-change-transform">
+          <VideoShowcase client:load />
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: ECOSYSTEM SCENE ── -->
+    <section class="relative bg-[#0a0f1a] border-t border-white/5 overflow-hidden">
+      <EcosystemScene client:visible />
+    </section>
+
+    <!-- ── SECTION 4: HOW AI AGENTS WORK ── -->
+    <section class="relative py-28 px-4 md:px-8 border-t border-white/5 bg-zinc-950">
+      <div class="relative z-10 w-full max-w-5xl mx-auto flex flex-col gap-20">
+        <div class="max-w-2xl flex flex-col gap-4">
+          <span class="eyebrow-text font-medium text-text/45">The Process</span>
+          <h2 class="heading-display">How AI Agents Work</h2>
+          <p class="text-base text-text/65 leading-relaxed max-w-lg mt-2">
+            From a customer request to a completed task on autopilot.
+          </p>
+        </div>
+
+        <!-- 4-step Typographic Flow -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+          <!-- Step 1: Capture -->
+          <div class="flex flex-col gap-4 group">
+            <span class="font-mono text-3xl font-light text-heading/20 group-hover:text-heading/45 transition-colors duration-500">01</span>
+            <div class="flex flex-col gap-2">
+              <h3 class="text-lg font-normal text-heading">Capture</h3>
+              <p class="text-sm text-text/50 leading-relaxed">
+                Receives requests instantly from your emails, website forms, or chat messages.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 2: Read & Route -->
+          <div class="flex flex-col gap-4 group">
+            <span class="font-mono text-3xl font-light text-heading/20 group-hover:text-heading/45 transition-colors duration-500">02</span>
+            <div class="flex flex-col gap-2">
+              <h3 class="text-lg font-normal text-heading">Read & Route</h3>
+              <p class="text-sm text-text/50 leading-relaxed">
+                Reads the request to figure out what is needed based on your business rules.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 3: Decide -->
+          <div class="flex flex-col gap-4 group">
+            <span class="font-mono text-3xl font-light text-heading/20 group-hover:text-heading/45 transition-colors duration-500">03</span>
+            <div class="flex flex-col gap-2">
+              <h3 class="text-lg font-normal text-heading">Decide</h3>
+              <p class="text-sm text-text/50 leading-relaxed">
+                Chooses the correct next steps—like preparing a quote, booking a call, or flagging an issue.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 4: Get it Done -->
+          <div class="flex flex-col gap-4 group">
+            <span class="font-mono text-3xl font-light text-heading/20 group-hover:text-heading/45 transition-colors duration-500">04</span>
+            <div class="flex flex-col gap-2">
+              <h3 class="text-lg font-normal text-heading">Get it Done</h3>
+              <p class="text-sm text-text/50 leading-relaxed">
+                Updates your software, drafts the invoice, or sends the email automatically.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 5: REAL BUSINESS APPLICATIONS ── -->
+    <section class="relative py-28 px-4 md:px-8 border-t border-white/5 bg-[#0a0f1a]">
+      <div class="relative z-10 w-full max-w-5xl mx-auto flex flex-col gap-20">
+        <div class="max-w-2xl flex flex-col gap-4">
+          <span class="eyebrow-text font-medium text-text/45">Applications</span>
+          <h2 class="heading-display">Real Business Operations</h2>
+          <p class="text-base text-text/65 leading-relaxed max-w-lg mt-2">
+            AI agents handling back-office, financial, and logistical workloads without human friction.
+          </p>
+        </div>
+
+        <!-- Vertical Row List (No boxes/cards) -->
+        <div class="border-t border-heading/10 flex flex-col w-full">
+          
+          <!-- Operations -->
+          <div class="py-10 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-12 border-b border-heading/8 group transition-colors duration-300 hover:bg-white/[0.01]">
+            <div class="flex items-center gap-6">
+              <span class="font-mono text-xs text-heading/20">01</span>
+              <h3 class="text-xl font-normal text-heading">Operations</h3>
+            </div>
+            <p class="text-sm text-text/50 leading-relaxed">
+              Automate vendor dispatching, status updates, team communications, and scheduling pipelines based on active database inputs.
+            </p>
+          </div>
+
+          <!-- Finance -->
+          <div class="py-10 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-12 border-b border-heading/8 group transition-colors duration-300 hover:bg-white/[0.01]">
+            <div class="flex items-center gap-6">
+              <span class="font-mono text-xs text-heading/20">02</span>
+              <h3 class="text-xl font-normal text-heading">Finance & Billing</h3>
+            </div>
+            <p class="text-sm text-text/50 leading-relaxed">
+              Trigger invoices upon completion, reconcile ledger entries, manage billing notifications, and extract document receipts automatically.
+            </p>
+          </div>
+
+          <!-- Customer Service -->
+          <div class="py-10 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-12 border-b border-heading/8 group transition-colors duration-300 hover:bg-white/[0.01]">
+            <div class="flex items-center gap-6">
+              <span class="font-mono text-xs text-heading/20">03</span>
+              <h3 class="text-xl font-normal text-heading">Customer Support</h3>
+            </div>
+            <p class="text-sm text-text/50 leading-relaxed">
+              Autonomously resolve tracking issues, return requests, and account updates while escalating complex cases to support staff seamlessly.
+            </p>
+          </div>
+
+          <!-- Internal Knowledge -->
+          <div class="py-10 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-12 border-b border-heading/8 group transition-colors duration-300 hover:bg-white/[0.01]">
+            <div class="flex items-center gap-6">
+              <span class="font-mono text-xs text-heading/20">04</span>
+              <h3 class="text-xl font-normal text-heading">Internal Playbooks</h3>
+            </div>
+            <p class="text-sm text-text/50 leading-relaxed">
+              Onboard teammates and answer procedural questions instantly using your company's proprietary knowledge base, policies, and records.
+            </p>
+          </div>
+
+          <!-- Reporting -->
+          <div class="py-10 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-12 border-b border-heading/8 group transition-colors duration-300 hover:bg-white/[0.01]">
+            <div class="flex items-center gap-6">
+              <span class="font-mono text-xs text-heading/20">05</span>
+              <h3 class="text-xl font-normal text-heading">Reporting & Audits</h3>
+            </div>
+            <p class="text-sm text-text/50 leading-relaxed">
+              Synthesize operations logs, database changes, and team metrics into clean daily summaries and automated anomaly alerts.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 6: CTA ── -->
+    <section class="relative py-32 px-4 md:px-8 border-t border-white/5 bg-zinc-950 text-center flex flex-col items-center justify-center min-h-[50svh]">
+      <div class="relative z-10 w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
+        <div class="flex flex-col gap-4">
+          <span class="eyebrow-text font-medium text-text/45">Audit Your Operations</span>
+          <h2 class="heading-display">Ready to design your agent?</h2>
+          <p class="text-base text-text/65 max-w-lg mx-auto leading-relaxed mt-2">
+            Audit your manual workflows and design custom AI operations tailored to your business rules.
+          </p>
+        </div>
+
+        <!-- Value Prop badges -->
+        <div class="flex flex-wrap justify-center gap-4 md:gap-8 my-2">
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span class="text-xs uppercase tracking-wider font-semibold text-text/50">Save Time</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span class="text-xs uppercase tracking-wider font-semibold text-text/50">Reduce Costs</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-white/40" />
+            <span class="text-xs uppercase tracking-wider font-semibold text-text/50">Scale Operations</span>
+          </div>
+        </div>
+
+        <Button variant="primary" href="/contact-us" size="lg" className="px-8 mt-2">
+          Book Strategy Call
+        </Button>
+      </div>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { readMotionPreference } from "@/hooks/useMotionPreference";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  let activeTimeline: gsap.core.Timeline | null = null;
+
+  function initVideoScroll() {
+    // Clean up any existing timeline/ScrollTrigger to avoid duplicates/memory leaks on hot-reload/navigation
+    if (activeTimeline) {
+      activeTimeline.kill();
+      activeTimeline = null;
+    }
+
+    const target = document.querySelector(".video-scroll-target");
+    const trigger = document.querySelector("#demo-video");
+    if (!target || !trigger) return;
+
+    if (readMotionPreference()) {
+      // If prefers-reduced-motion is active, ensure element is reset to full scale
+      gsap.set(target, { scale: 1.0, clearProps: "transform" });
+      return;
+    }
+
+    activeTimeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: trigger,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: true,
+      }
+    });
+
+    activeTimeline
+      .fromTo(target,
+        { scale: 0.82 },
+        { scale: 1.0, ease: "power1.inOut", duration: 1 }
+      )
+      .to(target,
+        { scale: 1.0, duration: 0.5 } // Keep at full size in the middle of viewport
+      )
+      .to(target,
+        { scale: 0.82, ease: "power1.inOut", duration: 1 }
+      );
+  }
+
+  // Initial load
+  initVideoScroll();
+
+  // Astro page transitions support
+  document.addEventListener("astro:page-load", initVideoScroll);
+</script>

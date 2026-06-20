@@ -1,113 +1,164 @@
 // src/components/AnimatedExamples/AiAgentsDemo.tsx
-/**
- * AI Agents solution demo — "chat that performs a task".
- *
- * A user request appears, the agent shows a thinking indicator, then instead of
- * merely replying it RUNS a tool ("Booking…") which resolves to a ✓ result card
- * — the differentiator: agents that act, not just chat. Everything is monochrome
- * except the success check, which gets the one real colour pop (a real success
- * green) because that's the meaningful state change.
- *
- * Steps: 0 empty · 1 user msg · 2 thinking dots · 3 tool running · 4 ✓ result.
- */
 import { motion } from "framer-motion";
 import ExampleFrame, { useExampleSteps } from "./ExampleFrame";
 
-const SUCCESS = "#3ba55d"; // real success green — the sole colour pop
+const GREEN_ACCENT = "#4ade80";
 
-interface Props {
-  className?: string;
-}
+// Symmetrical wave path connecting the node centers mathematically
+const WAVE_PATH = "M 80,180 C 120,180 140,80 180,80 C 220,80 240,180 280,180";
+
+// Three mathematically balanced app nodes
+const PATH_NODES = [
+  { cx: 80,  cy: 180, color: "#60a5fa", type: "calendar", activeStep: 1, textY: 208, label: "STEP 1" },
+  { cx: 180, cy: 80,  color: "#fbbf24", type: "mail",     activeStep: 2, textY: 55,  label: "STEP 2" },
+  { cx: 280, cy: 180, color: "#c084fc", type: "db",       activeStep: 3, textY: 211, label: "STEP 3" },
+];
+
+interface Props { className?: string }
 
 export default function AiAgentsDemo({ className = "" }: Props) {
-  const step = useExampleSteps([500, 1300, 2100, 3200], 5600);
-
-  const bubble = {
-    initial: { opacity: 0, y: 12, scale: 0.96 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
-  };
+  // Loop timings for step increments
+  const step = useExampleSteps([600, 1400, 2300], 4800);
 
   return (
-    <ExampleFrame label="Animation: an AI agent performing a task from a chat request" className={className}>
-      <div className="absolute inset-0 flex flex-col justify-center gap-2.5 p-5">
-        {/* User request */}
-        {step >= 1 && (
-          <motion.div {...bubble} className="self-end">
-            <div className="max-w-[78%] rounded-2xl rounded-br-sm bg-[var(--color-heading)]/12 px-3 py-2">
-              <div className="h-1.5 w-28 rounded bg-[var(--color-heading)]/45" />
-              <div className="mt-1.5 h-1.5 w-20 rounded bg-[var(--color-heading)]/30" />
-            </div>
-          </motion.div>
+    <ExampleFrame label="Animation: Symmetrical AI Agent workflow execution pipeline" className={className}>
+      {/* Background with emerald green radial glow */}
+      <div 
+        className="absolute inset-0 bg-[#040907]" 
+        style={{
+          backgroundImage: "radial-gradient(circle at center, rgba(74,222,128,0.12) 0%, rgba(4,9,7,0) 75%)"
+        }}
+      />
+
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 360 260" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          {/* Glowing particle filter */}
+          <filter id="agent-glow" x="-25%" y="-25%" width="150%" height="150%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Subtle grid of miniature dots */}
+        {Array.from({ length: 12 }, (_, col) =>
+          Array.from({ length: 9 }, (_, row) => {
+            const cx = col * 32 + (row % 2) * 16 - 8;
+            const cy = row * 28 + 6;
+            return (
+              <circle
+                key={`${col}-${row}`}
+                cx={cx}
+                cy={cy}
+                r="0.85"
+                fill={GREEN_ACCENT}
+                fillOpacity="0.04"
+              />
+            );
+          })
         )}
 
-        {/* Agent: thinking → tool run → result */}
-        {step >= 2 && (
-          <motion.div {...bubble} className="self-start">
-            <div className="flex min-w-[10rem] flex-col gap-2 rounded-2xl rounded-bl-sm border border-[var(--color-border-soft)] bg-[var(--color-bg2)] px-3 py-2.5">
-              {/* Thinking dots (only before the tool starts) */}
-              {step === 2 && (
-                <div className="flex items-center gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <motion.span
-                      key={i}
-                      className="h-1.5 w-1.5 rounded-full bg-[var(--color-heading)]/45"
-                      animate={{ opacity: [0.25, 1, 0.25] }}
-                      transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.18 }}
-                    />
-                  ))}
-                </div>
+        {/* --- Symmetrical Circuit Wave Path --- */}
+        <g>
+          {/* Background trace line */}
+          <path
+            d={WAVE_PATH}
+            fill="none"
+            stroke="rgba(74, 222, 128, 0.08)"
+            strokeWidth="4.5"
+            strokeLinecap="round"
+          />
+          {/* Active dotted path */}
+          <path
+            d={WAVE_PATH}
+            fill="none"
+            stroke={GREEN_ACCENT}
+            strokeWidth="1.2"
+            strokeDasharray="3 4"
+            strokeOpacity="0.6"
+          />
+
+          {/* Glowing Orb traversing the path */}
+          <circle r="4" fill="#ffffff" filter="url(#agent-glow)">
+            <animateMotion
+              dur="4.5s"
+              repeatCount="indefinite"
+              path={WAVE_PATH}
+            />
+          </circle>
+        </g>
+
+        {/* --- Mathematically Balanced Hexagon Nodes & Monospace Labels --- */}
+        {PATH_NODES.map((n, idx) => {
+          const isActive = step >= n.activeStep;
+          
+          // Generate coordinates for flat-topped hexagon (radius 14) dynamically
+          const hexPath = `M ${n.cx + 14},${n.cy} L ${n.cx + 7},${n.cy + 12} L ${n.cx - 7},${n.cy + 12} L ${n.cx - 14},${n.cy} L ${n.cx - 7},${n.cy - 12} L ${n.cx + 7},${n.cy - 12} Z`;
+
+          return (
+            <motion.g 
+              key={idx}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ 
+                opacity: 1, 
+                scale: isActive ? [1, 1.15, 1] : 1
+              }}
+              transition={{ duration: 0.4, delay: idx * 0.1 }}
+            >
+              {/* Symmetrical Hexagon Card Node */}
+              <motion.path
+                d={hexPath}
+                fill="rgba(10, 15, 24, 0.85)"
+                stroke={isActive ? n.color : "rgba(255, 255, 255, 0.06)"}
+                strokeWidth="1.2"
+                filter={isActive ? "url(#agent-glow)" : undefined}
+                animate={isActive ? { strokeOpacity: [0.7, 1.0, 0.7] } : {}}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+
+              {/* Minimal SVG icons inside nodes */}
+              {n.type === "calendar" && (
+                <g stroke={isActive ? n.color : "rgba(255,255,255,0.35)"} strokeWidth="1" fill="none">
+                  <rect x={n.cx - 5} y={n.cy - 5} width="10" height="9" rx="1" />
+                  <line x1={n.cx - 5} y1={n.cy - 2} x2={n.cx + 5} y2={n.cy - 2} />
+                  <circle cx={n.cx} cy={n.cy + 1.5} r="0.6" fill="currentColor" />
+                </g>
               )}
 
-              {/* Tool-call chip */}
-              {step >= 3 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="flex items-center gap-2 rounded-md border border-[var(--color-border-soft)] bg-[var(--color-bg3)] px-2 py-1.5"
-                >
-                  {step === 3 ? (
-                    <motion.span
-                      className="h-3 w-3 rounded-full border-2 border-[var(--color-heading)]/25 border-t-[var(--color-heading)]/70"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                    />
-                  ) : (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 360, damping: 16 }}
-                      className="flex h-3.5 w-3.5 items-center justify-center rounded-full"
-                      style={{ background: SUCCESS }}
-                    >
-                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none">
-                        <path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </motion.span>
-                  )}
-                  <span className="text-[0.6rem] font-medium tracking-wide text-[var(--color-heading)]/70">
-                    {step === 3 ? "Booking appointment…" : "Appointment booked"}
-                  </span>
-                </motion.div>
+              {n.type === "mail" && (
+                <g stroke={isActive ? n.color : "rgba(255,255,255,0.35)"} strokeWidth="1" fill="none">
+                  <rect x={n.cx - 6} y={n.cy - 4} width="12" height="8" rx="1" />
+                  <path d={`M${n.cx - 6},${n.cy - 2.5} L${n.cx},${n.cy + 1} L${n.cx + 6},${n.cy - 2.5}`} />
+                </g>
               )}
 
-              {/* Result line after success */}
-              {step >= 4 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                  className="flex flex-col gap-1"
-                >
-                  <div className="h-1.5 w-24 rounded bg-[var(--color-heading)]/35" />
-                  <div className="h-1.5 w-16 rounded bg-[var(--color-heading)]/20" />
-                </motion.div>
+              {n.type === "db" && (
+                <g stroke={isActive ? n.color : "rgba(255,255,255,0.35)"} strokeWidth="1" fill="none">
+                  <ellipse cx={n.cx} cy={n.cy - 3} rx="5" ry="1.6" />
+                  <path d={`M${n.cx - 5},${n.cy - 3} V${n.cy + 0.5} C${n.cx - 5},${n.cy + 2} ${n.cx + 5},${n.cy + 2} ${n.cx + 5},${n.cy + 0.5} V${n.cy - 3}`} />
+                  <path d={`M${n.cx - 5},${n.cy + 0.5} V${n.cy + 4} C${n.cx - 5},${n.cy + 5.5} ${n.cx + 5},${n.cy + 5.5} ${n.cx + 5},${n.cy + 4} V${n.cy + 0.5}`} />
+                </g>
               )}
-            </div>
-          </motion.div>
-        )}
-      </div>
+
+              {/* Clean all-caps label aligned under/above node */}
+              <text
+                x={n.cx}
+                y={n.textY}
+                fontSize="7.5"
+                fill={isActive ? "rgba(255, 255, 255, 0.7)" : "rgba(255, 255, 255, 0.28)"}
+                fontWeight="800"
+                textAnchor="middle"
+                fontFamily="monospace"
+                letterSpacing="0.6"
+              >
+                {n.label}
+              </text>
+            </motion.g>
+          );
+        })}
+      </svg>
     </ExampleFrame>
   );
 }

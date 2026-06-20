@@ -5,6 +5,7 @@ description: "Custom AI agents and automations that handle the busywork so your 
 icon: "fa6:robot"
 order: 3
 tagline: "Your business, running smarter."
+itemLayout: "@/layouts/collections/AiAgentsLayout.astro"
 includes:
   - title: "Custom AI Agents"
     body: "Built for your exact workflow, not a generic chatbot dropped into your site. Agents that understand your context and act on it."
@@ -22,17 +23,3 @@ steps:
   - title: "Run"
     body: "Deployed, monitored, and refined on an ongoing basis so the agents keep delivering value as your needs change."
 ---
-import AboutSection from "@/components/AboutSection/AboutSection.astro";
-
-<AboutSection
-  eyebrow="AI Agents"
-  statement="AI agents that remove repetitive work and help your team move faster."
-  leftText="We design AI systems around the processes that slow your team down."
-  rightText="Our mission is to make automation feel practical, reliable, and easy to use in the real business."
-  ctaText="Explore Our Story"
-  ctaLink="/about-us"
-  stickyHeight="220svh"
-  videoSrc="/project-images-and-videos/koiroofingandsolar.com/videos/koiroofingandsolar.com-desktop.mp4"
-  videoWrapperClass="bg-black"
-  showStats={false}
-/>
