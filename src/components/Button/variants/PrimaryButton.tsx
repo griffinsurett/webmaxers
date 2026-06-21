@@ -18,9 +18,10 @@ export default function PrimaryButton({
   className = "",
   ...props
 }: ButtonProps) {
-  // Primary button styling
+  // Primary button styling — solid primary (brand) background. Light text in
+  // light mode; heading-colored text in dark mode.
   const variantClasses =
-    "text-bg focus:ring-primary bg-heading transition-all";
+    "bg-primary text-primary-50 dark:text-heading focus:ring-primary hover:bg-primary-600 transition-all";
 
   return (
     <ButtonBase
