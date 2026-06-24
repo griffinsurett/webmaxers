@@ -443,10 +443,14 @@ export default function HeroLogo3D({
       //   REBUILD_END → 1                 : fully whole, HELD (covers the footer
       //                                     with margin so scrub-lag never leaves
       //                                     stray shards at the bottom).
-      const SPIN_END = 0.12;       // stay whole briefly at the very top
-      const SHATTER_END = 0.38;    // fully shattered by ~38% down the page
-      const REBUILD_START = 0.66;  // start reassembling before the footer
-      const REBUILD_END = 0.90;    // fully back together by 90% → whole through the footer
+      // Tuned against the WHOLE-page scroll: stay whole through the hero +
+      // solutions, then shatter WHILE the About text is on screen (it used to
+      // break during the About section), hold as rubble through the
+      // portfolio/blog/testimonials, and reassemble for the footer.
+      const SPIN_END = 0.16;       // whole through the hero
+      const SHATTER_END = 0.34;    // shatter spans the About section
+      const REBUILD_START = 0.78;  // start reassembling before the footer
+      const REBUILD_END = 0.94;    // fully back together → whole through the footer
 
       // Latest break amount (scroll-driven), re-applied every frame by the tick
       // loop so the rubble keeps animating even when the scroll position is static.

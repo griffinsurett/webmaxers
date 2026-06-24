@@ -28,7 +28,13 @@ const ctaLink = "/contact-us";
         <ThemeControls client:load />
 
         <div class="hidden sm:block">
-          <Button variant="hiddenUnderline" href={ctaLink} size="sm" client:load>
+          <Button
+            variant="hiddenUnderline"
+            href={ctaLink}
+            size="sm"
+            className="!rounded-full border border-heading !px-5 !py-2 after:hidden hover:bg-heading hover:text-bg transition-colors"
+            client:load
+          >
             Let's Talk
           </Button>
         </div>

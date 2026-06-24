@@ -132,14 +132,24 @@ const latestPosts = query("blog")
 
 <style>
   /* Blog layer = the curtain's resting layer (revealed when the portfolio peels
-     off left). Its content is vertically centred in the pinned frame. */
+     off left). Centred in the pinned frame on desktop (it fits in one viewport).
+     Transparent so the fixed 3D logo / page bg shows through behind it. */
   :global(.curtain-blog-layer) {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /* Transparent so the fixed 3D logo / page bg shows through behind the blog
-       (a continuation of the top section, not its own panel). */
     background: transparent;
+  }
+
+  /* Mobile: the stacked blog grid is TALLER than the 100vh curtain frame, so
+     centring it pushes the top out of view. Top-align it (and let it scroll
+     within the frame) so it's revealed from its highest point as the portfolio
+     peels off. */
+  @media (max-width: 767px) {
+    :global(.curtain-blog-layer) {
+      justify-content: flex-start;
+      overflow-y: auto;
+    }
   }
 
   /* Reduced motion: the stack flattens to normal flow — the blog layer returns
