@@ -42,7 +42,7 @@ const {
     <!-- Top row: headline left, (empty right) -->
     <div class="flex items-start justify-between gap-8 w-full">
 
-      <!-- Left: headline + CTA -->
+      <!-- Left: headline (+ CTA on desktop) -->
       <div class="max-w-3xl md:pt-20 lg:pt-28">
         {/* Hero headline. heading-display sets the desktop clamp; on mobile we
             override to a smaller size so it doesn't dominate the viewport. */}
@@ -56,7 +56,23 @@ const {
           {bodyText || statDescription}
         </p>
 
-        <div class="flex flex-wrap items-center gap-6 mt-8">
+        {/* Mobile only: testimonial circles under the text. */}
+        <ContentRenderer
+          query={query("testimonials")
+            .where((entry) => entry.data.featured === true)
+            .limit(3)}
+          variant="TestimonialCirclesVariant"
+          className="mt-6 lg:hidden"
+          counterStart={10}
+          counterEnd={100}
+          counterDuration={1800}
+          counterSuffix="+"
+          counterLabel="Happy Clients"
+        />
+
+        {/* CTAs — DESKTOP: under the headline (top-left). MOBILE: hidden here and
+            shown in the bottom group instead. */}
+        <div class="hidden lg:flex flex-wrap items-center gap-6 mt-8">
           <Button
             variant="primary"
             href={ctaLink}
@@ -76,29 +92,34 @@ const {
             View Our Work
           </Button>
         </div>
-
-        <!-- Mobile only: circles sit under the CTA (unchanged on small screens). -->
-        <ContentRenderer
-          query={query("testimonials")
-            .where((entry) => entry.data.featured === true)
-            .limit(3)}
-          variant="TestimonialCirclesVariant"
-          className="mt-6 lg:hidden"
-          counterStart={10}
-          counterEnd={100}
-          counterDuration={1800}
-          counterSuffix="+"
-          counterLabel="Happy Clients"
-        />
       </div>
     </div>
 
     <!-- Bottom row — pinned to the bottom of the hero by the parent's
-         justify-between. Mobile: stat block stacked above the scroll arrow.
-         lg+: [spacer] [scroll arrow centred] [stat box right]. -->
+         justify-between. Mobile: CTA + circles group (left) above the scroll
+         arrow; stats hidden. lg+: [circles] [scroll arrow centred] [stat box]. -->
     <div class="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between w-full">
-      <!-- Desktop only: testimonial circles pinned bottom-left, mirroring the
-           stat box's bottom-right placement. (Mobile keeps them under the CTA.) -->
+      {/* MOBILE-only group: CTAs + circles at the bottom-left (the desktop CTAs
+          live up by the headline; the stats box is hidden on mobile and
+          reappears in the About section). */}
+      <div class="flex flex-col items-end gap-6 text-right lg:hidden">
+        <div class="flex flex-wrap items-center justify-end gap-6">
+          <Button
+            variant="primary"
+            href={ctaLink}
+            rightIcon="lu:arrow-up-right"
+            className="rounded-xl px-6 py-3.5 eyebrow-text font-medium flex items-center gap-2 group shadow-md [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-[0.16rem] hover:[&_svg]:-translate-y-[0.16rem]"
+            client:load
+          >
+            {ctaText}
+          </Button>
+          <Button variant="underline" href="/projects" className="!self-center" client:load>
+            View Our Work
+          </Button>
+        </div>
+      </div>
+
+      <!-- Desktop only: testimonial circles pinned bottom-left. -->
       <ContentRenderer
         query={query("testimonials")
           .where((entry) => entry.data.featured === true)
@@ -112,16 +133,17 @@ const {
         counterLabel="Happy Clients"
       />
 
-      <!-- Scroll indicator: centred in the row on desktop, below the stat on mobile -->
+      <!-- Scroll indicator: centred in the row on desktop, below on mobile -->
       <ScrollIndicator href="#solutions-stacked-deck-section" className="order-last lg:order-none self-center lg:self-auto relative bottom-auto left-auto translate-x-0 static-in-row" />
 
-      <!-- Stat box + body text — bottom of hero on mobile, bottom-right on desktop. -->
+      <!-- Stat box + body text — DESKTOP bottom-right only. Hidden on mobile
+           (the same stats reappear in the About section). -->
       <ContentRenderer
         query={query("stats").orderBy(sortByOrder())}
         variant="HeroStatsVariant"
         description={bodyText || statDescription}
         showHeadingSection={false}
-        className="shrink-0 lg:w-[380px]"
+        className="hidden lg:flex shrink-0 lg:w-[380px]"
       />
     </div>
   </div>
