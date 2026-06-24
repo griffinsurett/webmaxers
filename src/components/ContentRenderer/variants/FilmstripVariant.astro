@@ -277,26 +277,24 @@ const totalPanels = items.length + 2;
   // toward centre (ease-out), and exits upward as the panel clears the left
   // edge (ease-in via the exit term). Panel clips the card so it's never
   // visible outside the panel.
-  function applyCardRise(
-    cards: NodeListOf<HTMLElement>,
-    currentX: number,
-    vw: number,
-  ) {
-    cards.forEach((rise) => {
-      const panel = rise.closest<HTMLElement>("[data-filmstrip-card]");
-      if (!panel) return;
-      const panelW = panel.offsetWidth;
-      const panelH = panel.offsetHeight;
-      // Left edge of this panel in viewport space.
-      const panelLeft = panel.offsetLeft - currentX;
+  //
+  // PERF: a card's panel geometry (width / height / offsetLeft) is STABLE during
+  // a scrub — only `currentX` changes. Reading offset* here every frame forced a
+  // synchronous reflow per card per frame (a major layout-thrash cost once the
+  // logo + curtain all animate together). So we measure the geometry ONCE (in
+  // measure()) into `geom` and this hot path does pure math, no DOM reads.
+  type CardGeom = { rise: HTMLElement; w: number; h: number; left: number };
+  function applyCardRise(geom: CardGeom[], currentX: number, vw: number) {
+    for (const g of geom) {
+      const panelLeft = g.left - currentX; // panel's left edge in viewport space
       // Entry: 0→1 as the panel travels from 1vw right to ~0.1vw right.
       const entry = easeOutCubic(clamp((vw - panelLeft) / (vw * 0.9), 0, 1));
       // Exit: 1→0 as the panel's left edge travels from 0 to -30% of its width.
-      const exit = 1 - clamp(panelLeft / (-panelW * 0.3), 0, 1);
+      const exit = 1 - clamp(panelLeft / (-g.w * 0.3), 0, 1);
       const v = Math.min(entry, exit);
-      rise.style.transform = `translateY(${((1 - v) * panelH).toFixed(2)}px)`;
-      rise.style.opacity = v.toFixed(3);
-    });
+      g.rise.style.transform = `translateY(${((1 - v) * g.h).toFixed(2)}px)`;
+      g.rise.style.opacity = v.toFixed(3);
+    }
   }
 
   // Phase 1 driver: translate the track to a given scrub progress (0→1) and
@@ -304,10 +302,11 @@ const totalPanels = items.length + 2;
   // CurtainStack orchestrator so the horizontal motion is identical either way.
   function makeTrackDriver(section: HTMLElement) {
     const track = section.querySelector<HTMLElement>("[data-filmstrip-track]");
-    const cards = section.querySelectorAll<HTMLElement>(
-      "[data-filmstrip-card] .fs-card-rise",
+    const cards = Array.from(
+      section.querySelectorAll<HTMLElement>("[data-filmstrip-card] .fs-card-rise"),
     );
     let maxX = 0;
+    let geom: CardGeom[] = [];
 
     // On small screens we skip the per-card rise/fall ("sling") and just scrub
     // the track straight off the page — cards sit statically in place.
@@ -315,10 +314,21 @@ const totalPanels = items.length + 2;
 
     return {
       // Horizontal travel = full track overflow, landing exactly on the last
-      // panel (no trailing gap — the filmstrip curtains the scene behind it).
+      // panel. Also snapshot each card's panel geometry here (one layout pass)
+      // so the per-frame setProgress never reads the DOM. Re-runs on resize via
+      // ScrollTrigger's invalidateOnRefresh.
       measure() {
         if (!track) return 0;
         maxX = Math.max(0, track.scrollWidth - window.innerWidth);
+        geom = cards.map((rise) => {
+          const panel = rise.closest<HTMLElement>("[data-filmstrip-card]");
+          return {
+            rise,
+            w: panel?.offsetWidth ?? 0,
+            h: panel?.offsetHeight ?? 0,
+            left: panel?.offsetLeft ?? 0,
+          };
+        });
         return maxX;
       },
       setProgress(p: number) {
@@ -327,12 +337,12 @@ const totalPanels = items.length + 2;
         track.style.transform = `translateX(${(-x).toFixed(2)}px)`;
         if (noRise()) {
           // Cards visible and in place — no rise animation on mobile.
-          cards.forEach((rise) => {
-            rise.style.transform = "translateY(0)";
-            rise.style.opacity = "1";
-          });
+          for (const g of geom) {
+            g.rise.style.transform = "translateY(0)";
+            g.rise.style.opacity = "1";
+          }
         } else {
-          applyCardRise(cards, x, window.innerWidth);
+          applyCardRise(geom, x, window.innerWidth);
         }
       },
     };

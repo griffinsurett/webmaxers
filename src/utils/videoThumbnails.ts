@@ -63,7 +63,11 @@ export async function generateVideoPoster(
 
   const baseName = getBaseName(videoPath);
   const rawFrame = path.join(THUMB_DIR, `${baseName}-raw.jpg`);
-  const posterFile = path.join(THUMB_DIR, `${baseName}-poster.webp`);
+  // Key the poster file by its target width, so different consumers (e.g. the
+  // homepage cards at 960 vs a project page at 1600) each get a correctly-sized
+  // poster instead of whichever width happened to generate first winning the
+  // shared `${baseName}-poster.webp` cache.
+  const posterFile = path.join(THUMB_DIR, `${baseName}-${width}-poster.webp`);
   const placeholderFile = path.join(THUMB_DIR, `${baseName}-placeholder.webp`);
 
   // Extract frame if not exists
@@ -83,13 +87,16 @@ export async function generateVideoPoster(
     throw new Error(`[videoThumbnails] Could not read frame metadata`);
   }
 
+  // Never upscale past the source frame — that only bloats the file with no
+  // added detail (e.g. a 1440px frame asked for 1600).
+  const targetWidth = Math.min(width, metadata.width);
   const aspectRatio = metadata.height / metadata.width;
-  const posterHeight = Math.round(width * aspectRatio);
+  const posterHeight = Math.round(targetWidth * aspectRatio);
 
   // Generate poster if not exists
   if (!fs.existsSync(posterFile)) {
     await sharp(rawFrame)
-      .resize(width, posterHeight, { fit: "cover" })
+      .resize(targetWidth, posterHeight, { fit: "cover" })
       .webp({ quality: 80 })
       .toFile(posterFile);
   }
@@ -104,9 +111,9 @@ export async function generateVideoPoster(
   }
 
   return {
-    src: `${THUMB_ROUTE}/${baseName}-poster.webp`,
+    src: `${THUMB_ROUTE}/${baseName}-${width}-poster.webp`,
     placeholderSrc: `${THUMB_ROUTE}/${baseName}-placeholder.webp`,
-    width,
+    width: targetWidth,
     height: posterHeight,
   };
 }

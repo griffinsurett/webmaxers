@@ -76,7 +76,10 @@ if (imageMetadata) {
     controls={false}
     lazy={true}
     playsInline={true}
-    posterWidth={1280}
+    {/* Cards display the media at ~648px CSS wide; 960 covers ~1.5× DPR while
+        roughly halving the poster weight vs the old 1280 (Lighthouse flagged the
+        1280 posters as oversized for their displayed size). */}
+    posterWidth={960}
     generateThumbAt={0.75}
     wrapperClass="h-full w-full overflow-hidden"
     mediaClass="block !h-auto !w-full !object-contain object-top"

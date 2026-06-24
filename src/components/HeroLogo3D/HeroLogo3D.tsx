@@ -511,6 +511,10 @@ export default function HeroLogo3D({
       // tumble). Lower = lazier, more languid drift. One knob to set the pace.
       const MOTION_SPEED = 0.15;
       const t0 = performance.now();
+      // True on frames where applyBreak displaced vertices — so we can write the
+      // identity positions ONE more time when motion stops, then skip the hot
+      // per-vertex work while the mark sits whole.
+      let brokeLastFrame = false;
       const tick = () => {
         raf = requestAnimationFrame(tick);
         const elapsed = ((performance.now() - t0) / 1000) * MOTION_SPEED; // scaled seconds
@@ -534,11 +538,39 @@ export default function HeroLogo3D({
         // Continuous rubble motion: re-apply break + time-based jitter + drift
         // (outward dispersal + wind) + tumble every frame, so the shattered field
         // keeps blowing around even when the scroll position is static.
+        //
+        // PERF: applyBreak is the hot path — it touches every shard vertex. When
+        // the mark is fully WHOLE and settled (breakAmount ~0 AND the float gate
+        // has eased shut), there is nothing to displace, so skip it entirely. We
+        // run it once more after settling (`brokeLastFrame`) to write the final
+        // identity positions, then stay idle until the next shatter. This is what
+        // keeps the now-full-page logo from burning the main thread forever.
+        const animating = breakAmount > 1e-3 || floatGate > 1e-3;
+        let dirty = false; // did anything visible change this frame?
         if (isReady && (cfg.jitter > 0 || cfg.drift > 0 || cfg.tumble > 0)) {
-          applyBreak(breakAmount, elapsed, cfg.jitter, cfg.drift, cfg.tumble, floatGate);
+          if (animating) {
+            applyBreak(breakAmount, elapsed, cfg.jitter, cfg.drift, cfg.tumble, floatGate);
+            brokeLastFrame = true;
+            dirty = true;
+          } else if (brokeLastFrame) {
+            applyBreak(0); // settle to exact whole once, then idle
+            brokeLastFrame = false;
+            dirty = true;
+          }
         }
 
-        renderer.render(scene, camera);
+        // While WHOLE the mark still spins, so its rotation changes each frame —
+        // that's a cheap visual update and must keep rendering. Track it as dirty
+        // too. (When fully rubble, wholeness→0 so the spin delta is ~0 and the
+        // applyBreak path above carries the motion instead.)
+        if (Math.abs(cfg.spinSpeed * wholeness) > 1e-5 || Math.abs(group.rotation.x) > 1e-4) {
+          dirty = true;
+        }
+
+        // Only touch the GPU when something actually changed. When the mark sits
+        // fully whole + still (e.g. tab backgrounded, or settled), skip the
+        // render so the now-full-page canvas isn't a perpetual main-thread cost.
+        if (dirty) renderer.render(scene, camera);
       };
       tick();
 
