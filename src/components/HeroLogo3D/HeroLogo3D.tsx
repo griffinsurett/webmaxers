@@ -434,10 +434,19 @@ export default function HeroLogo3D({
       const setVisible = (v: boolean) => {
         if (rootRef.current) rootRef.current.style.visibility = v ? "visible" : "hidden";
       };
-      // Scroll-SCRUBBED shatter (break 0 → 1) across the range.
-      //   progress 0 → SPIN_END : logo whole (break hasn't started)
-      //   progress SPIN_END → breakEnd : break ramps 0 → 1
-      const SPIN_END = 0.35; // stay whole longer before it starts to fall apart
+      // Scroll-SCRUBBED shatter + reassembly across the WHOLE page:
+      //   progress 0 → SPIN_END           : whole (break 0)
+      //   SPIN_END → SHATTER_END          : break ramps 0 → 1 (falls apart)
+      //   SHATTER_END → REBUILD_START     : full rubble (drifts behind the lower
+      //                                     sections — blog / testimonials)
+      //   REBUILD_START → REBUILD_END     : break eases 1 → 0 (reassembles)
+      //   REBUILD_END → 1                 : fully whole, HELD (covers the footer
+      //                                     with margin so scrub-lag never leaves
+      //                                     stray shards at the bottom).
+      const SPIN_END = 0.12;       // stay whole briefly at the very top
+      const SHATTER_END = 0.38;    // fully shattered by ~38% down the page
+      const REBUILD_START = 0.66;  // start reassembling before the footer
+      const REBUILD_END = 0.90;    // fully back together by 90% → whole through the footer
 
       // Latest break amount (scroll-driven), re-applied every frame by the tick
       // loop so the rubble keeps animating even when the scroll position is static.
@@ -455,12 +464,23 @@ export default function HeroLogo3D({
         onUpdate: (self) => {
           progress = self.progress;
           if (!isReady) return;
-          const breakEnd = cfg.breakEnd;
-          const breakSpan = breakEnd - SPIN_END;
-          breakAmount =
-            progress <= SPIN_END
-              ? 0
-              : Math.min((progress - SPIN_END) / breakSpan, 1) * cfg.maxBreak;
+          // Triangle-ish curve: ramp up to full break, hold, then ramp back down.
+          if (progress <= SPIN_END) {
+            breakAmount = 0;
+          } else if (progress < SHATTER_END) {
+            // Shatter 0 → 1.
+            breakAmount = ((progress - SPIN_END) / (SHATTER_END - SPIN_END)) * cfg.maxBreak;
+          } else if (progress < REBUILD_START) {
+            // Full rubble — drifts behind the lower sections.
+            breakAmount = cfg.maxBreak;
+          } else if (progress < REBUILD_END) {
+            // Reassemble 1 → 0.
+            breakAmount =
+              (1 - (progress - REBUILD_START) / (REBUILD_END - REBUILD_START)) * cfg.maxBreak;
+          } else {
+            // Held fully whole through the footer (exactly 0 — no stray shards).
+            breakAmount = 0;
+          }
         },
         // Hide once scrolled past the range when requested (a fixed/overlapping
         // canvas would otherwise show through later sections).
@@ -477,12 +497,12 @@ export default function HeroLogo3D({
 
       let spin = 0;
       let raf = 0;
-      // Free-float gate: 0 while the mark is whole, eases to 1 once it's rubble
-      // and then HOLDS — the merry drift/tumble is time-driven from here on, so
-      // scrolling further (or holding still) doesn't change it. Latches open so
-      // the debris keeps floating freely once shattered.
+      // Free-float gate: 0 while whole, eases toward 1 once it's rubble, and
+      // eases back to 0 as the mark REASSEMBLES — so the wind/drift/tumble unwind
+      // and the shards return to their origin for a clean rebuild (it no longer
+      // latches open). Tracks breakAmount so float is present only while broken.
       let floatGate = 0;
-      const FLOAT_BREAK_THRESH = 0.25; // open early so the wind/tumble churns DURING the burst
+      const FLOAT_BREAK_THRESH = 0.25; // float on once break passes this; off again as it falls back below
       // Global slow-motion factor for ALL rubble motion (wind, turbulence, jitter,
       // tumble). Lower = lazier, more languid drift. One knob to set the pace.
       const MOTION_SPEED = 0.15;

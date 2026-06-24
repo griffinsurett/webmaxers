@@ -25,13 +25,15 @@ const latestPosts = query("blog")
 ---
 
 <BaseLayout title="Home" description={siteData.description} hideFooter>
+  {
+    /* data-logo-break spans the WHOLE page (main + footer) so the 3D logo's
+       break scrubs across the entire scroll: it shatters near the top, drifts as
+       rubble behind the lower sections, then REASSEMBLES as you reach the footer.
+       The logo canvas is fixed full-viewport and never hides (hideOnLeave=false). */
+  }
+  <div data-logo-break>
   <main class="flex-1 relative z-10">
-    {
-      /* HeroLogo3D renders the fracturing logo; THIS wrapper decides when it
-        breaks. The logo goes from whole (top) to shattered across the wrapper's
-        height — i.e. fully broken when the projects section begins below it. */
-    }
-    <div class="relative" data-logo-break>
+    <div class="relative">
       {
         /* Dark-mode starfield: the backmost fixed layer, behind the 3D logo.
            It's the dark-mode background from the top of the page down to the
@@ -40,7 +42,7 @@ const latestPosts = query("blog")
       }
       <!-- <Starfield class="-z-20" /> -->
 
-      <HeroLogo3D class="fixed inset-0 -z-10 opacity-40 dark:invert">
+      <HeroLogo3D class="fixed inset-0 -z-10 opacity-40 dark:invert" hideOnLeave={false}>
         {
           /* Poster: a render of the 3D logo at progress 0, captured on a SQUARE
             canvas with the same perspective camera. The live canvas frames the
@@ -101,12 +103,8 @@ const latestPosts = query("blog")
       <div data-curtain-layer data-move="left">
         <PortfolioSection ctaLink="/projects" />
       </div>
-      <div data-curtain-layer data-move="up" id="logo-scene">
-        <TestimonialCarousel withBackground />
-      </div>
-      {/* Blog preview — the curtain's resting layer (revealed when testimonials
-          slides up). The footer is NOT in the curtain; it's a normal 2D section
-          below. */}
+      {/* Blog preview — the curtain's resting layer (revealed when the portfolio
+          peels off left). Transparent, so the fixed 3D logo shows through. */}
       <div data-curtain-layer data-move="none" class="curtain-blog-layer">
         <ContentRenderer
           query={latestPosts}
@@ -119,10 +117,17 @@ const latestPosts = query("blog")
         />
       </div>
     </CurtainStack>
+
+    {/* Testimonials — now a normal 2D section (no own background), scrolling in
+        flow over the persistent 3D-logo bg after the pinned curtain releases. */}
+    <section id="logo-scene">
+      <TestimonialCarousel />
+    </section>
   </main>
 
   {/* Footer — plain 2D, scrolls normally after the curtain releases. */}
   <Footer />
+  </div>
 </BaseLayout>
 
 <style>
@@ -141,7 +146,9 @@ const latestPosts = query("blog")
     flex-direction: column;
     justify-content: center;
     overflow: hidden;
-    background: var(--color-bg);
+    /* Transparent so the fixed 3D logo / page bg shows through behind the blog
+       (a continuation of the top section, not its own panel). */
+    background: transparent;
   }
   :global(.curtain-blog-layer.is-revealed) {
     overflow-y: auto;
