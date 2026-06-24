@@ -5,10 +5,40 @@ import Icon from "@/components/Icon";
 import WebsitesDemo from "@/components/AnimatedExamples/WebsitesDemo";
 import BrandingDemo from "@/components/AnimatedExamples/BrandingDemo";
 import AiAgentsDemo from "@/components/AnimatedExamples/AiAgentsDemo";
+import { query, whereArrayContains, sortByOrder } from "@/utils/query";
+import { resolveImageMetadata, getImageAlt } from "@/utils/images";
+import { getImage } from "astro:assets";
 
 type Props = BaseVariantProps;
 
 const { items = [], id, className = "" } = Astro.props as Props;
+
+// First frame of the Websites demo = 2 real featured projects (queried from the
+// portfolio). Resolve their preview thumbnails to optimized WebP at build time
+// and pass them to the (client) WebsitesDemo island as plain data.
+const featuredProjects = (
+  await query("projects")
+    .where(whereArrayContains("tags", "featured"))
+    .orderBy(sortByOrder())
+    .get()
+).entries.slice(0, 2);
+
+const websiteProjects = await Promise.all(
+  featuredProjects.map(async (p: any) => {
+    const src = p.data.fullSiteImage ?? p.data.bannerImage ?? p.data.featuredImage;
+    const meta = resolveImageMetadata(src);
+    let thumb: string | undefined;
+    if (meta) {
+      const img = await getImage({ src: meta, width: 480, format: "webp", quality: 70, fit: "cover", position: "top" });
+      thumb = img.src;
+    }
+    return {
+      title: p.data.title as string,
+      thumb,
+      alt: getImageAlt(src, `${p.data.title} website preview`),
+    };
+  }),
+);
 
 // Shared content padding — applied to the top row and the body so the card
 // itself has no padding and the middle (future-content slot) runs edge-to-edge.
@@ -66,7 +96,7 @@ const PAD = "p-[clamp(0.875rem,1.2vw,1.125rem)]";
                   slug. Each demo is a literal element (Astro needs the import
                   statically to attach client:visible). Blank bg if no match. */}
               <div class="flex-1 bg-bg" aria-hidden="true">
-                {item.id === "websites" && <WebsitesDemo client:visible className="h-full w-full" />}
+                {item.id === "websites" && <WebsitesDemo client:visible className="h-full w-full" projects={websiteProjects} />}
                 {item.id === "branding" && <BrandingDemo client:visible className="h-full w-full" />}
                 {item.id === "ai-agents" && <AiAgentsDemo client:visible className="h-full w-full" />}
               </div>

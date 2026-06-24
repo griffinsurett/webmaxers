@@ -10,18 +10,33 @@
  * Steps: 0 empty browser · 1 nav · 2 hero+copy blocks · 3 CTA block ·
  *        4 render to finished site.
  */
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ExampleFrame, { useExampleSteps } from "./ExampleFrame";
 
 // The single real-life colour pop (a site's primary CTA). Not the site accent.
 const CTA = "#2f6df6";
 
-interface Props {
-  className?: string;
+export interface DemoProject {
+  title: string;
+  thumb?: string;
+  alt?: string;
 }
 
-export default function WebsitesDemo({ className = "" }: Props) {
+interface Props {
+  className?: string;
+  /** Real featured projects (queried in the Astro wrapper) shown as the
+   *  demo's opening frame before the wireframe→live-site build plays. */
+  projects?: DemoProject[];
+}
+
+export default function WebsitesDemo({ className = "", projects = [] }: Props) {
+  // Step timeline: an extra opening beat (the real projects) when we have them,
+  // then the wireframe build. INTRO holds for ~1.4s, then the build runs.
+  const hasIntro = projects.length > 0;
   const step = useExampleSteps([450, 1100, 1750, 2600], 5200);
+  // While `intro` is true we show the 2 real projects; it ends as the build
+  // begins (step >= 1) so the first thing the viewer sees is real work.
+  const showIntro = hasIntro && step < 1;
   const rendered = step >= 4;
 
   const block = (show: boolean, delay = 0) => ({
@@ -32,6 +47,46 @@ export default function WebsitesDemo({ className = "" }: Props) {
 
   return (
     <ExampleFrame label="Animation: a website being designed and built" className={className}>
+      {/* Opening frame: 2 real featured projects, then it crossfades into the
+          wireframe→live-site build below. */}
+      <AnimatePresence>
+        {showIntro && (
+          <motion.div
+            key="intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 z-10 flex items-center justify-center gap-3 p-5"
+          >
+            {projects.slice(0, 2).map((p, i) => (
+              <motion.div
+                key={p.title}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.08 * i }}
+                className="flex-1 overflow-hidden rounded-lg border border-[var(--color-border-soft)] bg-[var(--color-bg2)]"
+              >
+                <div className="aspect-[16/11] w-full overflow-hidden bg-[var(--color-heading)]/8">
+                  {p.thumb && (
+                    <img
+                      src={p.thumb}
+                      alt={p.alt ?? ""}
+                      loading="lazy"
+                      decoding="async"
+                      className="block h-full w-full object-cover object-top"
+                    />
+                  )}
+                </div>
+                <p className="truncate px-2.5 py-2 text-[0.7rem] font-medium text-[var(--color-heading)]/80">
+                  {p.title}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="absolute inset-0 flex items-center justify-center p-5">
         {/* Browser chrome */}
         <div className="w-full max-w-[22rem] overflow-hidden rounded-lg border border-[var(--color-border-soft)] bg-[var(--color-bg2)]">

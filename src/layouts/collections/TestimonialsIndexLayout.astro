@@ -2,7 +2,7 @@
 // src/layouts/collections/TestimonialsIndexLayout.astro
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SecondaryHero from "@/layouts/SecondaryHero.astro";
-import TestimonialsMarquee from "@/components/TestimonialsMarquee/TestimonialsMarquee.astro";
+import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
 
 export interface Props {
   collectionMeta: any;
@@ -24,9 +24,9 @@ const { collectionMeta, seoProps } = Astro.props;
       minHeight="50vh"
     />
 
-    <!-- 3D Marquee Section -->
+    <!-- Homepage-style testimonial carousel (big rotating quote). -->
     <section class="tm-section" aria-label="Client testimonials">
-      <TestimonialsMarquee />
+      <TestimonialCarousel />
     </section>
 
   </main>

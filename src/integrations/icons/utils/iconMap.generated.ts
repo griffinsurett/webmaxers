@@ -3,7 +3,7 @@
 
 import type { IconType } from 'react-icons';
 import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGlobe, LuImage, LuMail, LuPhone, LuSettings, LuTrendingUp, LuUsers } from 'react-icons/lu';
-import { FaArrowRight, FaArrowsUpDownLeftRight, FaBriefcase, FaBullseye, FaCartShopping, FaClockRotateLeft, FaCompass, FaDumbbell, FaEye, FaFeather, FaFileLines, FaHandshake, FaHeadset, FaHelmetSafety, FaLayerGroup, FaLifeRing, FaLink, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUmbrellaBeach, FaUniversalAccess, FaUtensils, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
+import { FaArrowRight, FaArrowsUpDownLeftRight, FaBriefcase, FaBullseye, FaCartShopping, FaClockRotateLeft, FaCompass, FaDroplet, FaDumbbell, FaEye, FaFeather, FaFileLines, FaHandshake, FaHeadset, FaHelmetSafety, FaLayerGroup, FaLifeRing, FaLink, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUmbrellaBeach, FaUniversalAccess, FaUtensils, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
 import { PiBrain, PiCode, PiGauge, PiMagnifyingGlass, PiPenNib, PiShoppingCart } from 'react-icons/pi';
 import { SiFacebook, SiGithub, SiLinkedin, SiX } from 'react-icons/si';
 
@@ -15,6 +15,7 @@ export const iconMap = {
   'fa6:cart-shopping': FaCartShopping,
   'fa6:clock-rotate-left': FaClockRotateLeft,
   'fa6:compass': FaCompass,
+  'fa6:droplet': FaDroplet,
   'fa6:dumbbell': FaDumbbell,
   'fa6:eye': FaEye,
   'fa6:feather': FaFeather,
