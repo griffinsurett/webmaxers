@@ -138,7 +138,9 @@ export default function HeroLogo3D({
       // it tracks orientation / DPR changes.
       const BASE_Z = 5;
       const MOBILE_BP = 768;
-      const cameraZ = () => (window.innerWidth < MOBILE_BP ? BASE_Z * 2 : BASE_Z);
+      // Push the camera back further on mobile so the mark reads smaller (the
+      // apparent size scales inversely with distance — 2.6× distance ≈ 38% size).
+      const cameraZ = () => (window.innerWidth < MOBILE_BP ? BASE_Z * 2.6 : BASE_Z);
       camera.position.z = cameraZ();
 
       const key = new THREE.DirectionalLight(0xffffff, 1.2);
