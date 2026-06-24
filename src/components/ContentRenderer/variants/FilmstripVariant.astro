@@ -65,7 +65,7 @@ const totalPanels = items.length + 2;
             ))}
           </h2>
           {collectionUrl && (
-            <Button variant="underline" href={collectionUrl} size="sm" className="self-center!" client:load>
+            <Button variant="underline" href={collectionUrl} size="sm" className="self-start! md:self-center!" client:load>
               View all {collectionTitle?.toLowerCase() ?? "projects"}
             </Button>
           )}
@@ -105,7 +105,7 @@ const totalPanels = items.length + 2;
             <p class="fs-outro-text">
               {description ?? "Discover our complete collection of digital experiences, brands, and platforms."}
             </p>
-            <Button variant="underline" href={collectionUrl} size="sm" className="self-center!" client:load>
+            <Button variant="underline" href={collectionUrl} size="sm" className="self-start! md:self-center!" client:load>
               View all {collectionTitle?.toLowerCase() ?? "projects"}
             </Button>
           </div>
@@ -243,12 +243,13 @@ const totalPanels = items.length + 2;
     will-change: transform, opacity;
   }
 
-  /* The horizontal filmstrip scrub runs on all screen sizes (same pinned
-     timeline as desktop). Only reduced-motion users get the static vertical
-     fallback below. */
+  /* The horizontal filmstrip scrub runs on DESKTOP (≥768px). Below that — and
+     for reduced-motion users at any width — it flattens to a static vertical
+     stack (no pin, no horizontal scrub), one project per row. The JS skips the
+     pin in those same cases so the two never disagree. */
 
-  /* ── Reduced motion: vertical stack, no pinning ──────────────── */
-  @media (prefers-reduced-motion: reduce) {
+  /* ── Mobile (<768px) OR reduced motion: vertical stack, no pinning ──── */
+  @media (max-width: 767px), (prefers-reduced-motion: reduce) {
     .fs-section  { height: auto; overflow: visible; }
     .fs-track    { flex-direction: column; width: 100%; transform: none !important; transition: none !important; }
     .fs-panel    { width: 100%; height: auto; }
@@ -385,10 +386,11 @@ const totalPanels = items.length + 2;
         return;
       }
 
-      // Standalone — runs on all screen sizes; only reduced-motion users get
-      // the static CSS fallback (no ScrollTrigger registered for them).
+      // Standalone — the horizontal pin runs on DESKTOP only (≥768px). Below
+      // that, and for reduced-motion, no ScrollTrigger is registered and the CSS
+      // above flattens it to a static vertical stack.
       ScrollTrigger.matchMedia({
-        "(prefers-reduced-motion: no-preference)": () => {
+        "(min-width: 768px) and (prefers-reduced-motion: no-preference)": () => {
           buildStandalone(section);
         },
       });
