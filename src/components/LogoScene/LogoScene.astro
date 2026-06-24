@@ -169,7 +169,7 @@ const ANIMATION_URL = "/lotties/New_Logo_Circle.json";
             start: "top top",
             end: () => "+=" + PHASE_VH * window.innerHeight,
             pin: scene.querySelector<HTMLElement>(".logo-pin") ?? scene,
-            scrub: true,
+            scrub: 1,
             anticipatePin: 1,
             invalidateOnRefresh: true,
             onUpdate: (self) => logo.setProgress(self.progress),

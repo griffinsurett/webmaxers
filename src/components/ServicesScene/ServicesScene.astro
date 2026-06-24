@@ -414,7 +414,7 @@ const eyebrow = meta.title ?? "Our Services";
       start: "top top",
       end: () => "+=" + PHASE_VH * window.innerHeight,
       pin,
-      scrub: true,
+      scrub: 1,
       anticipatePin: 1,
       invalidateOnRefresh: true,
       onUpdate: (self) => applyPhases(scene, self.progress),

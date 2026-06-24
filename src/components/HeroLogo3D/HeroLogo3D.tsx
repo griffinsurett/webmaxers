@@ -451,7 +451,7 @@ export default function HeroLogo3D({
         trigger: trigger ?? undefined,
         start: cfg.scrollStart,
         end: cfg.scrollEnd,
-        scrub: true,
+        scrub: 1,
         onUpdate: (self) => {
           progress = self.progress;
           if (!isReady) return;

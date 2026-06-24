@@ -15,6 +15,7 @@ import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro"
 import { query, sortByDate } from "@/utils/query";
 import { Image } from "astro:assets";
 import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
+import Starfield from "@/components/Starfield/Starfield.astro";
 
 // Latest 3 blog posts for the homepage preview curtain layer.
 const latestPosts = query("blog")
@@ -31,6 +32,14 @@ const latestPosts = query("blog")
         height — i.e. fully broken when the projects section begins below it. */
     }
     <div class="relative" data-logo-break>
+      {
+        /* Dark-mode starfield: the backmost fixed layer, behind the 3D logo.
+           It's the dark-mode background from the top of the page down to the
+           CurtainStack — whose opaque card layers cover it once you scroll in.
+           Hidden in light mode (the canvas CSS handles that). */
+      }
+      <!-- <Starfield class="-z-20" /> -->
+
       <HeroLogo3D class="fixed inset-0 -z-10 opacity-40 dark:invert">
         {
           /* Poster: a render of the 3D logo at progress 0, captured on a SQUARE
@@ -119,13 +128,23 @@ const latestPosts = query("blog")
 <style>
   /* Blog layer = the curtain's resting layer (revealed when testimonials slides
      up). Opaque page bg so it fully covers what's behind during the reveal, and
-     its content is vertically centred in the pinned frame. */
+     its content is vertically centred in the pinned frame.
+
+     SCROLL-TRAP GUARD: while this layer is still COVERED it must NOT be a scroll
+     container — `overflow: hidden` means there's nothing here to scroll, so the
+     wheel falls through to the page and keeps driving the pin (pointer-events
+     alone does NOT stop wheel-scroll on an overflow element). The stack adds
+     `.is-revealed` only once this is the active, fully-uncovered layer, which
+     turns scrolling back on. */
   :global(.curtain-blog-layer) {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    overflow-y: auto;
+    overflow: hidden;
     background: var(--color-bg);
+  }
+  :global(.curtain-blog-layer.is-revealed) {
+    overflow-y: auto;
   }
 
   /* Reduced motion: the stack flattens to normal flow — the blog layer returns

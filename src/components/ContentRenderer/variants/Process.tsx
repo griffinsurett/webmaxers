@@ -127,7 +127,7 @@ export default function Process({ steps, logoSrc, checkpoints }: Props) {
         end: () => "+=" + Math.round(window.innerHeight * (n * 0.6 + 0.4)),
         pin: true,
         pinSpacing: true,
-        scrub: true,
+        scrub: 1,
         onUpdate: (self) => apply(self.progress),
         invalidateOnRefresh: true,
       });

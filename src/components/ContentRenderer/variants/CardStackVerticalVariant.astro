@@ -257,7 +257,7 @@ const { items = [], title = "", id, placeholderMedia = false } = Astro.props as 
       start: "top top",
       end: "+=" + scrubPx,
       pin: true,
-      scrub: true,
+      scrub: 1,
       anticipatePin: 1,
       invalidateOnRefresh: true,
       onRefreshInit: () => driver.setProgress(0),

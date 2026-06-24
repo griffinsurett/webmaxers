@@ -176,28 +176,54 @@ const { class: className = "", flattenMobile = false } = Astro.props;
         start: "top top",
         end: "+=" + total,
         pin: true,
-        scrub: true,
+        scrub: 1,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
           const p = self.progress;
-          legs.forEach((leg) => {
+
+          // The "active" layer = the LAST layer (top → bottom) that has not yet
+          // finished moving off. Every layer ABOVE it has fully peeled away;
+          // every layer BELOW it is still covered. Only the active layer should
+          // capture pointer/scroll events — covered layers (especially the
+          // resting blog layer, which scrolls internally) must let wheel/scroll
+          // fall through to the page so it keeps driving the pin. Otherwise the
+          // covered layer's own overflow eats the scroll = a scroll trap.
+          let activeIdx = legs.length - 1;
+          for (let i = 0; i < legs.length; i++) {
+            if (p < legs[i].moveEnd) { activeIdx = i; break; }
+          }
+
+          legs.forEach((leg, i) => {
             // Drive each layer's internal scrub across its own scrub window.
             if (leg.contract) {
               const span = leg.scrubEnd - leg.scrubStart;
               const lp = span > 0 ? clamp((p - leg.scrubStart) / span, 0, 1) : 1;
               leg.contract.setProgress(lp);
             }
-            // A layer that has begun moving off-screen must stop capturing
-            // pointers — otherwise the peeled/lifted layer (still in the DOM at
-            // the top z-index) intercepts clicks/selection on the layer beneath
-            // it (e.g. the filmstrip lingering over the services eyebrow).
-            if (leg.move !== "none") {
-              leg.layer.style.pointerEvents = p > leg.scrubEnd ? "none" : "auto";
-            }
+            const isActive = i === activeIdx;
+            // Only the active (topmost still-present) layer is interactive; all
+            // others — peeled-away above OR still-covered below — are inert so
+            // they can't intercept clicks.
+            leg.layer.style.pointerEvents = isActive ? "auto" : "none";
+            // …and only the active layer may be a scroll container. A COVERED
+            // layer that scrolls internally (e.g. the resting blog layer) would
+            // otherwise eat wheel events and trap the user — pointer-events does
+            // NOT stop wheel-scroll, so we also drop its overflow via this flag.
+            // (Layers opt in by reading `.is-revealed` in their own CSS.)
+            leg.layer.classList.toggle("is-revealed", isActive);
           });
         },
       },
+    });
+
+    // Initial state: at rest (progress 0) the first layer is active and every
+    // layer beneath it is inert + non-scrolling, so nothing below can trap
+    // scroll or intercept clicks before the first onUpdate fires.
+    legs.forEach((leg, i) => {
+      const isActive = i === 0;
+      leg.layer.style.pointerEvents = isActive ? "auto" : "none";
+      leg.layer.classList.toggle("is-revealed", isActive);
     });
 
     // Build the move-off tweens in sequence (internal scrub budget is held by a
