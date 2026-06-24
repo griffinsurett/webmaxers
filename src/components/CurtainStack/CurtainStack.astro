@@ -206,24 +206,16 @@ const { class: className = "", flattenMobile = false } = Astro.props;
             // others — peeled-away above OR still-covered below — are inert so
             // they can't intercept clicks.
             leg.layer.style.pointerEvents = isActive ? "auto" : "none";
-            // …and only the active layer may be a scroll container. A COVERED
-            // layer that scrolls internally (e.g. the resting blog layer) would
-            // otherwise eat wheel events and trap the user — pointer-events does
-            // NOT stop wheel-scroll, so we also drop its overflow via this flag.
-            // (Layers opt in by reading `.is-revealed` in their own CSS.)
-            leg.layer.classList.toggle("is-revealed", isActive);
           });
         },
       },
     });
 
     // Initial state: at rest (progress 0) the first layer is active and every
-    // layer beneath it is inert + non-scrolling, so nothing below can trap
-    // scroll or intercept clicks before the first onUpdate fires.
+    // layer beneath it is inert, so nothing below can intercept clicks before
+    // the first onUpdate fires.
     legs.forEach((leg, i) => {
-      const isActive = i === 0;
-      leg.layer.style.pointerEvents = isActive ? "auto" : "none";
-      leg.layer.classList.toggle("is-revealed", isActive);
+      leg.layer.style.pointerEvents = i === 0 ? "auto" : "none";
     });
 
     // Build the move-off tweens in sequence (internal scrub budget is held by a

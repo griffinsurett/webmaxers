@@ -131,27 +131,15 @@ const latestPosts = query("blog")
 </BaseLayout>
 
 <style>
-  /* Blog layer = the curtain's resting layer (revealed when testimonials slides
-     up). Opaque page bg so it fully covers what's behind during the reveal, and
-     its content is vertically centred in the pinned frame.
-
-     SCROLL-TRAP GUARD: while this layer is still COVERED it must NOT be a scroll
-     container — `overflow: hidden` means there's nothing here to scroll, so the
-     wheel falls through to the page and keeps driving the pin (pointer-events
-     alone does NOT stop wheel-scroll on an overflow element). The stack adds
-     `.is-revealed` only once this is the active, fully-uncovered layer, which
-     turns scrolling back on. */
+  /* Blog layer = the curtain's resting layer (revealed when the portfolio peels
+     off left). Its content is vertically centred in the pinned frame. */
   :global(.curtain-blog-layer) {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    overflow: hidden;
     /* Transparent so the fixed 3D logo / page bg shows through behind the blog
        (a continuation of the top section, not its own panel). */
     background: transparent;
-  }
-  :global(.curtain-blog-layer.is-revealed) {
-    overflow-y: auto;
   }
 
   /* Reduced motion: the stack flattens to normal flow — the blog layer returns
