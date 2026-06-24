@@ -24,6 +24,8 @@ import type { BaseVariantProps } from "../ContentRenderer.types";
 import FilmstripCard from "@/components/LoopComponents/FilmstripCard.astro";
 import { shouldShowCollectionCTA } from "../utils/helpers";
 import Button from "@/components/Button/Button";
+import { find } from "@/utils/query";
+import { normalizeRef } from "@/utils/string";
 
 type Props = BaseVariantProps;
 
@@ -35,6 +37,37 @@ const {
   collectionTitle,
   id,
 } = Astro.props as Props;
+
+// Resolve each project's `industries` reference(s) → industry title(s) (the
+// niche shown on the card, in place of the tech list). Accepts a single ref or
+// an array (refSchema). Cached so repeated industries resolve once.
+const industryTitleCache = new Map<string, string>();
+async function industryTitle(ref: any): Promise<string | null> {
+  const idStr = normalizeRef(ref);
+  if (!idStr || idStr === "[object Object]") return null;
+  if (industryTitleCache.has(idStr)) return industryTitleCache.get(idStr)!;
+  let label = idStr;
+  try {
+    const entry = await find("industries", idStr);
+    if (entry?.data?.title) label = String(entry.data.title);
+  } catch {}
+  industryTitleCache.set(idStr, label);
+  return label;
+}
+async function industryLabel(industries: any): Promise<string | undefined> {
+  if (!industries) return undefined;
+  const refs = Array.isArray(industries) ? industries : [industries];
+  const titles = (await Promise.all(refs.map(industryTitle))).filter(Boolean);
+  return titles.length ? titles.join(" · ") : undefined;
+}
+
+// Pre-resolve the industry label for each item (Astro frontmatter is async).
+const itemsWithIndustry = await Promise.all(
+  items.map(async (item: any) => ({
+    ...item,
+    industryLabel: await industryLabel(item.industries),
+  })),
+);
 
 // intro + project panels + outro
 const totalPanels = items.length + 2;
@@ -73,7 +106,7 @@ const totalPanels = items.length + 2;
       </div>
 
       <!-- Project panels -->
-      {items.map((item, i) => (
+      {itemsWithIndustry.map((item, i) => (
         <div class="fs-panel fs-panel--project" data-slide-index={i + 1} data-filmstrip-card>
           <div class="fs-rule" aria-hidden="true"></div>
           <div class="fs-panel-inner fs-panel-inner--project">
@@ -86,9 +119,8 @@ const totalPanels = items.length + 2;
                 fullSiteImage={item.fullSiteImage}
                 bannerImage={item.bannerImage}
                 featuredImage={item.featuredImage}
-                industry={item.industry}
+                industry={item.industryLabel}
                 client={item.client}
-                technologies={item.technologies}
                 link={item.link}
                 projectUrl={item.projectUrl}
               />

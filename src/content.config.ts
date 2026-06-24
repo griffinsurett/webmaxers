@@ -129,6 +129,18 @@ export const collections = {
       }),
   }),
 
+  // ── industries ─────────────────────────────────────────
+  // The niches we build for (Contractors, Fitness, E-Commerce, …). Data-only
+  // (hasPage / itemsHasPage false in _meta) — referenced from projects to show
+  // the project's niche on its card.
+  "industries": defineCollection({
+    loader: GlobLoad("industries"),
+    schema: ({ image }) =>
+      baseSchema({ image }).extend({
+        icon: z.string().optional(),
+      }),
+  }),
+
   // ── stats ──────────────────────────────────────────────
   // Headline numbers (e.g. "7+ Years", "$1M+ Clients") rendered as animated
   // count-up counters via StatsVariant. `title` is the label under the number.
@@ -156,7 +168,10 @@ export const collections = {
         projectUrl: z.string().url().optional(),
         technologies: z.array(z.string()).default([]),
         category: z.string().optional(),
-        industry: z.string().optional(),
+        /** The project's niche(s) — reference(s) into the industries collection.
+         *  Accepts a single ref or an array (refSchema). Replaces the old plain
+         *  `industry` string; the card now shows the resolved industry title. */
+        industries: refSchema("industries"),
         featuredVideo: z.string().optional(),
         link: z.object({
           label: z.string(),

@@ -3,20 +3,25 @@
 
 import type { IconType } from 'react-icons';
 import { LuArrowRight, LuArrowUpRight, LuBookOpen, LuChevronRight, LuContact, LuGlobe, LuImage, LuMail, LuPhone, LuSettings, LuTrendingUp, LuUsers } from 'react-icons/lu';
-import { FaArrowRight, FaArrowsUpDownLeftRight, FaBullseye, FaClockRotateLeft, FaCompass, FaEye, FaFeather, FaFileLines, FaHeadset, FaLayerGroup, FaLifeRing, FaLink, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUniversalAccess, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
+import { FaArrowRight, FaArrowsUpDownLeftRight, FaBriefcase, FaBullseye, FaCartShopping, FaClockRotateLeft, FaCompass, FaDumbbell, FaEye, FaFeather, FaFileLines, FaHandshake, FaHeadset, FaHelmetSafety, FaLayerGroup, FaLifeRing, FaLink, FaMoon, FaPalette, FaRobot, FaRotateLeft, FaScaleBalanced, FaShieldHalved, FaSun, FaUmbrellaBeach, FaUniversalAccess, FaUtensils, FaWandMagicSparkles, FaXmark } from 'react-icons/fa6';
 import { PiBrain, PiCode, PiGauge, PiMagnifyingGlass, PiPenNib, PiShoppingCart } from 'react-icons/pi';
 import { SiFacebook, SiGithub, SiLinkedin, SiX } from 'react-icons/si';
 
 export const iconMap = {
   'fa6:arrow-right': FaArrowRight,
   'fa6:arrows-up-down-left-right': FaArrowsUpDownLeftRight,
+  'fa6:briefcase': FaBriefcase,
   'fa6:bullseye': FaBullseye,
+  'fa6:cart-shopping': FaCartShopping,
   'fa6:clock-rotate-left': FaClockRotateLeft,
   'fa6:compass': FaCompass,
+  'fa6:dumbbell': FaDumbbell,
   'fa6:eye': FaEye,
   'fa6:feather': FaFeather,
   'fa6:file-lines': FaFileLines,
+  'fa6:handshake': FaHandshake,
   'fa6:headset': FaHeadset,
+  'fa6:helmet-safety': FaHelmetSafety,
   'fa6:layer-group': FaLayerGroup,
   'fa6:life-ring': FaLifeRing,
   'fa6:link': FaLink,
@@ -27,7 +32,9 @@ export const iconMap = {
   'fa6:scale-balanced': FaScaleBalanced,
   'fa6:shield-halved': FaShieldHalved,
   'fa6:sun': FaSun,
+  'fa6:umbrella-beach': FaUmbrellaBeach,
   'fa6:universal-access': FaUniversalAccess,
+  'fa6:utensils': FaUtensils,
   'fa6:wand-magic-sparkles': FaWandMagicSparkles,
   'fa6:xmark': FaXmark,
   'lu:arrow-right': LuArrowRight,
