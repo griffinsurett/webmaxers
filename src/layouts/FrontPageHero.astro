@@ -44,7 +44,9 @@ const {
 
       <!-- Left: headline + CTA -->
       <div class="max-w-3xl md:pt-20 lg:pt-28">
-        <h1 class="heading-display">
+        {/* Hero headline. heading-display sets the desktop clamp; on mobile we
+            override to a smaller size so it doesn't dominate the viewport. */}
+        <h1 class="heading-display text-[2.25rem]! sm:text-[2.75rem]! md:text-[clamp(2.8rem,6.5vw,6rem)]!">
           {headline}<br />{headlineLine2}
         </h1>
 
