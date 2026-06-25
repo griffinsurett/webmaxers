@@ -25,15 +25,14 @@ const latestPosts = query("blog")
 ---
 
 <BaseLayout title="Home" description={siteData.description} hideFooter>
-  {
-    /* data-logo-break spans the WHOLE page (main + footer) so the 3D logo's
-       break scrubs across the entire scroll: it shatters near the top, drifts as
-       rubble behind the lower sections, then REASSEMBLES as you reach the footer.
-       The logo canvas is fixed full-viewport and never hides (hideOnLeave=false). */
-  }
-  <div data-logo-break>
   <main class="flex-1 relative z-10">
-    <div class="relative">
+    {
+      /* data-logo-break bounds the 3D logo's break range to the hero region
+         (hero → solutions → about → marquee). The logo shatters across this
+         wrapper and then hides once scrolled past it — so the projects/curtain
+         section below covers it rather than the logo persisting full-page. */
+    }
+    <div class="relative" data-logo-break>
       {
         /* Dark-mode starfield: the backmost fixed layer, behind the 3D logo.
            It's the dark-mode background from the top of the page down to the
@@ -42,7 +41,7 @@ const latestPosts = query("blog")
       }
       <!-- <Starfield class="-z-20" /> -->
 
-      <HeroLogo3D class="fixed inset-0 -z-10 opacity-40 dark:invert" hideOnLeave={false}>
+      <HeroLogo3D class="fixed inset-0 -z-10 opacity-40 dark:invert">
         {
           /* Poster: a render of the 3D logo at progress 0, captured on a SQUARE
             canvas with the same perspective camera. The live canvas frames the
@@ -128,7 +127,6 @@ const latestPosts = query("blog")
 
   {/* Footer — plain 2D, scrolls normally after the curtain releases. */}
   <Footer />
-  </div>
 </BaseLayout>
 
 <style>

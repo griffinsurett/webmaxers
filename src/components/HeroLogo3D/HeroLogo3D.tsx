@@ -436,23 +436,12 @@ export default function HeroLogo3D({
       const setVisible = (v: boolean) => {
         if (rootRef.current) rootRef.current.style.visibility = v ? "visible" : "hidden";
       };
-      // Scroll-SCRUBBED shatter + reassembly across the WHOLE page:
-      //   progress 0 → SPIN_END           : whole (break 0)
-      //   SPIN_END → SHATTER_END          : break ramps 0 → 1 (falls apart)
-      //   SHATTER_END → REBUILD_START     : full rubble (drifts behind the lower
-      //                                     sections — blog / testimonials)
-      //   REBUILD_START → REBUILD_END     : break eases 1 → 0 (reassembles)
-      //   REBUILD_END → 1                 : fully whole, HELD (covers the footer
-      //                                     with margin so scrub-lag never leaves
-      //                                     stray shards at the bottom).
-      // Tuned against the WHOLE-page scroll: stay whole through the hero +
-      // solutions, then shatter WHILE the About text is on screen (it used to
-      // break during the About section), hold as rubble through the
-      // portfolio/blog/testimonials, and reassemble for the footer.
-      const SPIN_END = 0.16;       // whole through the hero
-      const SHATTER_END = 0.34;    // shatter spans the About section
-      const REBUILD_START = 0.78;  // start reassembling before the footer
-      const REBUILD_END = 0.94;    // fully back together → whole through the footer
+      // Scroll-SCRUBBED shatter (break 0 → 1) across the hero wrapper's range:
+      //   progress 0 → SPIN_END     : logo whole (break hasn't started)
+      //   SPIN_END → breakEnd       : break ramps 0 → 1
+      // Past the wrapper the logo hides (hideOnLeave) so the projects/curtain
+      // section below covers it — it does NOT persist or reassemble.
+      const SPIN_END = 0.35; // stay whole longer before it starts to fall apart
 
       // Latest break amount (scroll-driven), re-applied every frame by the tick
       // loop so the rubble keeps animating even when the scroll position is static.
@@ -470,23 +459,12 @@ export default function HeroLogo3D({
         onUpdate: (self) => {
           progress = self.progress;
           if (!isReady) return;
-          // Triangle-ish curve: ramp up to full break, hold, then ramp back down.
-          if (progress <= SPIN_END) {
-            breakAmount = 0;
-          } else if (progress < SHATTER_END) {
-            // Shatter 0 → 1.
-            breakAmount = ((progress - SPIN_END) / (SHATTER_END - SPIN_END)) * cfg.maxBreak;
-          } else if (progress < REBUILD_START) {
-            // Full rubble — drifts behind the lower sections.
-            breakAmount = cfg.maxBreak;
-          } else if (progress < REBUILD_END) {
-            // Reassemble 1 → 0.
-            breakAmount =
-              (1 - (progress - REBUILD_START) / (REBUILD_END - REBUILD_START)) * cfg.maxBreak;
-          } else {
-            // Held fully whole through the footer (exactly 0 — no stray shards).
-            breakAmount = 0;
-          }
+          const breakEnd = cfg.breakEnd;
+          const breakSpan = breakEnd - SPIN_END;
+          breakAmount =
+            progress <= SPIN_END
+              ? 0
+              : Math.min((progress - SPIN_END) / breakSpan, 1) * cfg.maxBreak;
         },
         // Hide once scrolled past the range when requested (a fixed/overlapping
         // canvas would otherwise show through later sections).
