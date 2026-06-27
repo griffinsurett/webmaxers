@@ -45,6 +45,13 @@ const CFG = {
   breakEnd: 0.95,
   /** Per-shard break-delay spread. Smaller = shards shatter more in unison. */
   breakDelaySpread: 0.4,
+  /**
+   * How much each shard shrinks toward its centroid as it breaks free (0→1).
+   * 0 = stays full size; higher = smaller, more particle-like flecks. At 0.82
+   * a broken shard collapses to ~18% of its size, reading as a dust particle
+   * rather than a chunk of the logo.
+   */
+  shardShrink: 0.82,
 };
 
 interface Props {
@@ -299,8 +306,8 @@ export default function HeroLogo3D({
             }
             // Shrink each shard toward its centroid as it breaks free: full size
             // while WHOLE (so the starting logo is solid and continuous), down to
-            // half size once it's loose rubble. `free` 0→1 drives it.
-            const shardScale = 1 - 0.5 * free;
+            // a small fleck once it's loose (cfg.shardShrink). `free` 0→1 drives it.
+            const shardScale = 1 - cfg.shardShrink * free;
             for (let v = 0; v < 3; v++) {
               const i = (s * 3 + v) * 3;
               // Start from the centroid-relative vertex, scaled by shardScale.
