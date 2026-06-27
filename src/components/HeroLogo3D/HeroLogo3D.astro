@@ -1,14 +1,25 @@
 ---
 // src/components/HeroLogo3D/HeroLogo3D.astro
 /**
- * HeroLogo3D — thin Astro wrapper around the React island. Hydrates with
- * `client:idle`, so the heavy Three.js + GLB load once the browser is idle after
- * load (not on the critical path). The island renders the poster (slot)
- * immediately; reduced-motion keeps the poster forever and never loads the 3D.
+ * HeroLogo3D — thin Astro wrapper around the React island.
+ *
+ * Responsive hydration (xl breakpoint, 1280px): the heavy Three.js + GLB scene
+ * is a NET NEGATIVE on phones/tablets (cost + jank > payoff), so below `xl` we
+ * render ONLY the static poster — the island is never shown and therefore never
+ * hydrates (HydrateResponsive keeps the desktop slot display:none below xl, so
+ * its client:visible IntersectionObserver never fires, and no Three.js bundle
+ * runs). At/above xl the island hydrates `client:visible` (lazy on scroll) and
+ * renders the same poster immediately, then swaps to the live 3D canvas.
+ *
+ * The poster comes in via the default slot (caller authors the <Image>). A
+ * default slot can only be rendered ONCE, so we pre-render it to HTML and inject
+ * the same markup into BOTH branches (island child on desktop, static image on
+ * mobile).
  *
  * Positioning is yours via `class`. The break scrubs across `breakSelector`.
  */
 import HeroLogo3DIsland from "./HeroLogo3D.tsx";
+import HydrateResponsive from "@/components/HydrateResponsive.astro";
 
 interface Props {
   class?: string;
@@ -20,14 +31,31 @@ interface Props {
 }
 
 const { class: className = "", contained, hideOnLeave, breakSelector } = Astro.props;
+
+// Pre-render the slotted poster to HTML so it can be reused in both the desktop
+// (island child) and mobile (static) branches — a default slot only renders once.
+const posterHTML = Astro.slots.has("default")
+  ? await Astro.slots.render("default")
+  : "";
 ---
 
-<HeroLogo3DIsland
-  className={className}
-  contained={contained}
-  hideOnLeave={hideOnLeave}
-  breakSelector={breakSelector}
-  client:idle
->
-  <slot />
-</HeroLogo3DIsland>
+{/* xl+ : the hydrated 3D island (lazy via client:visible). Below xl: the static
+    poster only — no island, no Three.js hydration. */}
+<HydrateResponsive min="1280px">
+  <HeroLogo3DIsland
+    slot="desktop"
+    className={className}
+    contained={contained}
+    hideOnLeave={hideOnLeave}
+    breakSelector={breakSelector}
+    client:visible
+  >
+    <Fragment set:html={posterHTML} />
+  </HeroLogo3DIsland>
+
+  {/* Mobile/tablet (< xl): static poster, same positioning class as the island
+      root so it sits exactly where the 3D logo would. No JS. */}
+  <div class={className} slot="mobile">
+    <Fragment set:html={posterHTML} />
+  </div>
+</HydrateResponsive>

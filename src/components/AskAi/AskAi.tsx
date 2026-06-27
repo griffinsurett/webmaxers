@@ -233,11 +233,18 @@ export default function AskAi({
         position="center"
         animation="slide-up"
         ariaLabel="Ask AI"
-        className="w-[min(48rem,calc(100vw-2rem))] rounded-3xl bg-bg2 p-6 shadow-2xl sm:p-10"
+        className={[
+          // Mobile / small screens: full-bleed sheet — full width + height, no
+          // rounding, scrollable if the content overflows.
+          "h-[100dvh] w-screen max-w-none overflow-y-auto rounded-none p-6",
+          // sm+ : back to the centered, rounded card.
+          "sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:w-[min(48rem,calc(100vw-2rem))] sm:rounded-3xl sm:p-10",
+          "bg-bg2 shadow-2xl",
+        ].join(" ")}
         overlayClass="bg-primary-dark/60"
         closeButton
       >
-        <div className="flex flex-col items-center gap-8">
+        <div className="flex min-h-full flex-col items-center justify-center gap-8 sm:min-h-0">
           <div className="flex items-center gap-2 self-start text-sm font-semibold text-heading">
             <span className="text-primary"><SparkleIcon /></span>
             <span>Ask</span>

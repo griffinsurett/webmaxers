@@ -202,7 +202,7 @@ function Modal({
   // Render modal as a portal to document.body
   return createPortal(
     <div
-      className={`fixed inset-0 z-[9999] ${
+      className={`fixed inset-0 z-[100001] ${
         POSITION_CLASSES[position]
       } ${overlayClass} transform transition-opacity ease-in-out ${
         animation === "slide-up" ? "duration-500" : "duration-300"
