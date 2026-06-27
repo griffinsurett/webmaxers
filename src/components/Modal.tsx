@@ -18,6 +18,10 @@ export interface ModalProps {
   closeButton?: boolean;
   closeButtonClass?: string;
   overlayClass?: string;
+  /** Stacking of the overlay. Defaults to `z-[9999]` (below the site header at
+   *  z-[100000]). Pass a higher z utility (e.g. `z-[100001]`) for modals that
+   *  must cover the header too. */
+  overlayZClass?: string;
   className?: string;
   allowScroll?: boolean;
   ariaLabel?: string;
@@ -65,6 +69,7 @@ function Modal({
   closeButton = true,
   closeButtonClass = "absolute top-4 right-4",
   overlayClass = "bg-black bg-opacity-50",
+  overlayZClass = "z-[9999]",
   className = "bg-bg shadow-xl p-6 rounded-lg max-w-lg w-full mx-4",
   allowScroll = false,
   ariaLabel,
@@ -202,7 +207,7 @@ function Modal({
   // Render modal as a portal to document.body
   return createPortal(
     <div
-      className={`fixed inset-0 z-[100001] ${
+      className={`fixed inset-0 ${overlayZClass} ${
         POSITION_CLASSES[position]
       } ${overlayClass} transform transition-opacity ease-in-out ${
         animation === "slide-up" ? "duration-500" : "duration-300"

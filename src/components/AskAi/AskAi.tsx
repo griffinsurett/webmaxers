@@ -242,6 +242,10 @@ export default function AskAi({
           "bg-bg2 shadow-2xl",
         ].join(" ")}
         overlayClass="bg-primary-dark/60"
+        // Stack ABOVE the site header (z-[100000]) so the full-screen sheet
+        // covers it. AI-modal-specific — other modals keep the default z-[9999].
+        overlayZClass="z-[100001]"
+        closeButtonClass="absolute right-4 top-4 text-text/60 hover:text-heading"
         closeButton
       >
         <div className="flex min-h-full flex-col items-center justify-center gap-8 sm:min-h-0">

@@ -78,11 +78,3 @@
   }
 }
 
-/* Tint the sticky header while the drawer is open */
-.mobile-menu-open .site-header {
-  background-image: linear-gradient(
-    to right,
-    var(--color-bg3),
-    var(--color-bg)
-  );
-}
