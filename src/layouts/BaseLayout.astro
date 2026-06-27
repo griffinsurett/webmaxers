@@ -2,14 +2,37 @@
 // src/layouts/BaseLayout.astro
 /**
  * Base Layout - Root HTML Structure
- * 
+ *
  * The foundation layout for all pages in the application.
  * Provides:
  * - HTML document structure
  * - Head section with meta tags, SEO, theme setup
- * - Body with main content slot and footer
+ * - Fixed site header (always rendered, pinned over the page)
+ * - A per-page hero slot, the main content slot, and the footer
  * - Global styles import
- * 
+ *
+ * Structure:
+ *   <body>
+ *     <div id="app">                   ← flex column
+ *       <div data-main-frame>          ← header + hero, grouped
+ *         <Header/>                     ← sticky top:0 (pins across the frame)
+ *         <slot name="hero"/>           ← per-page hero (optional)
+ *       </div>
+ *       <div data-container-below>      ← the page content between hero & footer
+ *         <slot/>                       ← default slot (the rest of the page)
+ *       </div>
+ *       <slot name="footer"><Footer/>   ← footer at the bottom (defaults to
+ *                                          <Footer/>, overridable; hideFooter
+ *                                          suppresses it)
+ *     </div>
+ *
+ * Header is kept STICKY (not fixed) so it can live inside data-main-frame without
+ * losing its pinning (a fixed element would re-anchor to a transformed wrapper).
+ * data-container-below is flex-1 so it fills the viewport on short pages, keeping
+ * the footer at the bottom.
+ *
+ * Slots: "hero" (per-page hero), "footer" (defaults to <Footer/>), default (rest).
+ *
  * All other layouts should extend or use this as their base.
  * Ensures consistent structure and metadata across the entire site.
  */
@@ -19,8 +42,9 @@ import HeadTags from "./HeadTags.astro";
 import SEO from "./SEO.astro";
 import Theme from "./Theme.astro";
 import BodyTags from "./BodyTags.astro";
-import Header from "./Header.astro"; 
+import Header from "./Header.astro";
 import Footer from "./Footer.astro";
+import AskAi from "@/components/AskAi/AskAi";
 
 export interface Props {
   /** Suppress the default site footer (e.g. when a page renders it itself,
@@ -53,21 +77,35 @@ const { hideFooter = false, ...seoProps } = Astro.props;
   </head>
 
   <body class="antialiased">
-    <Header />
-
     {/* Body-level scripts and elements */}
     <BodyTags />
 
-
-    {/* Main app container with flex column for sticky footer */}
+    {/* App: flex column so the container-below flexes and the footer sits at the
+        bottom even on short pages. */}
     <div id="app" class="min-h-screen flex flex-col">
-      {/* Page content goes here */}
-      <slot />
 
-      {/* Footer at bottom - now contains both consent and accessibility.
-          Pages that render their own footer (e.g. inside a curtain reveal) set
-          hideFooter to suppress this one. */}
-      {!hideFooter && <Footer />}
+      {/* Main frame — header + hero grouped. The header is STICKY (not fixed) so
+          it pins across the frame while living inside this wrapper. */}
+      <!-- <div class="main-frame relative flex flex-col" data-main-frame> -->
+        <Header />
+        <slot name="hero" />
+      <!-- </div> -->
+
+      {/* Container below — the page content between hero and footer. flex-1 so it
+          fills the viewport on short pages (keeping the footer at the bottom). */}
+      <div class="container-below flex-1 flex flex-col" data-container-below>
+        <slot />
+
+        {/* Ask-AI chat bar. Its trigger is position:fixed (floats over the
+            viewport), so visibility is driven by observing #hero + <footer>: it
+            only shows in the band between them, never over the hero or footer. */}
+        <AskAi client:visible />
+      </div>
+
+      {/* Footer — sits at the bottom of the page below the container. Defaults to
+          <Footer/> via slot fallback; hideFooter suppresses it (pages that render
+          their own footer, e.g. the homepage curtain reveal). */}
+      {!hideFooter && <slot name="footer"><Footer /></slot>}
     </div>
   </body>
 </html>

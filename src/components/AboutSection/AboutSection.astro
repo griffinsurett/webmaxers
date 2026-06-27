@@ -5,8 +5,16 @@ import Button from "@/components/Button/Button";
 import EyebrowSection from "@/layouts/EyebrowSection.astro";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import Video from "@/components/Video/Video.astro";
+import { Image } from "astro:assets";
+import aboutPortraitBw from "@/assets/about_portrait_bw.png";
 import { query, sortByOrder } from "@/utils/query";
 import { siteData } from "@/content/siteData";
+
+// The AI explainer video (self-hosted in /public). Used as the About section's
+// default video "for now". Being local, Video.astro auto-generates its optimized
+// poster at build time (ffmpeg) — no manual thumbnail needed.
+const AI_VIDEO_SRC =
+  "/The_Ghost_Shift__Scaling_Beyond_the_Human_Ceiling_c1uefq.mp4";
 
 interface Props {
   eyebrow?: string;
@@ -89,6 +97,22 @@ const words = splitTextIntoAnimatedWords(statement);
             className="about-stats"
           />
         )}
+
+        {/* Optimized portrait — pinned to the BOTTOM-RIGHT of the frame, mirroring
+            the bottom-left stats. Optimized at build via astro:assets (webp). */}
+        {showStats && (
+          <Image
+            src={aboutPortraitBw}
+            alt=""
+            width={420}
+            densities={[1, 2]}
+            format="webp"
+            quality={72}
+            loading="lazy"
+            decoding="async"
+            class="about-portrait"
+          />
+        )}
       </section>
     </div>
   </aside>
@@ -109,29 +133,25 @@ const words = splitTextIntoAnimatedWords(statement);
   <!-- About Bottom Section -->
   <section class="about-bottom section-container">
     <!-- Mobile: single column stack. md+: leftText | video | rightText+CTA -->
-    <div class="grid grid-cols-1 gap-10 md:gap-0 md:grid-cols-[1fr_2fr_1fr]">
+    <div class="grid grid-cols-1 gap-10 md:gap-12 lg:gap-16 md:grid-cols-[1fr_2fr_1fr] items-center">
       <p class="text-base font-light leading-relaxed text-text">
         {leftText}
       </p>
-      {videoSrc ? (
-        <div class="flex items-center justify-center">
-          <Video
-            src={videoSrc}
-            poster={videoPoster}
-            alt={videoAlt}
-            wrapperClass={`about-video-shell !h-auto aspect-square overflow-hidden bg-black ${videoWrapperClass}`.trim()}
-            class={`about-video-media ${videoClass}`.trim()}
-            autoplay={true}
-            muted={true}
-            loop={true}
-            controls={false}
-            playsinline={true}
-            lazy={true}
-          />
-        </div>
-      ) : (
-        <div class="hidden md:block"></div>
-      )}
+      <div class="flex items-center justify-center">
+        <Video
+          src={videoSrc ?? AI_VIDEO_SRC}
+          poster={videoPoster}
+          alt={videoAlt}
+          wrapperClass={`about-video-shell !h-auto aspect-video overflow-hidden bg-black ${videoWrapperClass}`.trim()}
+          class={`about-video-media ${videoClass}`.trim()}
+          autoplay={false}
+          muted={true}
+          loop={true}
+          controls={true}
+          playsinline={true}
+          lazy={false}
+        />
+      </div>
       <div class="flex flex-col justify-between gap-8">
         <p class="text-base font-light leading-relaxed text-text">
           {rightText}
@@ -167,12 +187,46 @@ const words = splitTextIntoAnimatedWords(statement);
     height: 100%;
   }
 
+  /* Mobile: cap the frame to 95svh so its bottom edge (where the stats + portrait
+     pin) rises ABOVE the fixed "Ask a question" chat bar instead of sitting
+     behind it. Below lg only — desktop has the 3-corner layout with room. */
+  @media (max-width: 1023px) {
+    .about-sticky-pin--with-stats {
+      height: calc(95svh - var(--about-pin-top) - 1.5rem);
+    }
+  }
+
   /* Stat counters: absolutely pinned to the bottom-left of the frame, aligned to
      the same inset as the "About" eyebrow label (the section-container edge). */
   :global(.about-stats) {
     position: absolute;
     left: 0;
     bottom: 0;
+  }
+
+
+  /* Portrait, pinned inside the about frame. Mobile (default): bottom-LEFT and
+     lifted to sit directly ABOVE the stats (vertical stack — image, then stats,
+     then the fixed chat bar). Desktop (lg+): bottom-RIGHT corner, mirroring the
+     bottom-left stats. Square source → height auto-derives from width. */
+  .about-portrait {
+    position: absolute;
+    left: 0;
+    /* Sit just above the bottom-left stats block (~stats height + gap). */
+    bottom: 5.5rem;
+    width: clamp(7rem, 32vw, 11rem);
+    height: auto;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+  }
+  @media (min-width: 1024px) {
+    .about-portrait {
+      left: auto;
+      right: 0;
+      bottom: 0;
+      width: clamp(10rem, 16vw, 16rem);
+    }
   }
 
   .about-statement {
@@ -213,7 +267,10 @@ const words = splitTextIntoAnimatedWords(statement);
 
   .about-video-shell {
     width: 100%;
-    max-width: min(100%, 24rem);
+    /* Fills the center column; capped so it doesn't get unwieldy on very wide
+       viewports. aspect-video (16:9) is set via the wrapperClass. */
+    max-width: min(100%, 40rem);
+    border-radius: 0;
   }
 
   .about-video-media {
@@ -234,6 +291,10 @@ const words = splitTextIntoAnimatedWords(statement);
       position: static;
       margin-top: clamp(1.5rem, 4vw, 3rem);
     }
+    /* No pinned frame to anchor to — hide the corner portrait. */
+    .about-portrait {
+      display: none;
+    }
     .about-word-layer--overlay {
       opacity: 1;
       will-change: auto;
@@ -251,6 +312,9 @@ const words = splitTextIntoAnimatedWords(statement);
   :global([data-a11y-motion="reduced"]) .about-stats {
     position: static;
     margin-top: clamp(1.5rem, 4vw, 3rem);
+  }
+  :global([data-a11y-motion="reduced"]) .about-portrait {
+    display: none;
   }
   :global([data-a11y-motion="reduced"]) .about-word-layer--overlay {
     opacity: 1;

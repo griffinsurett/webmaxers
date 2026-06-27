@@ -1,0 +1,65 @@
+---
+/**
+ * Layer — one pinned panel inside a <StickyStack>.
+ *
+ * Each Layer is `position: sticky; top: 0`, so it pins to the top of the
+ * viewport as you scroll and the NEXT Layer slides up and covers it (the one
+ * beneath stays put — it doesn't scroll away). Because later siblings come
+ * after it in the DOM, they naturally paint on top, giving the "cover" effect.
+ *
+ * Drop as many Layers as you want into a StickyStack's default slot:
+ *
+ *   <StickyStack>
+ *     <Layer>...section A...</Layer>
+ *     <Layer>...section B (covers A)...</Layer>
+ *     <Layer>...section C (covers B)...</Layer>
+ *   </StickyStack>
+ *
+ * Sizing: each Layer is `min-h-screen` (100svh) by default so one full viewport
+ * of scroll reveals each cover. Pass a different `height` for taller/shorter
+ * panels. The wrapper is opaque-by-default expectation — give the slotted
+ * content its own background (image or color) so it fully hides the layer
+ * underneath as it rises.
+ */
+interface Props {
+  /** Panel height. Controls how much scroll distance the cover takes. */
+  height?: string;
+  /** Extra classes on the sticky layer wrapper. */
+  class?: string;
+  id?: string;
+}
+
+const { height = "100svh", class: className = "", id } = Astro.props as Props;
+---
+
+<div
+  class:list={["sticky-stack-layer", className]}
+  style={`--layer-h:${height}`}
+  data-sticky-layer
+  {...id ? { id } : {}}
+>
+  <slot />
+</div>
+
+<style>
+  .sticky-stack-layer {
+    position: sticky;
+    top: 0;
+    /* Each layer occupies a full panel of scroll; later siblings rise over it. */
+    min-height: var(--layer-h);
+    /* Establish a stacking context so the slotted content paints as one unit. */
+    isolation: isolate;
+    /* Layers must be opaque to cover what's beneath — content supplies the bg,
+       but we default to the page bg so a transparent panel never reveals a gap. */
+    background: var(--color-bg);
+  }
+
+  /* Reduced motion / no-JS still works — sticky is native, no hijack. But for
+     users who prefer reduced motion we drop the pin so sections simply stack
+     and scroll normally (no overlap surprise). */
+  @media (prefers-reduced-motion: reduce) {
+    .sticky-stack-layer {
+      position: relative;
+    }
+  }
+</style>

@@ -481,12 +481,13 @@ export default function HeroLogo3D({
 
       let spin = 0;
       let raf = 0;
-      // Free-float gate: 0 while whole, eases toward 1 once it's rubble, and
-      // eases back to 0 as the mark REASSEMBLES — so the wind/drift/tumble unwind
-      // and the shards return to their origin for a clean rebuild (it no longer
-      // latches open). Tracks breakAmount so float is present only while broken.
+      // Free-float gate: 0 while the mark is whole, eases to 1 once it's rubble
+      // and then HOLDS — the merry drift/tumble is time-driven from here on, so
+      // scrolling further (or holding still) doesn't change it. Latches open so
+      // the debris keeps floating freely once shattered (the logo is confined to
+      // the hero range and hides past it; it never reassembles).
       let floatGate = 0;
-      const FLOAT_BREAK_THRESH = 0.25; // float on once break passes this; off again as it falls back below
+      const FLOAT_BREAK_THRESH = 0.25; // open early so the wind/tumble churns DURING the burst
       // Global slow-motion factor for ALL rubble motion (wind, turbulence, jitter,
       // tumble). Lower = lazier, more languid drift. One knob to set the pace.
       const MOTION_SPEED = 0.15;
@@ -523,8 +524,8 @@ export default function HeroLogo3D({
         // the mark is fully WHOLE and settled (breakAmount ~0 AND the float gate
         // has eased shut), there is nothing to displace, so skip it entirely. We
         // run it once more after settling (`brokeLastFrame`) to write the final
-        // identity positions, then stay idle until the next shatter. This is what
-        // keeps the now-full-page logo from burning the main thread forever.
+        // identity positions, then stay idle until the next shatter — so the
+        // whole, un-scrolled logo doesn't burn the main thread.
         const animating = breakAmount > 1e-3 || floatGate > 1e-3;
         let dirty = false; // did anything visible change this frame?
         if (isReady && (cfg.jitter > 0 || cfg.drift > 0 || cfg.tumble > 0)) {
@@ -549,7 +550,7 @@ export default function HeroLogo3D({
 
         // Only touch the GPU when something actually changed. When the mark sits
         // fully whole + still (e.g. tab backgrounded, or settled), skip the
-        // render so the now-full-page canvas isn't a perpetual main-thread cost.
+        // render so the canvas isn't a perpetual main-thread cost.
         if (dirty) renderer.render(scene, camera);
       };
       tick();

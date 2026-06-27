@@ -126,6 +126,32 @@ export const collections = {
         tagline: z.string().optional(),
         includes: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
         steps: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
+        // Optional richer blocks used by bespoke solution layouts (e.g. AI Agents).
+        // Numbered row-list of real-world applications (distinct from the
+        // `includes` grid and the `steps` process).
+        applications: z
+          .array(z.object({ title: z.string(), body: z.string() }))
+          .default([]),
+        // Embedded demo-video section (heading/copy + optional source override).
+        videoShowcase: z
+          .object({
+            eyebrow: z.string().optional(),
+            title: z.string().optional(),
+            description: z.string().optional(),
+            videoSrc: z.string().optional(),
+          })
+          .optional(),
+        // Closing call-to-action block (heading/copy + button + value badges).
+        cta: z
+          .object({
+            eyebrow: z.string().optional(),
+            title: z.string().optional(),
+            description: z.string().optional(),
+            buttonText: z.string().optional(),
+            buttonLink: z.string().optional(),
+            badges: z.array(z.string()).default([]),
+          })
+          .optional(),
       }),
   }),
 

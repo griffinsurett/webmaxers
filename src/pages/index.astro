@@ -33,13 +33,6 @@ const latestPosts = query("blog")
          section below covers it rather than the logo persisting full-page. */
     }
     <div class="relative" data-logo-break>
-      {
-        /* Dark-mode starfield: the backmost fixed layer, behind the 3D logo.
-           It's the dark-mode background from the top of the page down to the
-           CurtainStack — whose opaque card layers cover it once you scroll in.
-           Hidden in light mode (the canvas CSS handles that). */
-      }
-      <!-- <Starfield class="-z-20" /> -->
 
       <HeroLogo3D class="fixed inset-0 -z-10 opacity-40 dark:invert">
         {
@@ -59,7 +52,6 @@ const latestPosts = query("blog")
         />
       </HeroLogo3D>
 
-      <!-- <div class="px-6 md:px-[80px]"> -->
       <FrontPageHero
         headline="Designed to"
         headlineLine2="grow your business."
@@ -129,34 +121,3 @@ const latestPosts = query("blog")
   <Footer />
 </BaseLayout>
 
-<style>
-  /* Blog layer = the curtain's resting layer (revealed when the portfolio peels
-     off left). Centred in the pinned frame on desktop (it fits in one viewport).
-     Transparent so the fixed 3D logo / page bg shows through behind it. */
-  :global(.curtain-blog-layer) {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background: transparent;
-  }
-
-  /* Mobile: the stacked blog grid is TALLER than the 100vh curtain frame, so
-     centring it pushes the top out of view. Top-align it (and let it scroll
-     within the frame) so it's revealed from its highest point as the portfolio
-     peels off. */
-  @media (max-width: 767px) {
-    :global(.curtain-blog-layer) {
-      justify-content: flex-start;
-      overflow-y: auto;
-    }
-  }
-
-  /* Reduced motion: the stack flattens to normal flow — the blog layer returns
-     to a normal block (no forced height / centring). */
-  @media (prefers-reduced-motion: reduce) {
-    :global(.curtain-blog-layer) {
-      display: block;
-      overflow: visible;
-    }
-  }
-</style>

@@ -16,6 +16,7 @@ import Button from "@/components/Button/Button";
 import AIIconPrompt from "@/components/Footer/AIIconPrompt";
 import Logo from "@/components/Logo/Logo.astro";
 import { ctaData } from "@/content/siteData";
+import RevealStack from "@/components/StickyStack/RevealStack.astro";
 
 const eyebrow = "Let's build work that inspires.";
 const heading = "Ready to build";
@@ -46,11 +47,16 @@ const legalColClass = [
   role="contentinfo"
   aria-label="Site footer"
 >
-  {/* The persistent full-page hero 3D logo reassembles here at the footer, so
-      the footer no longer renders its own 3D mark. */}
-
+  {
+    /* Adobe-style reveal via the reusable RevealStack: the footer content is the
+      `cover` that scrolls up and off; the giant wordmark is the `base` parked
+      beneath, uncovered as the cover lifts away. The whole effect is confined
+      to the footer (RevealStack clips its own overflow). */
+  }
+  <RevealStack>
   <div
-    class="relative z-10 section-container grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2"
+    slot="cover"
+    class="footer-content relative section-container grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2"
   >
     {/* Top-left — eyebrow + heading */}
     <div class="lg:col-start-1 lg:row-start-1">
@@ -113,11 +119,12 @@ const legalColClass = [
   </div>
 
   {
-    /* Full-bleed giant logo + wordmark lockup — spans the viewport, clipped at
-      both edges. Desktop/tablet only (hidden on mobile). The mark reuses the
-      header's scroll-driven animated logo (no text portion). */
+    /* Full-bleed giant logo + wordmark lockup — the RevealStack `base`, parked
+      at the footer's bottom and uncovered as the content above lifts off.
+      Spans the viewport, clipped at both edges. Desktop/tablet only (hidden on
+      mobile). The mark reuses the header's scroll-driven animated logo. */
   }
-  <div class="footer-wordmark" aria-hidden="true">
+  <div slot="base" class="footer-wordmark" aria-hidden="true">
     <div class="footer-wordmark__mark">
       <Logo
         showText={false}
@@ -129,12 +136,22 @@ const legalColClass = [
     </div>
     <span class="footer-wordmark__text">{siteData.title}</span>
   </div>
+  </RevealStack>
 </footer>
 
 <style>
-  /* Full-bleed logo + wordmark lockup: the mark and the single word are sized
-     to span the viewport together, clipped flush to the bottom edge so they
-     bleed off the left/right margins. Hidden on mobile. */
+  /* The reveal mechanic (clip/sticky/stacking) lives in <RevealStack>. Here we
+     only style the footer's own content + wordmark lockup. */
+
+  /* Content (the RevealStack `cover`) must be opaque so it fully hides the
+     wordmark until it scrolls up and off, uncovering it. */
+  .footer-content {
+    background: var(--color-bg);
+  }
+
+  /* Full-bleed logo + wordmark lockup (the RevealStack `base`): sized to span
+     the viewport, clipped flush to the bottom edge so it bleeds off the
+     left/right margins. Hidden on mobile. */
   .footer-wordmark {
     display: none;
   }
@@ -146,6 +163,8 @@ const legalColClass = [
       gap: 1.25vw;
       overflow: hidden;
       line-height: 0.72;
+      width: 100%;
+      pointer-events: none;
     }
   }
   /* Mark scales with the viewport to track the wordmark's cap height. The

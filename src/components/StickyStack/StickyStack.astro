@@ -1,0 +1,53 @@
+---
+/**
+ * StickyStack — a scroll container that turns its <Layer> children into a stack
+ * of pinned, overlapping panels (the "Excited!"-style cover effect): as you
+ * scroll, each section slides UP and covers the one before it instead of the
+ * previous one scrolling away.
+ *
+ * How it works (pure CSS, native scroll — no scroll-jacking):
+ *  - The stack is a tall normal-flow block. Its height = N layers worth of
+ *    scroll, so there's room for each layer to be revealed in turn.
+ *  - Each <Layer> is `position: sticky; top: 0`, so it pins to the top of the
+ *    viewport. Later layers come after it in the DOM, so they paint on top and
+ *    rise over the pinned earlier layer as you scroll. The covered layer stays
+ *    put underneath.
+ *  - The LAST layer has nothing after it to cover it, so it's the resting layer.
+ *
+ * Usage — drop ANY number of layers into the default slot:
+ *
+ *   <StickyStack>
+ *     <Layer><SectionA /></Layer>
+ *     <Layer height="100svh"><SectionB /></Layer>
+ *     <Layer><SectionC /></Layer>
+ *   </StickyStack>
+ *
+ * Give each layer's content its own opaque background (color or image) so it
+ * fully hides the layer beneath as it rises.
+ */
+interface Props {
+  /** Extra classes on the stack container. */
+  class?: string;
+  id?: string;
+}
+
+const { class: className = "", id } = Astro.props as Props;
+---
+
+<div class:list={["sticky-stack", className]} data-sticky-stack {...id ? { id } : {}}>
+  <slot />
+</div>
+
+<style>
+  /* The stack itself is just a flow container. The sticky layers inside it do
+     all the work; the container only needs to NOT clip them and to establish a
+     fresh stacking context so the pinned layers don't fight z-index with the
+     rest of the page. */
+  .sticky-stack {
+    position: relative;
+    isolation: isolate;
+    /* overflow must stay visible — `overflow:hidden/clip` here would break
+       position:sticky on the children. */
+    overflow: visible;
+  }
+</style>

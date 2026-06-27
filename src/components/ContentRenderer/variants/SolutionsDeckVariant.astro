@@ -2,46 +2,26 @@
 // src/components/ContentRenderer/variants/SolutionsDeckVariant.astro
 import type { BaseVariantProps } from "../ContentRenderer.types";
 import Icon from "@/components/Icon";
-import WebsitesDemo from "@/components/AnimatedExamples/WebsitesDemo";
-import BrandingDemo from "@/components/AnimatedExamples/BrandingDemo";
-import AiAgentsDemo from "@/components/AnimatedExamples/AiAgentsDemo";
-import { query, whereArrayContains, sortByOrder } from "@/utils/query";
-import { resolveImageMetadata, getImageAlt } from "@/utils/images";
-import { getImage } from "astro:assets";
+import { related } from "@/utils/query";
 
 type Props = BaseVariantProps;
 
 const { items = [], id, className = "" } = Astro.props as Props;
 
-// First frame of the Websites demo = 2 real featured projects (queried from the
-// portfolio). Resolve their preview thumbnails to optimized WebP at build time
-// and pass them to the (client) WebsitesDemo island as plain data.
-const featuredProjects = (
-  await query("projects")
-    .where(whereArrayContains("tags", "featured"))
-    .orderBy(sortByOrder())
-    .get()
-).entries.slice(0, 2);
-
-const websiteProjects = await Promise.all(
-  featuredProjects.map(async (p: any) => {
-    const src = p.data.fullSiteImage ?? p.data.bannerImage ?? p.data.featuredImage;
-    const meta = resolveImageMetadata(src);
-    let thumb: string | undefined;
-    if (meta) {
-      const img = await getImage({ src: meta, width: 480, format: "webp", quality: 70, fit: "cover", position: "top" });
-      thumb = img.src;
-    }
-    return {
-      title: p.data.title as string,
-      thumb,
-      alt: getImageAlt(src, `${p.data.title} website preview`),
-    };
-  }),
+// Related services for each solution: capabilities whose `solutions` ref points
+// at this solution. Drives the service pills shown inside each card (replacing
+// the old animated demos) — fully content-driven, no hardcoded lists.
+const servicesBySolution = new Map<string, string[]>(
+  await Promise.all(
+    items.map(async (item) => {
+      const caps = await related("capabilities", "solutions", item.id).all();
+      return [item.id, caps.map((c: any) => c.data.title as string)] as const;
+    }),
+  ),
 );
 
 // Shared content padding — applied to the top row and the body so the card
-// itself has no padding and the middle (future-content slot) runs edge-to-edge.
+// itself has no padding and the middle (services slot) runs edge-to-edge.
 const PAD = "p-[clamp(0.875rem,1.2vw,1.125rem)]";
 ---
 
@@ -92,13 +72,19 @@ const PAD = "p-[clamp(0.875rem,1.2vw,1.125rem)]";
                 </span>
               </div>
 
-              {/* Middle content slot — the solution's animated example, keyed by
-                  slug. Each demo is a literal element (Astro needs the import
-                  statically to attach client:visible). Blank bg if no match. */}
-              <div class="flex-1 bg-bg" aria-hidden="true">
-                {item.id === "websites" && <WebsitesDemo client:visible className="h-full w-full" projects={websiteProjects} />}
-                {item.id === "branding" && <BrandingDemo client:visible className="h-full w-full" />}
-                {item.id === "ai-agents" && <AiAgentsDemo client:visible className="h-full w-full" />}
+              {/* Middle slot — the solution's related services as pills. Each
+                  pill is a capability whose `solutions` ref points at this
+                  solution (content-driven, queried above). */}
+              <div class={`flex-1 ${PAD} pt-0`}>
+                {(servicesBySolution.get(item.id) ?? []).length > 0 && (
+                  <ul class="list-none flex flex-wrap gap-2 m-0 p-0">
+                    {(servicesBySolution.get(item.id) ?? []).map((service) => (
+                      <li class="inline-flex items-center rounded-full bg-bg border border-heading/10 px-3 py-1.5 text-[clamp(0.8125rem,0.95vw,0.875rem)] leading-none font-light text-heading/75">
+                        {service}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Description pinned to the bottom */}

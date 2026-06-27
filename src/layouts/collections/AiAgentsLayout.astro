@@ -1,0 +1,248 @@
+---
+// src/layouts/collections/AiAgentsLayout.astro
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Button from "@/components/Button/Button";
+import AiAgentsWorkflow from "@/components/AnimatedExamples/AiAgentsWorkflow";
+import VideoShowcase from "@/components/AI/VideoShowcase";
+import EcosystemScene from "@/components/AI/EcosystemScene";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import type { CollectionLayoutProps } from "./types";
+
+const { entry, seoProps = {} } = Astro.props as CollectionLayoutProps;
+const data = entry?.data || {};
+
+// All copy is content-driven (solutions/ai-agents.mdx) — the layout only owns
+// structure, styling, and the custom R3F/animation islands.
+const headingText =
+  typeof data.heading === "string"
+    ? data.heading
+    : data.heading
+      ? [data.heading.before, data.heading.text, data.heading.after]
+          .filter(Boolean)
+          .join(" ")
+      : data.title || "AI Agents for your Business";
+const descriptionText =
+  data.description ||
+  "Custom AI automations that handle the busywork so you can focus on growth.";
+
+const steps: { title: string; body: string }[] = data.steps ?? [];
+const applications: { title: string; body: string }[] = data.applications ?? [];
+const video = data.videoShowcase ?? {};
+const cta = data.cta ?? {};
+---
+
+<BaseLayout {...seoProps}>
+  <main class="flex-1 bg-zinc-950 text-zinc-100 overflow-hidden">
+    
+    <!-- ── SECTION 1: HERO ── -->
+    <section class="relative min-h-[92vh] flex items-center justify-center pt-24 pb-16 px-4 md:px-8 border-b border-white/5 bg-zinc-950">
+
+      <div class="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        {/* Left Column: Headline, Subtitle, CTA */}
+        <div class="lg:col-span-5 flex flex-col items-start gap-6 text-left">
+          <span class="eyebrow-text font-semibold text-text/50">✦ AI Agent Automation</span>
+
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-white leading-[1.05] text-wrap-balance">
+            {headingText}
+          </h1>
+
+          <p class="text-base md:text-lg text-zinc-400 font-light leading-relaxed max-w-xl">
+            {descriptionText}
+          </p>
+
+          <div class="flex flex-wrap items-center gap-4 mt-2">
+            <Button variant="primary" href="/contact-us">
+              Get Started
+            </Button>
+            <Button variant="secondary" href="#demo-video">
+              Watch Video
+            </Button>
+          </div>
+        </div>
+
+        {/* Right Column: Workflow Animation */}
+        <div class="lg:col-span-7 w-full flex items-center justify-center">
+          <AiAgentsWorkflow client:load />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: VIDEO SHOWCASE ── -->
+    <section id="demo-video" class="relative py-20 px-4 md:px-8 border-b border-white/5 bg-zinc-950">
+
+      <div class="relative z-10 w-full max-w-5xl mx-auto flex flex-col gap-10 items-center text-center">
+        <div class="max-w-2xl flex flex-col gap-3">
+          {video.eyebrow && (
+            <span class="eyebrow-text font-bold text-text/45">{video.eyebrow}</span>
+          )}
+          {video.title && (
+            <h2 class="text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-tight">
+              {video.title}
+            </h2>
+          )}
+          {video.description && (
+            <p class="text-sm md:text-base text-zinc-400 font-light leading-relaxed">
+              {video.description}
+            </p>
+          )}
+        </div>
+
+        {/* Custom Video Showcase component */}
+        <div class="video-scroll-target w-full will-change-transform">
+          <VideoShowcase client:load videoSrc={video.videoSrc} />
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: ECOSYSTEM SCENE ── -->
+    <section class="relative bg-[#0a0f1a] border-t border-white/5 overflow-hidden">
+      <EcosystemScene client:visible />
+    </section>
+
+    <!-- ── SECTION 4: HOW AI AGENTS WORK (content-driven, animated ProcessVariant) ── -->
+    {steps.length > 0 && (
+      <section class="relative py-28 px-4 md:px-8 border-t border-white/5 bg-zinc-950">
+        <ContentRenderer
+          variant="ProcessVariant"
+          items={steps}
+          eyebrow="The Process"
+          title="How AI Agents Work"
+          description="From a customer request to a completed task on autopilot."
+        />
+      </section>
+    )}
+
+    <!-- ── SECTION 5: REAL BUSINESS APPLICATIONS (content-driven row list) ── -->
+    {applications.length > 0 && (
+      <section class="relative py-28 px-4 md:px-8 border-t border-white/5 bg-[#0a0f1a]">
+        <div class="relative z-10 w-full max-w-5xl mx-auto flex flex-col gap-20">
+          <div class="max-w-2xl flex flex-col gap-4">
+            <span class="eyebrow-text font-medium text-text/45">Applications</span>
+            <h2 class="heading-display">Real Business Operations</h2>
+            <p class="text-base text-text/65 leading-relaxed max-w-lg mt-2">
+              AI agents handling back-office, financial, and logistical workloads without human friction.
+            </p>
+          </div>
+
+          {/* Vertical Row List (No boxes/cards) */}
+          <div class="border-t border-heading/10 flex flex-col w-full">
+            {applications.map((app, i) => (
+              <div class="py-10 grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 md:gap-12 border-b border-heading/8 group transition-colors duration-300 hover:bg-white/[0.01]">
+                <div class="flex items-center gap-6">
+                  <span class="font-mono text-xs text-heading/20">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <h3 class="text-xl font-normal text-heading">{app.title}</h3>
+                </div>
+                <p class="text-sm text-text/50 leading-relaxed">{app.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ── SECTION 6: CTA (content-driven) ── -->
+    {cta.title && (
+      <section class="relative py-32 px-4 md:px-8 border-t border-white/5 bg-zinc-950 text-center flex flex-col items-center justify-center min-h-[50svh]">
+        <div class="relative z-10 w-full max-w-3xl mx-auto flex flex-col items-center gap-8">
+          <div class="flex flex-col gap-4">
+            {cta.eyebrow && (
+              <span class="eyebrow-text font-medium text-text/45">{cta.eyebrow}</span>
+            )}
+            <h2 class="heading-display">{cta.title}</h2>
+            {cta.description && (
+              <p class="text-base text-text/65 max-w-lg mx-auto leading-relaxed mt-2">
+                {cta.description}
+              </p>
+            )}
+          </div>
+
+          {/* Value Prop badges */}
+          {cta.badges?.length > 0 && (
+            <div class="flex flex-wrap justify-center gap-4 md:gap-8 my-2">
+              {cta.badges.map((badge) => (
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span class="text-xs uppercase tracking-wider font-semibold text-text/50">
+                    {badge}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {cta.buttonText && (
+            <Button variant="primary" href={cta.buttonLink ?? "/contact-us"} size="lg" className="px-8 mt-2">
+              {cta.buttonText}
+            </Button>
+          )}
+        </div>
+      </section>
+    )}
+
+  </main>
+</BaseLayout>
+
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { readMotionPreference } from "@/hooks/useMotionPreference";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  let activeTimeline: gsap.core.Timeline | null = null;
+
+  function initVideoScroll() {
+    // Clean up any existing timeline/ScrollTrigger to avoid duplicates/memory leaks on hot-reload/navigation
+    if (activeTimeline) {
+      activeTimeline.kill();
+      activeTimeline = null;
+    }
+
+    const target = document.querySelector(".video-scroll-target");
+    const trigger = document.querySelector("#demo-video");
+    if (!target || !trigger) return;
+
+    if (readMotionPreference()) {
+      // If prefers-reduced-motion is active, ensure element is reset to full scale
+      gsap.set(target, { scale: 1.0, clearProps: "transform" });
+      return;
+    }
+
+    activeTimeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: trigger,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: true,
+      }
+    });
+
+    activeTimeline
+      .fromTo(target,
+        { scale: 0.82 },
+        { scale: 1.0, ease: "power1.inOut", duration: 1 }
+      )
+      .to(target,
+        { scale: 1.0, duration: 0.5 } // Keep at full size in the middle of viewport
+      )
+      .to(target,
+        { scale: 0.82, ease: "power1.inOut", duration: 1 }
+      );
+  }
+
+  // Initial load
+  initVideoScroll();
+
+  // Astro page transitions support
+  document.addEventListener("astro:page-load", initVideoScroll);
+</script>

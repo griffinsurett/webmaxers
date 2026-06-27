@@ -7,6 +7,7 @@ import {
   type ReactNode,
   type ReactPortal,
   type MouseEvent,
+  type TransitionEvent,
 } from "react";
 import { createPortal } from "react-dom";
 
@@ -27,6 +28,10 @@ export interface ModalProps {
     | "bottom-right"
     | "top-left"
     | "top-right";
+  /** Panel enter/exit motion.
+   *  - "scale" (default): subtle scale + slight rise (original behavior).
+   *  - "slide-up": slides UP into view on open, DOWN out of view on close. */
+  animation?: "scale" | "slide-up";
   ssr?: boolean;
 }
 
@@ -65,9 +70,14 @@ function Modal({
   ariaLabel,
   ariaDescribedBy,
   position = "center",
+  animation = "scale",
   ssr = true,
 }: ModalProps): ReactPortal | null {
   const [mounted, setMounted] = useState<boolean>(ssr ? isOpen : false);
+  // `entered` gates the OPEN visual state so the panel first commits its closed
+  // (off-viewport) frame, then transitions in on the next frame — without this,
+  // a modal that mounts already-open would snap into place instead of sliding up.
+  const [entered, setEntered] = useState<boolean>(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
@@ -84,8 +94,21 @@ function Modal({
       setMounted(true);
       // Store previously focused element
       previousFocusRef.current = document.activeElement as HTMLElement;
+    } else {
+      // Closing → drop `entered` so the panel transitions back to its closed
+      // (off-viewport) state.
+      setEntered(false);
     }
   }, [isOpen]);
+
+  // After the modal mounts open, flip `entered` on the next frame so the panel
+  // animates from its closed frame to open (slide up) instead of snapping.
+  useEffect(() => {
+    if (mounted && isOpen) {
+      const id = requestAnimationFrame(() => setEntered(true));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [mounted, isOpen]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -144,9 +167,12 @@ function Modal({
     };
   }, [mounted, isOpen]);
 
-  // Unmount modal after exit animation completes
-  const handleAnimationEnd = (): void => {
-    if (!isOpen) {
+  // Unmount only after the PANEL'S exit transition finishes (it's the longest —
+  // the full slide-down), not the overlay's, so the panel travels all the way
+  // off-viewport before we unmount. transitionend bubbles, so we match the panel
+  // element specifically.
+  const handleAnimationEnd = (e: TransitionEvent<HTMLDivElement>): void => {
+    if (!isOpen && e.target === modalRef.current) {
       setMounted(false);
     }
   };
@@ -178,9 +204,9 @@ function Modal({
     <div
       className={`fixed inset-0 z-[9999] ${
         POSITION_CLASSES[position]
-      } ${overlayClass} transform transition-opacity duration-300 ease-in-out ${
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
+      } ${overlayClass} transform transition-opacity ease-in-out ${
+        animation === "slide-up" ? "duration-500" : "duration-300"
+      } ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       onClick={handleOverlayClick}
       onTransitionEnd={handleAnimationEnd}
       role="dialog"
@@ -190,10 +216,23 @@ function Modal({
     >
       <div
         ref={modalRef}
-        className={`relative ${className} ${modalPointerEventsClass} transform-gpu transition-all duration-300 ease-in-out origin-center ${
-          isOpen
-            ? "scale-100 translate-y-0 opacity-100"
-            : "scale-95 translate-y-4 opacity-0"
+        className={`relative ${className} ${modalPointerEventsClass} transform-gpu origin-center ${
+          animation === "slide-up"
+            // Slower so the full-viewport travel is visible.
+            ? "transition-all duration-500 ease-out"
+            : "transition-all duration-300 ease-out"
+        } ${
+          // slide-up gates "open" on `entered` so it animates from its closed
+          // (off-viewport) frame on mount; scale keeps the original isOpen timing.
+          (animation === "slide-up" ? entered && isOpen : isOpen)
+            ? "translate-y-0 scale-100 opacity-100"
+            : animation === "slide-up"
+              // Closed: parked entirely BELOW the viewport → slides all the way UP
+              // in on open, all the way DOWN out on close. translate-y-[110vh]
+              // clears the bottom edge regardless of panel height.
+              ? "translate-y-[110vh] scale-100 opacity-100"
+              // Closed: subtle scale + slight rise (original default).
+              : "translate-y-4 scale-95 opacity-0"
         }`}
         onClick={handleModalClick}
         tabIndex={-1}

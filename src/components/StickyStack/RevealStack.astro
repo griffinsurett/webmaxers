@@ -1,0 +1,107 @@
+---
+/**
+ * RevealStack — a clipped container where a "cover" layer scrolls UP and off to
+ * uncover a "base" layer pinned beneath it (the Adobe-footer reveal). The base
+ * is sticky to the container's OWN bottom; because the container clips its
+ * overflow, the base can never bleed out past the container — the whole effect
+ * is confined to the RevealStack.
+ *
+ * This is the inverse of <StickyStack> (where later layers rise UP to COVER the
+ * earlier ones). Here a single base layer stays put and the cover lifts away to
+ * REVEAL it. Same family, opposite direction.
+ *
+ * How it works (pure CSS, native scroll — no JS):
+ *  - The container is `overflow: clip` and tall (min-height ≥ 100svh by default)
+ *    so there's scroll travel for the cover to lift across.
+ *  - `cover` slot: opaque, painted on top (z-10). Fills the top and scrolls up
+ *    out of the clip window as you scroll.
+ *  - `base` slot: `position: sticky; bottom: 0` (z-0), parked at the container's
+ *    bottom edge, revealed as the cover rises off it.
+ *
+ * Usage:
+ *   <RevealStack>
+ *     <div slot="cover"> …the section that scrolls away… </div>
+ *     <div slot="base">  …the thing revealed beneath…   </div>
+ *   </RevealStack>
+ *
+ * Give the `cover` content its own opaque background so it fully hides the base
+ * until it lifts off. On mobile the effect is disabled (renders in normal flow)
+ * unless `mobile` is set — and `prefers-reduced-motion` always drops the pin.
+ */
+interface Props {
+  /** Extra classes on the stack container. */
+  class?: string;
+  /** Container height — the reveal travel. Default one viewport. */
+  height?: string;
+  id?: string;
+}
+
+const { class: className = "", height = "100svh", id } = Astro.props as Props;
+---
+
+<div
+  class:list={["reveal-stack", className]}
+  data-reveal-stack
+  style={`--reveal-h:${height}`}
+  {...id ? { id } : {}}
+>
+  <div class="reveal-stack__base" data-reveal-base>
+    <slot name="base" />
+  </div>
+  <div class="reveal-stack__cover" data-reveal-cover>
+    <slot name="cover" />
+  </div>
+</div>
+
+<style>
+  .reveal-stack {
+    position: relative;
+  }
+
+  /* Base layer — parked behind the cover. Default in-flow; pinned only when the
+     reveal is active (see the media query below). */
+  .reveal-stack__base {
+    position: relative;
+    z-index: 0;
+  }
+
+  /* Cover layer — opaque-by-expectation (content supplies its own bg) and on
+     top, so it hides the base until it scrolls off. */
+  .reveal-stack__cover {
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Activate the reveal at/above the configured breakpoint. Below it (or with
+     reduced motion) the stack is just two normal blocks in flow. */
+  @media (min-width: 768px) {
+    .reveal-stack {
+      /* clip confines the sticky base to the container AND hides any bleed-off
+         edges of the revealed content. */
+      overflow: clip;
+      display: flex;
+      flex-direction: column;
+      min-height: var(--reveal-h);
+    }
+    /* Cover fills the top and grows, pushing the base to the container floor;
+       the reveal happens as the cover scrolls up past the pinned base. */
+    .reveal-stack__cover {
+      order: -1; /* paint the cover above the base in DOM-flow order */
+      flex: 1 1 auto;
+    }
+    .reveal-stack__base {
+      position: sticky;
+      bottom: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-stack {
+      min-height: 0;
+      overflow: visible;
+    }
+    .reveal-stack__base {
+      position: relative;
+    }
+  }
+</style>

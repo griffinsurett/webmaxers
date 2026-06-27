@@ -9,7 +9,7 @@ import { related } from "@/utils/query";
 const ctaLink = "/contact-us";
 ---
 
-<header class="site-header sticky top-0 z-[100000]">
+<header class="site-header sticky top-0 inset-x-0 z-[100000]">
   <div class="head-foot-section">
     <div class="flex items-center justify-between h-16 w-full">
 
@@ -28,9 +28,12 @@ const ctaLink = "/contact-us";
         <ThemeControls client:load />
 
         <div>
+          {/* "Let's Talk" opens the Ask-AI modal (same modal as the chat bar)
+              instead of navigating. No href → renders a <button>; the inline
+              script below dispatches the ask-ai:open event on click. */}
           <Button
+            id="header-lets-talk"
             variant="hiddenUnderline"
-            href={ctaLink}
             size="sm"
             className="!rounded-full border border-heading after:hidden hover:bg-primary hover:!text-bg hover:border-primary transition-colors !gap-1 !text-[0.6rem] !px-2.5 !py-1 [&_svg]:h-3 [&_svg]:w-3 sm:!gap-2 sm:!text-sm sm:!px-5 sm:!py-2 sm:[&_svg]:h-4 sm:[&_svg]:w-4"
             client:load
@@ -53,3 +56,18 @@ const ctaLink = "/contact-us";
     </div>
   </div>
 </header>
+
+<script>
+  // Wire the header "Let's Talk" button to open the Ask-AI modal (same modal as
+  // the chat bar). Delegated off the document so it works regardless of when the
+  // Button island hydrates and survives Astro view transitions. The event name
+  // is the literal string AskAi listens for (ASK_AI_OPEN_EVENT) — kept inline so
+  // this script doesn't pull the React component into its bundle.
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest("#header-lets-talk")) {
+      e.preventDefault();
+      window.dispatchEvent(new Event("ask-ai:open"));
+    }
+  });
+</script>

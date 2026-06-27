@@ -5,6 +5,7 @@ description: "Custom AI agents and automations that handle the busywork so your 
 icon: "fa6:robot"
 order: 3
 tagline: "Your business, running smarter."
+itemLayout: "@/layouts/collections/AiAgentsLayout.astro"
 includes:
   - title: "Custom AI Agents"
     body: "Built for your exact workflow, not a generic chatbot dropped into your site. Agents that understand your context and act on it."
@@ -15,24 +16,37 @@ includes:
   - title: "Ongoing Improvement"
     body: "Agents trained on your data and refined over time. They get better as your business grows, not worse."
 steps:
-  - title: "Map"
-    body: "We document your current processes in detail and identify exactly where automation creates the most leverage."
-  - title: "Build"
-    body: "Custom agents and workflows built and tested in your actual environment, not a demo that falls apart in production."
-  - title: "Run"
-    body: "Deployed, monitored, and refined on an ongoing basis so the agents keep delivering value as your needs change."
+  - title: "Capture"
+    body: "Receives requests instantly from your emails, website forms, or chat messages."
+  - title: "Read & Route"
+    body: "Reads the request to figure out what is needed based on your business rules."
+  - title: "Decide"
+    body: "Chooses the correct next steps—like preparing a quote, booking a call, or flagging an issue."
+  - title: "Get it Done"
+    body: "Updates your software, drafts the invoice, or sends the email automatically."
+applications:
+  - title: "Operations"
+    body: "Automate vendor dispatching, status updates, team communications, and scheduling pipelines based on active database inputs."
+  - title: "Finance & Billing"
+    body: "Trigger invoices upon completion, reconcile ledger entries, manage billing notifications, and extract document receipts automatically."
+  - title: "Customer Support"
+    body: "Autonomously resolve tracking issues, return requests, and account updates while escalating complex cases to support staff seamlessly."
+  - title: "Internal Playbooks"
+    body: "Onboard teammates and answer procedural questions instantly using your company's proprietary knowledge base, policies, and records."
+  - title: "Reporting & Audits"
+    body: "Synthesize operations logs, database changes, and team metrics into clean daily summaries and automated anomaly alerts."
+videoShowcase:
+  eyebrow: "What is an AI Agent?"
+  title: "Scaling Beyond the Human Ceiling"
+  description: "See how AI agents run your operations, book customers, and draft invoices on autopilot."
+cta:
+  eyebrow: "Audit Your Operations"
+  title: "Ready to design your agent?"
+  description: "Audit your manual workflows and design custom AI operations tailored to your business rules."
+  buttonText: "Book Strategy Call"
+  buttonLink: "/contact-us"
+  badges:
+    - "Save Time"
+    - "Reduce Costs"
+    - "Scale Operations"
 ---
-import AboutSection from "@/components/AboutSection/AboutSection.astro";
-
-<AboutSection
-  eyebrow="AI Agents"
-  statement="AI agents that remove repetitive work and help your team move faster."
-  leftText="We design AI systems around the processes that slow your team down."
-  rightText="Our mission is to make automation feel practical, reliable, and easy to use in the real business."
-  ctaText="Explore Our Story"
-  ctaLink="/about-us"
-  stickyHeight="220svh"
-  videoSrc="/project-images-and-videos/koiroofingandsolar.com/videos/koiroofingandsolar.com-desktop.mp4"
-  videoWrapperClass="bg-black"
-  showStats={false}
-/>

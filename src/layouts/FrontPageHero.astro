@@ -105,7 +105,7 @@ const {
           live up by the headline; the stats box is hidden on mobile and
           reappears in the About section). */}
       <div class="flex flex-col items-end gap-6 text-right lg:hidden">
-        <div class="flex flex-wrap items-center justify-end gap-6">
+        <div class="flex flex-col items-end gap-4">
           <Button
             variant="primary"
             href={ctaLink}
@@ -115,7 +115,7 @@ const {
           >
             {ctaText}
           </Button>
-          <Button variant="underline" href="/projects" className="!self-center" client:load>
+          <Button variant="underline" href="/projects" className="!self-end" client:load>
             View Our Work
           </Button>
         </div>
