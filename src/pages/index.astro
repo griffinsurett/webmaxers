@@ -5,7 +5,6 @@ import { siteData } from "@/content/siteData";
 import FrontPageHero from "@/layouts/FrontPageHero.astro";
 import AboutSection from "@/components/AboutSection/AboutSection.astro";
 import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
-import Marquee from "@/components/Marquee.astro";
 import PortfolioSection from "@/components/Portfolio/PortfolioSection.astro";
 import CurtainStack from "@/components/CurtainStack/CurtainStack.astro";
 import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
@@ -65,19 +64,20 @@ const latestPosts = query("blog")
       <!-- Solutions: pinned stacking-card deck (cards fold up on scroll). -->
       <SolutionsScroll />
 
-      <!-- About Section (includes both top reveal and bottom content) -->
+      {/* About Section — owns the whole sequence: animated statement → rolling
+          logo → bottom content with the centred fire image → marquee scrolling
+          over it → that same image scaling into a full-bleed background. */}
       <AboutSection
         statement={`${siteData.title} is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology.`}
         leftText="We design for longevity, clarity first, craft always, built to scale."
         rightText="Our mission is to make technology feel human by designing digital products that are intuitive, purposeful, and meaningful to people."
         ctaText="Explore Our Story"
         ctaLink="/about-us"
+        expandEyebrow="The work"
+        expandHeadline="Built to be felt."
+        expandBody="Every project is engineered for clarity, scale, and momentum."
         showStats
       />
-      <!-- </div> -->
-
-      <!-- Marquee: full-bleed, manages its own horizontal escape -->
-      <Marquee />
     </div>
 
     {
