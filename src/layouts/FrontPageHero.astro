@@ -58,13 +58,29 @@ const {
           {bodyText || statDescription}
         </p>
 
-        {/* Mobile only: testimonial circles under the text. */}
+        {/* Mobile: CTAs above the testimonial circles, left-aligned. */}
+        <div class="flex flex-col items-start gap-4 py-6 lg:hidden">
+          <Button
+            variant="primary"
+            href={ctaLink}
+            rightIcon="lu:arrow-up-right"
+            className="rounded-xl px-6 py-3.5 eyebrow-text font-medium flex items-center gap-2 group shadow-md [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-[0.16rem] hover:[&_svg]:-translate-y-[0.16rem]"
+            client:load
+          >
+            {ctaText}
+          </Button>
+          <Button variant="underline" href="/projects" className="!self-start" client:load>
+            View Our Work
+          </Button>
+        </div>
+
+        {/* Mobile only: testimonial circles under the CTAs. */}
         <ContentRenderer
           query={query("testimonials")
             .where((entry) => entry.data.featured === true)
             .limit(3)}
           variant="TestimonialCirclesVariant"
-          className="lg:hidden"
+          className="lg:hidden [&_.text-2xl]:text-3xl [&_.support-text]:text-base"
           counterStart={10}
           counterEnd={100}
           counterDuration={1800}
@@ -72,8 +88,7 @@ const {
           counterLabel="Happy Clients"
         />
 
-        {/* CTAs — DESKTOP: under the headline (top-left). MOBILE: hidden here and
-            shown in the bottom group instead. */}
+        {/* CTAs — DESKTOP: under the headline (top-left). MOBILE: shown above. */}
         <div class="hidden lg:flex flex-wrap items-center gap-6 mt-8">
           <Button
             variant="primary"
@@ -98,29 +113,10 @@ const {
     </div>
 
     <!-- Bottom row — pinned to the bottom of the hero by the parent's
-         justify-between. Mobile: CTA + circles group (left) above the scroll
-         arrow; stats hidden. lg+: [circles] [scroll arrow centred] [stat box]. -->
+         justify-between. Mobile: only the scroll arrow (CTAs + circles live up
+         under the headline; stats hidden). lg+: [circles] [scroll arrow centred]
+         [stat box]. -->
     <div class="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between w-full">
-      {/* MOBILE-only group: CTAs + circles at the bottom-left (the desktop CTAs
-          live up by the headline; the stats box is hidden on mobile and
-          reappears in the About section). */}
-      <div class="flex flex-col items-end gap-6 text-right lg:hidden">
-        <div class="flex flex-col items-end gap-4">
-          <Button
-            variant="primary"
-            href={ctaLink}
-            rightIcon="lu:arrow-up-right"
-            className="rounded-xl px-6 py-3.5 eyebrow-text font-medium flex items-center gap-2 group shadow-md [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-[0.16rem] hover:[&_svg]:-translate-y-[0.16rem]"
-            client:load
-          >
-            {ctaText}
-          </Button>
-          <Button variant="underline" href="/projects" className="!self-end" client:load>
-            View Our Work
-          </Button>
-        </div>
-      </div>
-
       <!-- Desktop only: testimonial circles pinned bottom-left. -->
       <ContentRenderer
         query={query("testimonials")
