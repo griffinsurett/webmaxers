@@ -65,19 +65,21 @@ const latestPosts = query("blog")
       <SolutionsScroll />
 
       {/* About Section — owns the whole sequence: animated statement → rolling
-          logo → bottom content with the centred fire image → marquee scrolling
-          over it → that same image scaling into a full-bleed background. */}
+          logo → bottom content with the centred image → marquee scrolling over
+          it → that same image scaling into a full-bleed background. The
+          testimonials carousel is revealed over that full-bleed image. */}
       <AboutSection
         statement={`${siteData.title} is an independent digital studio crafting meaningful brand experiences through strategy, design, and technology.`}
         leftText="We design for longevity, clarity first, craft always, built to scale."
         rightText="Our mission is to make technology feel human by designing digital products that are intuitive, purposeful, and meaningful to people."
         ctaText="Explore Our Story"
         ctaLink="/about-us"
-        expandEyebrow="The work"
-        expandHeadline="Built to be felt."
-        expandBody="Every project is engineered for clarity, scale, and momentum."
         showStats
-      />
+      >
+        <div slot="expand-content" id="logo-scene" class="w-full">
+          <TestimonialCarousel />
+        </div>
+      </AboutSection>
     </div>
 
     {
@@ -110,11 +112,6 @@ const latestPosts = query("blog")
       </div>
     </CurtainStack>
 
-    {/* Testimonials — now a normal 2D section (no own background), scrolling in
-        flow over the persistent 3D-logo bg after the pinned curtain releases. */}
-    <section id="logo-scene">
-      <TestimonialCarousel />
-    </section>
   </main>
 
   {/* Footer — plain 2D, scrolls normally after the curtain releases. */}

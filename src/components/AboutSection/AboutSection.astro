@@ -9,7 +9,7 @@ import { query, sortByOrder } from "@/utils/query";
 import { siteData } from "@/content/siteData";
 import Marquee from "@/components/Marquee.astro";
 import aboutPortraitBw from "@/assets/about_portrait_bw.png";
-import aboutExpandImage from "@/assets/fire-pic.jpg";
+import aboutExpandImage from "@/assets/meoncomp.jpg";
 
 interface Props {
   eyebrow?: string;
@@ -51,11 +51,15 @@ const {
   expandHeadline,
   expandBody,
   expandHeight = "300svh",
-  expandOverlayOpacity = 0.45,
+  expandOverlayOpacity = 0.85,
   showStats = false,
 } = Astro.props;
 
 const words = splitTextIntoAnimatedWords(statement);
+
+// When a caller provides the `expand-content` slot, it takes precedence over the
+// eyebrow/headline/body copy as the overlay revealed on the full-bleed image.
+const hasExpandSlot = Astro.slots.has("expand-content");
 ---
 
 <div class="flex flex-col gap-24 md:gap-36 lg:gap-48">
@@ -163,9 +167,15 @@ const words = splitTextIntoAnimatedWords(statement);
         <div class="about-expand-overlay" aria-hidden="true"></div>
       </figure>
 
-      {(expandEyebrow || expandHeadline || expandBody) && (
-        <div class="about-expand-content section-container" data-about-expand-content>
-          {expandEyebrow ? (
+      {/* Overlay revealed once the image is full-bleed. A caller can pass an
+          `expand-content` slot (e.g. the testimonials carousel) to render any
+          custom content over the background; otherwise it falls back to the
+          eyebrow/headline/body copy props. */}
+      {(hasExpandSlot || expandEyebrow || expandHeadline || expandBody) && (
+        <div class="about-expand-content" data-about-expand-content>
+          {hasExpandSlot ? (
+            <slot name="expand-content" />
+          ) : expandEyebrow ? (
             <EyebrowSection eyebrow={expandEyebrow} center>
               {expandHeadline && (
                 <h2 class="text-center text-[clamp(2rem,7vw,5rem)] font-light leading-[1.05] text-white">
@@ -363,7 +373,6 @@ const words = splitTextIntoAnimatedWords(statement);
     top: var(--axp-y, 50%);
     width: var(--axp-w, 60%);
     height: var(--axp-h, 60%);
-    border-radius: calc(clamp(0.75rem, 2vw, 1.5rem) * (1 - var(--axp-progress, 0)));
     will-change: left, top, width, height;
   }
 
@@ -374,15 +383,20 @@ const words = splitTextIntoAnimatedWords(statement);
     display: block;
   }
 
+  /* Overlay tints toward the page bg colour (dark in dark mode → dark dim; light
+     in light mode → light dim) so legibility holds in both themes. Fades in with
+     the scale (--axp-progress). */
   .about-expand-overlay {
     position: absolute;
     inset: 0;
-    background: #000;
+    background: var(--color-bg);
     opacity: calc(var(--axp-overlay) * var(--axp-progress, 0));
     pointer-events: none;
   }
 
-  /* Reveal copy over the full-bleed image — fades/rises in at the end. */
+  /* Reveal copy/content over the full-bleed image — fades/rises in at the end.
+     The wrapper stays click-through (so empty areas don't trap scroll), but its
+     children become interactive once revealed (e.g. the testimonials controls). */
   .about-expand-content {
     position: absolute;
     inset: 0;
@@ -393,6 +407,9 @@ const words = splitTextIntoAnimatedWords(statement);
     opacity: var(--axp-content, 0);
     transform: translateY(calc((1 - var(--axp-content, 0)) * 2rem));
     will-change: opacity, transform;
+  }
+  .about-expand-content > :global(*) {
+    pointer-events: auto;
   }
 
   /* Flow content (grid + marquee) rides ABOVE the pinned image. Pulled up by one
