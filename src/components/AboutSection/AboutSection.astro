@@ -384,13 +384,14 @@ const hasExpandSlot = Astro.slots.has("expand-content");
   }
 
   /* Overlay tints toward the page bg colour (dark in dark mode → dark dim; light
-     in light mode → light dim) so legibility holds in both themes. Fades in with
-     the scale (--axp-progress). */
+     in light mode → light dim) so legibility holds in both themes. Driven by
+     --axp-dim, which ramps in EARLY (while the marquee scrolls over the resting
+     image) so the marquee text stays readable — not waiting for the morph. */
   .about-expand-overlay {
     position: absolute;
     inset: 0;
     background: var(--color-bg);
-    opacity: calc(var(--axp-overlay) * var(--axp-progress, 0));
+    opacity: calc(var(--axp-overlay) * var(--axp-dim, 0));
     pointer-events: none;
   }
 
@@ -675,6 +676,13 @@ const hasExpandSlot = Astro.slots.has("expand-content");
         media.style.setProperty("--axp-w", `${w}px`);
         media.style.setProperty("--axp-h", `${h}px`);
         region.style.setProperty("--axp-progress", e.toFixed(4));
+        // Dim overlay — ramps in EARLY (while the marquee is still scrolling over
+        // the resting image, before the morph) so the marquee text stays
+        // readable against the photo. Reaches full dim by the time the morph
+        // begins (START), independent of the slower geometry progress.
+        const DIM_END = START; // fully dimmed once the morph kicks off
+        const dim = Math.max(0, Math.min(p / DIM_END, 1));
+        region.style.setProperty("--axp-dim", dim.toFixed(4));
         // Overlay copy fades in over the final 35% of the morph.
         const content = Math.max(0, Math.min((m - 0.65) / 0.35, 1));
         region.style.setProperty("--axp-content", content.toFixed(4));
