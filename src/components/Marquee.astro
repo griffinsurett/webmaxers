@@ -1,8 +1,23 @@
 ---
 // src/components/Marquee.astro
+/**
+ * Marquee — decorative scrolling word band.
+ *
+ * Prefer passing a `query` so the words come from a content collection and stay
+ * in sync with the site's actual content. `items` remains for one-off cases
+ * where the words aren't collection-backed.
+ *
+ * The band is aria-hidden (purely decorative), so the text is never announced —
+ * whatever collection it renders, it carries no accessibility or SEO weight.
+ */
 import LogoMark from "@/components/Logo/LogoMark.astro";
 
 interface Props {
+  /** A query builder — its entries' titles become the marquee words. */
+  query?: { all: () => Promise<any[]> };
+  /** Field read off each entry for the word. Defaults to `title`. */
+  field?: string;
+  /** Explicit words, when the source isn't a collection. Wins over `query`. */
   items?: string[];
   speed?: number; // seconds for one full loop
   logoSize?: number;
@@ -10,25 +25,37 @@ interface Props {
 }
 
 const {
-  items = [
-    "DESIGN",
-    "DEVELOP",
-    "DEPLOY",
-    "STRATEGY",
-    "BRANDING",
-    "PERFORMANCE",
-    "SCALE",
-    "RESULTS",
-  ],
+  query,
+  field = "title",
+  items,
   speed = 20,
   logoSize = 40,
   class: className = "",
-} = Astro.props;
+} = Astro.props as Props;
+
+// Explicit items win; otherwise resolve the query. Entries missing the field are
+// dropped so a half-filled collection can't emit blank gaps in the band.
+const resolved: string[] = items?.length
+  ? items
+  : query
+    ? (await query.all())
+        .map((entry) => entry?.data?.[field])
+        .filter((value): value is string => typeof value === "string" && value.length > 0)
+    : [];
+
+// A short list scrolls past too quickly to read as a continuous band, so repeat
+// it until there's enough to fill the track before the seam duplication below.
+const MIN_WORDS = 8;
+const filled =
+  resolved.length > 0 && resolved.length < MIN_WORDS
+    ? Array.from({ length: Math.ceil(MIN_WORDS / resolved.length) }, () => resolved).flat()
+    : resolved;
 
 // Duplicate so the seam is invisible
-const repeated = [...items, ...items];
+const repeated = [...filled, ...filled];
 ---
 
+{repeated.length > 0 && (
 <div
   class={`marquee-root overflow-hidden w-full py-32 lg:py-48 ${className}`}
   aria-hidden="true"
@@ -47,6 +74,7 @@ const repeated = [...items, ...items];
     ))}
   </div>
 </div>
+)}
 
 <style>
   @keyframes marquee {

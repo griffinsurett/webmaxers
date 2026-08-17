@@ -8,6 +8,8 @@ import { roots, related } from "@/utils/query/snippets";
 import FrontPageHero from "@/layouts/heroes/FrontPageHero.astro";
 import HomeProblemSolutionIntro from "@/layouts/sections/HomeProblemSolutionIntro.astro";
 import HomeSolutionBridge from "@/layouts/sections/HomeSolutionBridge.astro";
+import HomeOfferSection from "@/layouts/sections/HomeOfferSection.astro";
+import HomeFounderCtaSection from "@/layouts/sections/HomeFounderCtaSection.astro";
 // TrustPanel removed from the homepage — see the commented render below.
 // import TrustPanel from "@/layouts/sections/TrustPanel.astro";
 import AboutSection from "@/components/AboutSection/AboutSection.astro";
@@ -44,16 +46,10 @@ const heroDescription =
       class="block lg:min-h-screen inner-section"
       {...animationProps("fade-in-up", { once: false, threshold: 0.2 })} -->
     
-      <ContentRenderer
-        query={byTag("capabilities", "featured").orderBy(sortByOrder())}
-        variant="CardVariant"
-        id="capabilities"
-        title="What We Do"
-        columns={3}
-        gap="md"
-        showHeadingSection={false}
-        showButtonSection={false}
-      />
+      {/* OFFER — the primary selling section: what we actually do and why it's
+          more than "a website". Replaces the 3 featured-capability cards, which
+          didn't carry enough of the pitch this high on the page. */}
+      <HomeOfferSection />
       <!-- <ContentRenderer
         query={byTag("projects", "screen").orderBy(sortByOrder())}
         variant="PortfolioScreenVariant"
@@ -121,5 +117,9 @@ const heroDescription =
         before: "Stay Informed. Read Our Latest Insights.",
       }}
     />
+
+    {/* FOUNDER CTA — closing pitch before the footer: who's behind the work,
+        over a full-bleed photo. */}
+    <HomeFounderCtaSection />
   </div>
 </SiteLayout>

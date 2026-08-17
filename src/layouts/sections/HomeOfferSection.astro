@@ -1,0 +1,176 @@
+---
+// src/layouts/sections/HomeOfferSection.astro
+/**
+ * HomeOfferSection — the primary selling section on the homepage.
+ *
+ * Sits between the hero and the About section and does the heavy lifting of
+ * explaining the offer: what we actually do, and why it's more than "a website".
+ *
+ * Wireframe (desktop, 2 columns):
+ *   ┌──────────────────────────┬───────────────────┐
+ *   │ headline                 │  media (photo)    │
+ *   │ intro paragraphs         │                   │
+ *   │ points label             ├───────────────────┤
+ *   │ ✓ point                  │  closing text     │
+ *   │ ✓ point                  │                   │
+ *   │ ✓ point                  │  [ CTA ]          │
+ *   └──────────────────────────┴───────────────────┘
+ *
+ * The points use the shared `CheckList` component — the same circled-checkmark
+ * treatment as the front-page hero, so the two lists stay visually identical.
+ * On mobile everything collapses to one column and the media moves below the
+ * intro copy so the headline still leads.
+ *
+ * Copy lives in props (static for now). Each prop maps 1:1 to a future content
+ * collection field, so this can move to a `ContentRenderer` + collection later
+ * without changing the markup.
+ *
+ * No `id` — nothing links to this section, and the homepage anchor for the
+ * capabilities cards it replaced is gone. Add one only if a menu item needs it.
+ */
+import Section from "@/components/Section.astro";
+import CheckList from "@/components/CheckList.astro";
+import CtaWithProof from "@/components/CtaWithProof.astro";
+import { Image } from "astro:assets";
+import { contactCtaData } from "@/content/siteData";
+import offerMediaImage from "@/assets/meoncomp.png";
+
+interface OfferPoint {
+  /** Single sentence — phrased as something we do for the client. */
+  text: string;
+}
+
+interface Props {
+  heading?: string;
+  /** Lead paragraphs above the points grid. */
+  intro?: string[];
+  /** Small label introducing the points grid. */
+  pointsLabel?: string;
+  points?: OfferPoint[];
+  /** Media shown in the right column. */
+  image?: ImageMetadata;
+  imageAlt?: string;
+  /** Paragraph under the media, before the CTA. */
+  closing?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  /** External CTAs (Calendly) need target/rel. */
+  ctaExternal?: boolean;
+}
+
+const {
+  heading = "What if your website did the selling before you picked up the phone?",
+  intro = [
+    "Right now you’re probably doing that work yourself — explaining what you do, why you’re worth it, and how you’re different from the cheaper guy down the road. Your website should be handling most of that before anyone calls you.",
+    "That means a site that shows people you understand their problem, makes it obvious you can solve it, and gives them an easy reason to trust you. By the time they reach out, they’re already sold — you’re just confirming details.",
+  ],
+  pointsLabel = "Here’s how we make that happen",
+  points = [
+    {
+      text: "Messaging that names the problem your customers actually have, so they know they’re in the right place",
+    },
+    {
+      text: "Design that makes you look like the established choice, not the risky one",
+    },
+    {
+      text: "Proof up front — real work, real reviews — so you’re not the one who has to claim you’re good",
+    },
+    {
+      text: "Search-ready structure so you get found by people already looking to buy, on Google and in AI answers",
+    },
+    {
+      text: "Pages that load fast and make the next step obvious, so nobody leaves before they contact you",
+    },
+  ],
+  image = offerMediaImage,
+  imageAlt = "Griffin working on a client website from a café",
+  closing = "The result is a website that works while you don’t — bringing in people who already understand what you do, already trust you, and are ready to talk.",
+  ctaText = contactCtaData.text,
+  ctaLink = contactCtaData.link,
+  ctaExternal = contactCtaData.external ?? false,
+} = Astro.props as Props;
+
+// The reference lays the points out column-major (top-left, top-right, then
+// bottom-left, bottom-right). CSS grid fills row-major, which matches reading
+// order and keeps the DOM order sensible for screen readers — so we let the
+// grid flow naturally rather than reordering.
+---
+
+<Section
+  class="outer-section"
+  animate="fade-in-up"
+  animateThreshold={0.15}
+>
+  <div class="inner-section">
+    <div class="grid grid-cols-1 gap-x-16 gap-y-10 lg:grid-cols-2 lg:gap-x-20">
+      {/* ── Left column: headline, intro, points ─────────────────── */}
+      <div class="flex flex-col">
+        <h2
+          class="m-0 max-w-[20ch] text-[clamp(2.1rem,3.6vw,3.4rem)] font-light leading-[1.05] tracking-[-0.03em] text-heading text-balance"
+        >
+          {heading}
+        </h2>
+
+        <div class="mt-8 flex flex-col gap-6">
+          {intro.map((paragraph) => (
+            <p class="m-0 max-w-[46ch] text-[1.05rem] leading-[1.6] text-text/85">
+              {paragraph}
+            </p>
+          ))}
+        </div>
+
+        {/* Points — 2-col rule-separated grid, with the site's standard circled
+            checkmark (shared with the front-page hero via CheckList). */}
+        <p class="mt-10 mb-0 font-semibold text-heading">{pointsLabel}</p>
+
+        <CheckList
+          items={points.map((point) => point.text)}
+          id="offer-points"
+          label={pointsLabel}
+          layout="grid"
+          class="offer-points mt-5"
+          itemClass="text-[1.02rem] leading-[1.55] text-text/85"
+        />
+      </div>
+
+      {/* ── Right column: media, closing copy, CTA ─────────────────
+          Sticky on desktop (the shared `sticky-section` utility) so the photo
+          and CTA stay in view while the longer left column scrolls past.
+          `lg:self-start` is required — grid items stretch to the row height by
+          default, which makes a sticky child have nothing to slide within. */}
+      <div class="flex flex-col sticky-section lg:self-start">
+        {/* 4/3 — the source's native ratio (1450×1085), so nothing is cropped.
+            A 16/9 crop here left the right column ~400px shorter than the left,
+            which read as a big empty gap under the CTA. The taller ratio fills
+            that space and keeps the whole frame. */}
+        <Image
+          src={image}
+          alt={imageAlt}
+          widths={[640, 960, 1280]}
+          sizes="(min-width: 1024px) 40vw, 90vw"
+          format="webp"
+          quality={72}
+          loading="lazy"
+          decoding="async"
+          class="aspect-4/3 w-full object-cover shadow-2xl"
+        />
+
+        {/* Larger top gap than the CTA below it: the closing line is the payoff
+            of the points on the left, so it gets room to breathe rather than
+            sitting tight under the photo. */}
+        <p
+          class="mt-10 max-w-[46ch] text-[1.05rem] leading-[1.6] text-text/85 lg:mt-12"
+        >
+          {closing}
+        </p>
+
+        {/* Same CTA + proof cluster as the hero and the founder CTA. */}
+        <CtaWithProof
+          primaryCTA={{ text: ctaText, link: ctaLink, external: ctaExternal }}
+          id="offer-testimonial-circles"
+          class="mt-8 lg:mt-10"
+        />
+      </div>
+    </div>
+  </div>
+</Section>

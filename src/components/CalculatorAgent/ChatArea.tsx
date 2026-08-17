@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { FaArrowRight, FaArrowLeft, FaWandMagicSparkles, FaCheck } from 'react-icons/fa6';
 import { FiLayout } from 'react-icons/fi';
+import { US_STATES } from '@/components/Form/usStates';
 
 interface Question {
   id: string;
   label: string;
   description?: string;
-  type: 'textarea' | 'dropdown';
+  type: 'textarea' | 'dropdown' | 'location';
   options?: string[];
+  placeholder?: string;
 }
 
 const QUESTIONS: Question[] = [
@@ -21,8 +23,8 @@ const QUESTIONS: Question[] = [
   {
     id: 'q2',
     label: 'Where in the US is your business located?',
-    description: 'Enter your city and state (e.g., Austin, TX). We currently only serve businesses in the United States.',
-    type: 'textarea'
+    description: 'We currently only serve businesses in the United States.',
+    type: 'location'
   },
   {
     id: 'q3',
@@ -91,7 +93,8 @@ const QUESTIONS: Question[] = [
     id: 'q1',
     label: 'Tell us about your business.',
     description: 'What do you do, and what is the primary goal of your new website?',
-    type: 'textarea'
+    type: 'textarea',
+    placeholder: 'E.g., We are a local landscaping company looking to get more quote requests online...'
   }
 ];
 
@@ -105,6 +108,8 @@ interface ChatAreaProps {
 
 export const ChatArea: React.FC<ChatAreaProps> = ({ onGenerate, step, setStep, answers, setAnswers }) => {
   const [currentTextValue, setCurrentTextValue] = useState('');
+  const [city, setCity] = useState('');
+  const [stateCode, setStateCode] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [emailError, setEmailError] = useState('');
 
@@ -130,7 +135,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onGenerate, step, setStep, a
       if (!currentTextValue.trim()) return;
       setAnswers(prev => ({ ...prev, [currentQ.id]: currentTextValue }));
     }
-    
+
+    if (currentQ?.type === 'location') {
+      if (!city.trim() || !stateCode) return;
+      // Stored as "City, ST" — the shape the payload mapper already expects.
+      setAnswers(prev => ({ ...prev, [currentQ.id]: `${city.trim()}, ${stateCode}` }));
+    }
+
     if (step < QUESTIONS.length - 1) {
       setStep(step + 1);
     } else {
@@ -145,6 +156,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onGenerate, step, setStep, a
     const prevQ = QUESTIONS[prevStep];
     // Restore any previously typed text so going back doesn't discard the answer.
     setCurrentTextValue(prevQ?.type === 'textarea' ? answers[prevQ.id] ?? '' : '');
+    if (prevQ?.type === 'location') {
+      const [savedCity = '', savedState = ''] = (answers[prevQ.id] ?? '')
+        .split(',')
+        .map(part => part.trim());
+      setCity(savedCity);
+      setStateCode(savedState);
+    }
     setStep(prevStep);
   };
 
@@ -238,12 +256,72 @@ export const ChatArea: React.FC<ChatAreaProps> = ({ onGenerate, step, setStep, a
               <p className="text-[var(--color-muted)] text-lg mb-8">{currentQ.description}</p>
             )}
 
-            {currentQ.type === 'textarea' ? (
+            {currentQ.type === 'location' ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_15rem] gap-4">
+                  <div>
+                    <label
+                      htmlFor="calc-city"
+                      className="block mb-2 text-sm font-medium text-[var(--color-muted)]"
+                    >
+                      City
+                    </label>
+                    <input
+                      id="calc-city"
+                      autoFocus
+                      type="text"
+                      autoComplete="address-level2"
+                      className="w-full bg-[var(--color-bg2)] border-2 border-[var(--color-border)] focus:border-[var(--color-primary)] rounded-2xl px-6 py-4 text-lg text-[var(--color-heading)] placeholder:text-[var(--color-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--color-primary)]/20 transition-all shadow-sm"
+                      placeholder="Freehold"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleNext();
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="calc-state"
+                      className="block mb-2 text-sm font-medium text-[var(--color-muted)]"
+                    >
+                      State
+                    </label>
+                    <select
+                      id="calc-state"
+                      autoComplete="address-level1"
+                      value={stateCode}
+                      onChange={(e) => setStateCode(e.target.value)}
+                      className={`w-full bg-[var(--color-bg2)] border-2 border-[var(--color-border)] focus:border-[var(--color-primary)] rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-4 focus:ring-[var(--color-primary)]/20 transition-all shadow-sm cursor-pointer ${
+                        stateCode ? 'text-[var(--color-heading)]' : 'text-[var(--color-muted)]'
+                      }`}
+                    >
+                      <option value="">Select…</option>
+                      {US_STATES.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.value} — {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <button
+                  onClick={handleNext}
+                  disabled={!city.trim() || !stateCode}
+                  className="w-full flex justify-center items-center gap-2 py-4 rounded-xl font-bold text-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white hover:scale-[1.02] shadow-lg shadow-[var(--color-primary)]/20"
+                >
+                  Continue <FaArrowRight />
+                </button>
+              </div>
+            ) : currentQ.type === 'textarea' ? (
               <div className="space-y-6">
                 <textarea
                   autoFocus
                   className="w-full bg-[var(--color-bg2)] border-2 border-[var(--color-border)] focus:border-[var(--color-primary)] rounded-2xl p-6 text-lg text-[var(--color-heading)] placeholder:text-[var(--color-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--color-primary)]/20 transition-all min-h-[160px] resize-none shadow-sm"
-                  placeholder="E.g., We are a local landscaping company looking to get more quote requests online..."
+                  placeholder={currentQ.placeholder}
                   value={currentTextValue}
                   onChange={(e) => setCurrentTextValue(e.target.value)}
                   onKeyDown={(e) => {

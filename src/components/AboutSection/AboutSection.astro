@@ -7,7 +7,10 @@ import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro"
 import { Image } from "astro:assets";
 import { siteData } from "@/content/siteData";
 import Marquee from "@/components/Marquee.astro";
-import aboutExpandImage from "@/assets/meoncomp.jpg";
+import { sortByOrder } from "@/utils/query";
+import { byTag } from "@/utils/query/snippets";
+import aboutExpandImage from "@/assets/meoncomp.png";
+import aboutPortraitImage from "@/assets/me-on-computer-office.png";
 
 interface Props {
   /** Optional id on the section root — used as a scroll anchor (e.g. menu "About" → /#about). */
@@ -128,11 +131,13 @@ const hasExpandSlot = Astro.slots.has("expand-content");
         )}
 
         {/* Corner image — pinned to the BOTTOM-RIGHT of the frame, mirroring the
-            bottom-left stats. Uses the "me on the computer" photo (meoncomp).
-            Optimized at build via astro:assets (webp). */}
+            bottom-left stats. Uses the office computer photo
+            (me-on-computer-office.png) — distinct from the expand image above.
+            Source PNG is opaque RGB (no alpha), so astro:assets re-encodes it to
+            lossy webp at build: 1.9MB → 15kB/34kB at 1x/2x. */}
         {showStats && (
           <Image
-            src={aboutExpandImage}
+            src={aboutPortraitImage}
             alt=""
             width={420}
             densities={[1, 2]}
@@ -270,9 +275,11 @@ const hasExpandSlot = Astro.slots.has("expand-content");
         </div>
       </section>
 
-      <!-- Marquee: scrolls over the pinned image as it expands behind it. -->
+      <!-- Marquee: scrolls over the pinned image as it expands behind it.
+           Words come from the capabilities collection, so the band always
+           reflects what we actually offer instead of a hardcoded list. -->
       <div class="about-expand-marquee">
-        <Marquee />
+        <Marquee query={byTag("capabilities", "featured").orderBy(sortByOrder())} />
       </div>
     </div>
   </div>

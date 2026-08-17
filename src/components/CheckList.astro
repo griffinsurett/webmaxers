@@ -1,0 +1,128 @@
+---
+// src/components/CheckList.astro
+/**
+ * CheckList — the site's standard checked-item list.
+ *
+ * A circled checkmark (gradient-stroked, faded-bg pill) followed by text. This
+ * is the treatment introduced on the front-page hero; it lives here so every
+ * caller shares one definition instead of re-inlining the SVG.
+ *
+ * The gradient is defined once per instance in a zero-size <svg><defs>, because
+ * an SVG gradient can only be referenced by id. That id must be unique per
+ * instance — two lists on the same page with the same id would make the second
+ * one reference the first one's gradient. Callers pass `id` when a page renders
+ * more than one list; otherwise a random suffix keeps them distinct.
+ */
+interface Props {
+  /** The list items. */
+  items: string[];
+  /** Unique-per-page id seed for the gradient. */
+  id?: string;
+  /**
+   * "stack" — a plain vertical list (the hero treatment).
+   * "grid"  — 2 columns on ≥sm, each cell separated by a top rule, so the block
+   *           reads as a bordered table. Rules use the shared `section-rule-t`
+   *           utility so the weight matches the rest of the site.
+   */
+  layout?: "stack" | "grid";
+  /** Extra classes on the <ul>. */
+  class?: string;
+  /** Extra classes on each item's text span. */
+  itemClass?: string;
+  /** Accessible label, when the list needs naming. */
+  label?: string;
+}
+
+const {
+  items,
+  id = `checklist-${Math.random().toString(36).slice(2, 8)}`,
+  layout = "stack",
+  class: className = "",
+  itemClass = "text-text text-base lg:text-lg leading-relaxed",
+  label,
+} = Astro.props as Props;
+
+const gradientId = `${id}-check-gradient`;
+const isGrid = layout === "grid";
+---
+
+{/* Zero-size SVG holding only the gradient def this list's checkmarks stroke with. */}
+<svg
+  aria-hidden="true"
+  width="0"
+  height="0"
+  focusable="false"
+  class="absolute pointer-events-none w-0 h-0 overflow-hidden"
+>
+  <defs>
+    <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="currentColor" class="text-primary-100" />
+      <stop offset="55%" stop-color="currentColor" class="text-primary" />
+      <stop offset="100%" stop-color="currentColor" class="text-primary-800" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<ul
+  class:list={[
+    "m-0 p-0",
+    isGrid
+      ? "checklist-grid grid grid-cols-1 gap-x-10 sm:grid-cols-2"
+      : "space-y-2 lg:space-y-3",
+    className,
+  ]}
+  aria-label={label}
+>
+  {items.map((item) => (
+    /* items-start (not items-center) so the mark stays on the FIRST line when an
+       item wraps — centring it against a 2–3 line item leaves it floating. The
+       small top margin optically centres it against that first line. */
+    <li
+      class:list={[
+        "list-none flex items-start gap-1.5",
+        isGrid && "section-rule-t py-5",
+      ]}
+    >
+      <span
+        class="faded-bg mt-0.5 p-1 rounded-full flex items-center justify-center text-accent shrink-0"
+      >
+        <svg
+          class="w-3 h-3 lg:w-4 lg:h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={`url(#${gradientId})`}
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </span>
+      <span class={itemClass}>{item}</span>
+    </li>
+  ))}
+</ul>
+
+<style>
+  /* Grid layout only. Each cell owns a top rule; killing the row gap pulls the
+     two columns' rules into one continuous line across the block. */
+  .checklist-grid {
+    row-gap: 0;
+  }
+
+  /* A 2-col grid with an odd item count leaves a lone cell on the last row.
+     Give it a bottom rule so the block still closes cleanly. */
+  @media (min-width: 640px) {
+    .checklist-grid > li:nth-last-child(1):nth-child(odd) {
+      border-bottom: 1px solid var(--color-border);
+    }
+  }
+
+  /* Single column: always close the final item. */
+  @media (max-width: 639px) {
+    .checklist-grid > li:last-child {
+      border-bottom: 1px solid var(--color-border);
+    }
+  }
+</style>

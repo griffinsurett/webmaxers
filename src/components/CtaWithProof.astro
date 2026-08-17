@@ -1,0 +1,95 @@
+---
+// src/components/CtaWithProof.astro
+/**
+ * CtaWithProof — the site's CTA cluster: primary (and optional secondary) button
+ * alongside the testimonial circles + "100+ Happy Clients" counter.
+ *
+ * Introduced on the front-page hero and shared from here so every placement
+ * looks and behaves identically. On narrow widths the counter sits above the
+ * buttons; from `xl` it moves to the right of them (the hero's original order
+ * swap, preserved via order-* classes).
+ *
+ * The counter keeps TestimonialCirclesCounterVariant's default link
+ * (/#testimonials-home) unless `proofLink` is passed, so every instance points
+ * at the same testimonials carousel.
+ */
+import Button from "@/components/Button/Button";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query } from "@/utils/query";
+
+interface CTA {
+  text: string;
+  link: string;
+  rightIcon?: string;
+  /** Opens in a new tab (Calendly and other off-site links). */
+  external?: boolean;
+}
+
+interface Props {
+  primaryCTA: CTA;
+  secondaryCTA?: CTA;
+  /** Unique per page — the counter renders an id-bearing block. */
+  id: string;
+  /** Overrides the counter's default /#testimonials-home target. */
+  proofLink?: string;
+  /** Extra classes on the wrapper. */
+  class?: string;
+}
+
+const {
+  primaryCTA,
+  secondaryCTA,
+  id,
+  proofLink,
+  class: className = "",
+} = Astro.props as Props;
+
+/** Off-site links need target/rel; internal ones must not have them. */
+const externalAttrs = (cta: CTA) =>
+  cta.external ? { target: "_blank", rel: "noopener noreferrer" } : {};
+---
+
+<div
+  class:list={[
+    "flex flex-col items-start gap-3 xl:flex-row xl:items-center xl:w-full xl:gap-5",
+    className,
+  ]}
+>
+  <ContentRenderer
+    query={query("testimonials")
+      .where((entry) => entry.data.featured === true)
+      .limit(5)}
+    variant="TestimonialCirclesCounterVariant"
+    className="order-1 px-0 xl:order-2"
+    id={id}
+    {...(proofLink ? { link: proofLink } : {})}
+  />
+
+  <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap order-2 xl:order-1">
+    <Button
+      href={primaryCTA.link}
+      variant="primary"
+      size="lg"
+      rightIcon={primaryCTA.rightIcon ?? "lu:arrow-up-right"}
+      className="!w-auto whitespace-nowrap"
+      buttonWrapperClasses="!w-auto justify-start"
+      {...externalAttrs(primaryCTA)}
+    >
+      {primaryCTA.text}
+    </Button>
+
+    {secondaryCTA && (
+      <Button
+        href={secondaryCTA.link}
+        variant="secondary"
+        size="lg"
+        rightIcon={secondaryCTA.rightIcon ?? "lu:arrow-up-right"}
+        className="!w-auto whitespace-nowrap"
+        buttonWrapperClasses="!w-auto justify-start"
+        {...externalAttrs(secondaryCTA)}
+      >
+        {secondaryCTA.text}
+      </Button>
+    )}
+  </div>
+</div>
