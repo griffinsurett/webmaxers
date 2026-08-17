@@ -38,6 +38,10 @@ export interface GenerateResponse {
 export interface GenerateRequest {
   email: string;
   business_description: string;
+  /** Trade name, used to title the generated site. Null when not given. */
+  business_name?: string | null;
+  /** How wide a radius they serve — drives local SEO scope in the estimate. */
+  service_area?: string;
   industry: string;
   industry_other?: string | null;
   location: string;

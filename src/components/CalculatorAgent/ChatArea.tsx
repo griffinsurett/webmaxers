@@ -14,6 +14,13 @@ interface Question {
 
 const QUESTIONS: Question[] = [
   {
+    id: 'q_business_name',
+    label: 'What is your business called?',
+    description: 'We use this to name the site in your wireframes.',
+    type: 'textarea',
+    placeholder: 'e.g. Koi Roofing and Solar'
+  },
+  {
     id: 'q_industry',
     label: 'What is your primary industry?',
     description: 'What type of business are you operating?',
@@ -25,6 +32,19 @@ const QUESTIONS: Question[] = [
     label: 'Where in the US is your business located?',
     description: 'We currently only serve businesses in the United States.',
     type: 'location'
+  },
+  {
+    id: 'q_service_area',
+    label: 'How far do you serve customers?',
+    description: 'Local SEO scales with the area you cover, so this affects the estimate.',
+    type: 'dropdown',
+    options: [
+      'Just my city or town',
+      'A few nearby towns',
+      'My whole state',
+      'Multiple states',
+      'Online / nationwide'
+    ]
   },
   {
     id: 'q3',

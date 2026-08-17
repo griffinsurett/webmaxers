@@ -66,6 +66,20 @@ function mapBranding(val9?: string, val8?: string): string {
   return 'logo_only';
 }
 
+/** Slug form of the service-area answer — local SEO scope scales with this. */
+function mapServiceArea(val?: string): string {
+  if (!val) return 'unspecified';
+  const lower = val.toLowerCase();
+  // Order matters: "A few nearby towns" also contains "town", so the nearby
+  // check has to come before the single-city one.
+  if (lower.includes('nearby')) return 'nearby_towns';
+  if (lower.includes('city') || lower.includes('town')) return 'single_city';
+  if (lower.includes('whole state')) return 'statewide';
+  if (lower.includes('multiple states')) return 'multi_state';
+  if (lower.includes('online') || lower.includes('nationwide')) return 'nationwide';
+  return 'unspecified';
+}
+
 function mapTimeline(val?: string): string {
   if (!val) return '1_2_months';
   const lower = val.toLowerCase();
@@ -77,6 +91,8 @@ function mapTimeline(val?: string): string {
 export function mapAnswersToPayload(answers: Record<string, string>, email: string): GenerateRequest {
   const rawDesc = answers.q1 || answers.q2 || 'Custom website project for business growth';
   const location = (answers.q2 || 'Austin, TX').trim();
+  const businessName = (answers.q_business_name || '').trim();
+  const serviceArea = (answers.q_service_area || '').trim();
 
   // Backend requires business_description to be min 20 characters
   let cleanDesc = rawDesc.trim();
@@ -84,11 +100,25 @@ export function mapAnswersToPayload(answers: Record<string, string>, email: stri
     cleanDesc = `${cleanDesc} - comprehensive website design and development with custom SEO and digital strategies.`;
   }
 
+  // Both prompts (pricing and wireframes) feed on `model_dump()` of the whole
+  // payload, so the dedicated fields below are enough for the model to see them.
+  // They're also folded into the description because `business_description` is
+  // what the wireframe brief uses verbatim as `business_summary` — that's how
+  // the business name reaches the generated site's title.
+  const contextParts: string[] = [];
+  if (businessName) contextParts.push(`The business is called ${businessName}.`);
+  if (serviceArea) contextParts.push(`Service area: ${serviceArea.toLowerCase()}.`);
+  if (contextParts.length > 0) {
+    cleanDesc = `${cleanDesc} ${contextParts.join(' ')}`;
+  }
+
   const industrySlug = mapIndustry(answers.q_industry);
 
   return {
     email: email && email.includes('@') ? email.trim() : 'client@example.com',
     business_description: cleanDesc,
+    business_name: businessName || null,
+    service_area: mapServiceArea(answers.q_service_area),
     industry: industrySlug,
     industry_other: industrySlug === 'other' ? 'Custom Industry' : null,
     location: location.length >= 2 ? location : 'Austin, TX',
