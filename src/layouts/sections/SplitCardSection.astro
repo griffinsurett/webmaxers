@@ -1,0 +1,105 @@
+---
+// src/layouts/sections/SplitCardSection.astro
+/**
+ * SplitCardSection — the site's "copy on one side, card on the other" CTA layout.
+ *
+ * Stacks on small screens and splits into two columns from `lg`, with the copy
+ * column sticky so the card scrolls against it. Both sides are slots so the
+ * layout carries no content of its own:
+ *
+ *   default slot → the copy column (heading, supporting list, whatever fits)
+ *   `card` slot  → the panel on the other side (a form, a pricing box, …)
+ *
+ * The card slot is wrapped in `.section-box card-bg` here so every placement
+ * gets the same panel treatment; pass `cardClass` for per-placement additions.
+ * Use `reverse` to put the card on the left instead.
+ */
+import Section from "@/components/Section.astro";
+
+interface Props {
+  id?: string;
+  className?: string;
+  /** Extra classes on the copy column. */
+  copyClass?: string;
+  /** Extra classes on the card panel. */
+  cardClass?: string;
+  /** Places the card on the left and the copy on the right (from `lg`). */
+  reverse?: boolean;
+  /** Copy column stays pinned while the card scrolls (default: true). */
+  sticky?: boolean;
+  [key: string]: any;
+}
+
+const {
+  id,
+  className = "",
+  copyClass = "",
+  cardClass = "",
+  reverse = false,
+  sticky = true,
+  ...rest
+} = Astro.props as Props;
+---
+
+<Section id={id} class={`outer-section ${className}`.trim()} {...rest}>
+  <div class="inner-section">
+    <div class:list={["split-card", reverse && "split-card--reverse"]}>
+      <div
+        class:list={[
+          "split-card__copy",
+          sticky && "sticky-section lg:self-start",
+          copyClass,
+        ]}
+      >
+        <slot />
+      </div>
+
+      <div class:list={["split-card__card section-box card-bg", cardClass]}>
+        <slot name="card" />
+      </div>
+    </div>
+  </div>
+</Section>
+
+<style>
+  .split-card {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 3rem);
+    align-items: start;
+  }
+
+  .split-card__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .split-card__card {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 35px 90px -48px rgba(0, 0, 0, 0.55);
+  }
+
+  @media (min-width: 1024px) {
+    .split-card {
+      grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.95fr);
+    }
+
+    /* Reversed: the card column is declared second, so pull it back to
+       column 1 and push the copy to column 2 — source order stays
+       copy-first for screen readers and the stacked mobile layout. */
+    .split-card--reverse {
+      grid-template-columns: minmax(22rem, 0.95fr) minmax(0, 1fr);
+    }
+
+    .split-card--reverse .split-card__copy {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .split-card--reverse .split-card__card {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+</style>

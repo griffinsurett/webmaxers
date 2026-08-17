@@ -1,5 +1,5 @@
 ---
-import Section from "@/components/Section.astro";
+import SplitCardSection from "@/layouts/sections/SplitCardSection.astro";
 import QuoteForm from "@/components/Form/forms/QuoteForm.astro";
 import Icon from "@/components/Icon";
 import SectionHeading from "@/components/SectionHeading.astro";
@@ -42,66 +42,48 @@ const highlights = [
 ];
 ---
 
-<Section id={id} class={`outer-section ${className}`.trim()}>
-  <div class="inner-section">
-    <div class="industry-quote-layout">
-      <div class="industry-quote-copy sticky-section lg:self-start">
-        <SectionHeading
-          title="Request a Quote"
-          heading={heading}
-          description={`If you are planning a website for ${industryTitle.toLowerCase()}, ${description.toLowerCase()}`}
-          className="text-left"
-          headingClassName="h2 mb-6 text-heading"
-          emphasisClassName="text-heading"
-          descriptionClassName="large-text max-w-2xl"
-        />
+<SplitCardSection id={id} className={className}>
+  <SectionHeading
+    title="Request a Quote"
+    heading={heading}
+    description={`If you are planning a website for ${industryTitle.toLowerCase()}, ${description.toLowerCase()}`}
+    className="text-left"
+    headingClassName="h2 mb-6 text-heading"
+    emphasisClassName="text-heading"
+    descriptionClassName="large-text max-w-2xl"
+  />
 
-        <ul class="industry-quote-highlights">
-          {highlights.map((item) => (
-            <li class="industry-quote-highlight">
-              <span class="industry-quote-icon" aria-hidden="true">
-                <Icon icon={item.icon} size="sm" />
-              </span>
-              <div class="space-y-1">
-                <p class="industry-quote-highlight-title">{item.title}</p>
-                <p class="industry-quote-highlight-text">{item.description}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div class="industry-quote-card section-box card-bg">
-        <div class="industry-quote-card__header">
-          <h3 class="industry-quote-card__title">Start your quote</h3>
-          <p class="industry-quote-card__description">
-            Send the basics and we will follow up with the right recommendation for your website.
-          </p>
+  <ul class="industry-quote-highlights">
+    {highlights.map((item) => (
+      <li class="industry-quote-highlight">
+        <span class="industry-quote-icon" aria-hidden="true">
+          <Icon icon={item.icon} size="sm" />
+        </span>
+        <div class="space-y-1">
+          <p class="industry-quote-highlight-title">{item.title}</p>
+          <p class="industry-quote-highlight-text">{item.description}</p>
         </div>
-        <QuoteForm
-          capabilityTitle={industryTitle}
-          serviceCategory="industry-websites"
-          capabilitySlug={industryTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}
-          formType="industry"
-        />
-      </div>
+      </li>
+    ))}
+  </ul>
+
+  <Fragment slot="card">
+    <div class="industry-quote-card__header">
+      <h3 class="industry-quote-card__title">Start your quote</h3>
+      <p class="industry-quote-card__description">
+        Send the basics and we will follow up with the right recommendation for your website.
+      </p>
     </div>
-  </div>
-</Section>
+    <QuoteForm
+      capabilityTitle={industryTitle}
+      serviceCategory="industry-websites"
+      capabilitySlug={industryTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}
+      formType="industry"
+    />
+  </Fragment>
+</SplitCardSection>
 
 <style>
-  .industry-quote-layout {
-    display: grid;
-    gap: clamp(1.5rem, 3vw, 3rem);
-    align-items: start;
-  }
-
-  .industry-quote-copy {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-
   .industry-quote-highlights {
     list-style: none;
     margin: 0;
@@ -143,12 +125,6 @@ const highlights = [
     color: color-mix(in srgb, var(--color-text) 74%, transparent);
   }
 
-  .industry-quote-card {
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 35px 90px -48px rgba(0, 0, 0, 0.55);
-  }
-
   .industry-quote-card__header {
     margin-bottom: 1.5rem;
   }
@@ -164,11 +140,5 @@ const highlights = [
     margin: 0.65rem 0 0;
     line-height: 1.6;
     color: color-mix(in srgb, var(--color-text) 74%, transparent);
-  }
-
-  @media (min-width: 1024px) {
-    .industry-quote-layout {
-      grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.95fr);
-    }
   }
 </style>
