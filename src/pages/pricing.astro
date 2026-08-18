@@ -13,13 +13,9 @@ import { getCollection } from "astro:content";
 // `import.meta.env.DEV` is statically replaced at build time, so anything
 // inside these blocks is stripped from production builds and never ships.
 //
-//   showCalculators       — outer gate, wraps BOTH calculators.
-//                           Flip to `true` to ship the current agent.
-//   showLegacyCalculator  — inner gate, wraps ONLY the legacy UI.
-//                           Stays dev-only so the legacy UI stays hidden even
-//                           after the outer gate is opened.
-const showCalculators = import.meta.env.DEV;
-const showLegacyCalculator = showCalculators && import.meta.env.DEV;
+// showCalculators — outer gate, wraps BOTH calculators. Set to `true` to ship the current agent.
+const showCalculators = true;
+const showLegacyCalculator = import.meta.env.DEV;
 
 // Feeds the legacy niche selector, the same way the old /pricing page did.
 const industries = showLegacyCalculator

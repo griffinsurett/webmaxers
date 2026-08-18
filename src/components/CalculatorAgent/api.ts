@@ -1,6 +1,6 @@
 import type { GenerateRequest, GenerateResponse, ApiErrorPayload } from './types';
 
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://pricing-calc-mauve.vercel.app';
+const API_BASE_URL = (import.meta.env.PUBLIC_API_URL || 'https://api.griffinswebservices.com').replace(/\/$/, '');
 
 function mapIndustry(val?: string): string {
   if (!val) return 'service_consulting';
@@ -134,14 +134,38 @@ export function mapAnswersToPayload(answers: Record<string, string>, email: stri
 }
 
 export async function generateEstimate(payload: GenerateRequest): Promise<GenerateResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/generate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(6 * 60 * 1000),
-  });
+  const primaryUrl = API_BASE_URL ? `${API_BASE_URL}/api/generate` : '/api/railway-generate';
+  const fallbackUrl = '/api/railway-generate';
+
+  let response: Response;
+  try {
+    response = await fetch(primaryUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(6 * 60 * 1000),
+    });
+  } catch (err: any) {
+    // If direct connection fails (e.g. ISP DNS refusal on *.up.railway.app), try the Vercel proxy
+    if (primaryUrl !== fallbackUrl) {
+      try {
+        response = await fetch(fallbackUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(6 * 60 * 1000),
+        });
+      } catch (fallbackErr: any) {
+        throw new Error(`Network Error: Unable to reach backend directly or via proxy. Please verify Railway service is active.`);
+      }
+    } else {
+      throw new Error(`Network Error: Unable to reach backend. Please verify Railway service is active.`);
+    }
+  }
 
   if (!response.ok) {
     let errorMsg = `Server returned status ${response.status}`;

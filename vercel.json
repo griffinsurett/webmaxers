@@ -39,7 +39,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'none'; script-src 'self' 'unsafe-inline' translate.google.com translate.googleapis.com translate-pa.googleapis.com vercel.live *.googletagmanager.com *.google-analytics.com; worker-src 'self' blob:; child-src 'self' blob:; style-src 'self' 'unsafe-inline' translate.googleapis.com www.gstatic.com; img-src 'self' data: translate.google.com translate.googleapis.com fonts.gstatic.com www.gstatic.com vercel.com *.vercel-insights.com *.googletagmanager.com *.google-analytics.com *.googleusercontent.com; font-src 'self' data: fonts.gstatic.com; connect-src 'self' https://pricing-calc-mauve.vercel.app translate.googleapis.com translate-pa.googleapis.com vercel.live https://formspree.io *.google-analytics.com *.analytics.google.com *.googletagmanager.com *.supabase.co; frame-src 'self' translate.google.com translate.googleapis.com vercel.live; manifest-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://formspree.io; frame-ancestors 'none'; upgrade-insecure-requests; block-all-mixed-content;"
+          "value": "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: translate.google.com translate.googleapis.com translate-pa.googleapis.com vercel.live *.googletagmanager.com *.google-analytics.com; script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: translate.google.com translate.googleapis.com translate-pa.googleapis.com vercel.live *.googletagmanager.com *.google-analytics.com; worker-src 'self' blob:; child-src 'self' blob:; style-src 'self' 'unsafe-inline' translate.googleapis.com www.gstatic.com; img-src 'self' data: blob: translate.google.com translate.googleapis.com fonts.gstatic.com www.gstatic.com vercel.com *.vercel-insights.com *.googletagmanager.com *.google-analytics.com *.googleusercontent.com; font-src 'self' data: fonts.gstatic.com; connect-src 'self' https://api.griffinswebservices.com *.griffinswebservices.com https://calculator-wireframe-agent.up.railway.app https://calculator-wireframe-agent-production-34e8.up.railway.app *.up.railway.app translate.googleapis.com translate-pa.googleapis.com vercel.live https://formspree.io *.google-analytics.com *.analytics.google.com *.googletagmanager.com *.supabase.co; frame-src 'self' translate.google.com translate.googleapis.com vercel.live; manifest-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://formspree.io; frame-ancestors 'none'; upgrade-insecure-requests; block-all-mixed-content;"
         },
         {
           "key": "X-Frame-Options",
@@ -78,6 +78,12 @@
           "value": "max-age=63072000; includeSubDomains; preload"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/railway-generate",
+      "destination": "https://calculator-wireframe-agent.up.railway.app/api/generate"
     }
   ],
   "crons": [
