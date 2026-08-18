@@ -6,7 +6,6 @@
 import {
   useCallback,
   useState,
-  type ChangeEvent,
   type FocusEvent,
   type ReactNode,
   type SelectHTMLAttributes,
@@ -62,11 +61,8 @@ export default function Select({
 }: SelectProps) {
   const a11y = useField({ name, idProp, required, hint, error, describedBy });
 
+  // Only tracked to drive the AnimatedBorder — the label no longer floats.
   const [focused, setFocused] = useState(false);
-  const [hasValue, setHasValue] = useState(
-    Boolean((defaultValue ?? value ?? "") !== "" && (defaultValue ?? value))
-  );
-  const filled = focused || hasValue;
 
   const handleFocus = useCallback(
     (event: FocusEvent<HTMLSelectElement>) => {
@@ -82,13 +78,6 @@ export default function Select({
     },
     [onBlur]
   );
-  const handleChange = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>) => {
-      setHasValue(event.target.value !== "");
-      onChange?.(event);
-    },
-    [onChange]
-  );
 
   return (
     <Field
@@ -98,7 +87,6 @@ export default function Select({
       hint={hint}
       error={error}
       floating={floating}
-      filled={filled}
       containerClassName={containerClassName}
       labelClassName={labelClassName}
     >
@@ -121,14 +109,15 @@ export default function Select({
             defaultValue={defaultValue}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            onChange={handleChange}
+            onChange={onChange}
             className={`peer form-field appearance-none pr-10 ${error ? "form-field-error" : ""} ${selectClassName}`.trim()}
             {...selectProps}
           >
-            {/* Empty placeholder option — the visible floating label is the
-                accessible name, so this stays empty (no text shown once floated). */}
+            {/* A <select> has no native placeholder, so this empty option shows
+                the label text until a real option is chosen — the select's own
+                "disappearing placeholder". */}
             <option value="" disabled hidden className="form-option">
-              {floating && label ? "" : placeholder}
+              {floating && label ? `${label}${required ? " *" : ""}` : placeholder}
             </option>
             {options.map((option) => (
               <option

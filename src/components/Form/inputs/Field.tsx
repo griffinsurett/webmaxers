@@ -4,9 +4,10 @@
  *
  * Owns the label ↔ control ↔ error/hint relationships so WCAG 2.2 AA holds for
  * free at every call site:
- *   - a real <label for={id}> (never a placeholder standing in as the label) —
- *     rendered as a FLOATING label so the compact "placeholder look" is kept:
- *     it sits over the field at rest and floats up on focus/fill.
+ *   - a real <label for={id}> always exists. In `floating` (placeholder) mode
+ *     it is visually hidden and the same text is shown as the control's native
+ *     placeholder, so it just disappears on typing — the accessible name is
+ *     never lost, it is only the visual copy that the placeholder provides.
  *   - required marked with aria-required AND a text-labelled "*" (not colour
  *     alone) — 1.4.1 / 3.3.2.
  *   - hint + error text linked to the control via aria-describedby, and
@@ -73,10 +74,11 @@ interface FieldProps {
   error?: ReactNode;
   containerClassName?: string;
   labelClassName?: string;
-  /** Floating-label mode keeps the compact placeholder look. Default true. */
+  /**
+   * Placeholder mode: the label is visually hidden and its text is shown as the
+   * control's native placeholder. Default true.
+   */
   floating?: boolean;
-  /** Whether the field currently has a value / is focused (drives the float). */
-  filled?: boolean;
   children: ReactNode;
 }
 
@@ -89,39 +91,22 @@ export default function Field({
   containerClassName = "space-y-2",
   labelClassName,
   floating = true,
-  filled = false,
   children,
 }: FieldProps) {
   const { id, hintId, errorId } = a11y;
 
-  // Floating label: absolutely positioned over the control, animates up when the
-  // field is focused-within or filled. Purely visual — it is always a real
-  // <label for>, so screen readers get the name whatever the visual state.
+  // Placeholder mode: the label text is shown via the control's native
+  // `placeholder`, so it simply disappears as soon as the user types — no
+  // floating or resizing. The <label for> is still rendered for assistive tech,
+  // just visually hidden, so the field keeps its accessible name.
   if (floating && label) {
     return (
       <div className={`relative ${containerClassName === "space-y-2" ? "" : containerClassName}`.trim()}>
         <div className="relative">
           {children}
-          <label
-            htmlFor={id}
-            className={[
-              "pointer-events-none absolute left-4 origin-[0] text-muted transition-all duration-200",
-              "top-1/2 -translate-y-1/2 text-base",
-              // Floated state — either the field has a value, or it's focused.
-              filled ? "!top-2 !-translate-y-0 !text-xs !text-primary" : "",
-              "peer-focus:!top-2 peer-focus:!-translate-y-0 peer-focus:!text-xs peer-focus:!text-primary",
-              labelClassName ?? "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
+          <label htmlFor={id} className="sr-only">
             {label}
-            {required && (
-              <span className="text-primary">
-                {" *"}
-                <span className="sr-only"> (required)</span>
-              </span>
-            )}
+            {required && <span>{" (required)"}</span>}
           </label>
         </div>
         {hint && (

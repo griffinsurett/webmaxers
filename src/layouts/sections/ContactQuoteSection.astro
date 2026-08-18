@@ -1,30 +1,37 @@
 ---
+// src/layouts/sections/ContactQuoteSection.astro
+/**
+ * ContactQuoteSection — the contact page's form section.
+ *
+ * Uses MediaCardSection (the founder-CTA layout): the same full-bleed founder
+ * photo with a raised card over one side, except the card holds the form
+ * instead of prose. Heading and copy sit above the fields inside the card.
+ */
+import MediaCardSection from "@/layouts/sections/MediaCardSection.astro";
 import QuoteForm from "@/components/Form/forms/QuoteForm.astro";
-import SectionHeading from "@/components/SectionHeading.astro";
-import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import BackgroundMedia from "@/components/BackgroundMedia.astro";
-import asideBgImage from "@/assets/meoncomp.png";
+import Eyebrow from "@/components/Eyebrow";
+import founderImage from "@/assets/me-on-the-phone.png";
 
 interface Props {
   id?: string;
   className?: string;
   eyebrowTitle?: string;
   showEyebrow?: boolean;
+  heading?: string;
+  description?: string;
+  image?: ImageMetadata;
   formComponent?: any;
   formProps?: Record<string, any>;
-  stats?: Array<Record<string, any>>;
 }
-
-// Matches AboutSection's DEFAULT_STATS (the current homepage stat counter).
-const DEFAULT_STATS: Array<Record<string, any>> = [
-  { value: 7, suffix: "+", title: "Years of Experience" },
-];
 
 const {
   id = "contact-quote",
   className = "",
   eyebrowTitle = "Request a Quote",
   showEyebrow = true,
+  heading = "Tell us what you are planning and we will point you in the right direction.",
+  description = "Whether you need a new website, a set of focused improvements, or ongoing support, this is the best place to start.",
+  image = founderImage,
   formComponent: FormComponent = QuoteForm,
   formProps = {
     capabilityTitle: "Contact Us",
@@ -33,132 +40,29 @@ const {
     formType: "generic",
     buttonText: "Send quote request",
   },
-  stats = DEFAULT_STATS,
 } = Astro.props as Props;
 ---
 
-{/*
-  Double-box flow, mirroring BenefitsCardStackVariant (.bcs): a borderless 50/50
-  split with top/bottom section rules and a center divider. No card backgrounds.
-  LEFT = sticky heading + copy + proof. RIGHT = the form itself (unwrapped).
-*/}
-<section id={id} class:list={["cq", className]} aria-label="Contact us">
-  <div class="cq-aside">
-    <BackgroundMedia
-      backgroundMedia={{
-        image: { src: asideBgImage, imageClass: "object-cover", maxWidth: 1600 },
-        overlayClass: "bg-bg/82",
-      }}
-    />
+{/* Keeps MediaCardSection's default card width so the photo's subject stays
+    visible to the right of the card, exactly as on the founder CTA — the form's
+    two-column field grid fits comfortably at that width. */}
+<MediaCardSection id={id} image={image} className={className}>
+  {showEyebrow && <Eyebrow>{eyebrowTitle}</Eyebrow>}
 
-    <div class="cq-aside__content">
-      <SectionHeading
-        title={showEyebrow ? eyebrowTitle : undefined}
-        heading="Tell us what you are planning and we will point you in the right direction."
-        description="Whether you need a new website, a set of focused improvements, or ongoing support, this is the best place to start."
-        className="text-left"
-        headingClassName="h2 mb-6 text-heading"
-        emphasisClassName="text-heading"
-        descriptionClassName="large-text max-w-2xl"
-      />
-    </div>
-  </div>
+  <h2
+    class:list={[
+      "mb-0 text-[clamp(1.85rem,3.1vw,3rem)] font-light leading-[1.12] tracking-[-0.02em] text-heading text-balance",
+      showEyebrow && "mt-4",
+    ]}
+  >
+    {heading}
+  </h2>
 
-  <div class="cq-main">
-    <div class="cq-main__header">
-      <h3 class="cq-main__title">Start the conversation</h3>
-      <p class="cq-main__description">
-        Send the basics and we will follow up with the clearest recommendation for your project.
-      </p>
-    </div>
+  <p class="mt-6 mb-0 text-[1.02rem] leading-[1.62] text-text/85">
+    {description}
+  </p>
+
+  <div class="mt-8">
     <FormComponent {...formProps} />
   </div>
-</section>
-
-<style>
-  /* Double-box flow — mirrors BenefitsCardStackVariant (.bcs). */
-  .cq {
-    /* Internal centre divider lives here; the outer top/bottom section rule is
-       applied per-placement on the page via the `section-rule-*` utilities. */
-    --cq-rule: color-mix(in srgb, currentColor 12%, transparent);
-    --cq-pad: clamp(2rem, 5vw, 5rem);
-  }
-  @media (min-width: 768px) {
-    .cq { display: grid; grid-template-columns: 1fr 1fr; }
-  }
-
-  /* LEFT — sticky heading + proof over a portrait background, center divider on
-     the right edge. `position: relative` anchors the absolute-filling
-     BackgroundMedia; `overflow: hidden` clips it to the panel. */
-  .cq-aside {
-    position: relative;
-    overflow: hidden;
-    padding-inline: var(--cq-pad);
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  @media (max-width: 767px) { .cq-aside { padding-block: var(--cq-pad); } }
-
-  /* Content rides above the background image + overlay (which are z-0). */
-  .cq-aside__content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  @media (min-width: 768px) {
-    .cq-aside {
-      position: sticky;
-      top: 0;
-      align-self: start;
-      min-height: 100vh;
-      justify-content: center;
-      border-right: 1px solid var(--cq-rule);
-    }
-  }
-
-  /* RIGHT — the form, no card. */
-  .cq-main {
-    padding: var(--cq-pad);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  @media (max-width: 767px) {
-    .cq-main { border-top: 1px solid var(--cq-rule); }
-  }
-
-  .cq-main__header {
-    margin-bottom: 1.5rem;
-  }
-
-  .cq-main__title {
-    margin: 0;
-    font-size: 1.6rem;
-    font-weight: 600;
-    color: var(--color-heading);
-  }
-
-  .cq-main__description {
-    margin: 0.65rem 0 0;
-    line-height: 1.6;
-    color: color-mix(in srgb, var(--color-text) 74%, transparent);
-  }
-
-  .cq-main :global(form > .mt-6) {
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .cq-main :global(form > .mt-6 > span) {
-    width: auto !important;
-    justify-content: flex-start;
-  }
-
-  .cq-main :global(form > .mt-6 > span > a),
-  .cq-main :global(form > .mt-6 > span > button) {
-    width: auto !important;
-  }
-</style>
+</MediaCardSection>

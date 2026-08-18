@@ -1,11 +1,5 @@
 // src/components/Form/inputs/Textarea.tsx
-import {
-  useState,
-  type ChangeEvent,
-  type FocusEvent,
-  type ReactNode,
-  type TextareaHTMLAttributes,
-} from "react";
+import { type ReactNode, type TextareaHTMLAttributes } from "react";
 import Field, { useField } from "./Field";
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -43,28 +37,6 @@ export default function Textarea({
 }: TextareaProps) {
   const a11y = useField({ name, idProp, required, hint, error, describedBy });
 
-  const [focused, setFocused] = useState(false);
-  const [hasValue, setHasValue] = useState(
-    Boolean(defaultValue ?? value ?? "")
-  );
-  const filled = focused || hasValue;
-
-  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setHasValue(e.target.value.length > 0);
-    onChange?.(e);
-  };
-  const handleFocus = (e: FocusEvent<HTMLTextAreaElement>) => {
-    setFocused(true);
-    onFocus?.(e);
-  };
-  const handleBlur = (e: FocusEvent<HTMLTextAreaElement>) => {
-    setFocused(false);
-    setHasValue(e.target.value.length > 0);
-    onBlur?.(e);
-  };
-
-  // For a multi-line control the label floats to the TOP of the box, not the
-  // vertical centre — pass a label override so <Field> anchors it near the top.
   return (
     <Field
       a11y={a11y}
@@ -73,12 +45,8 @@ export default function Textarea({
       hint={hint}
       error={error}
       floating={floating}
-      filled={filled}
       containerClassName={containerClassName}
-      labelClassName={
-        // Anchor the resting label near the top for a tall control.
-        floating ? "!top-4 !translate-y-0" : labelClassName
-      }
+      labelClassName={labelClassName}
     >
       <textarea
         {...a11y.controlProps}
@@ -87,10 +55,14 @@ export default function Textarea({
         required={required}
         value={value}
         defaultValue={defaultValue}
-        placeholder={floating && label ? undefined : placeholder}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        placeholder={
+          floating && label
+            ? (placeholder ?? `${label}${required ? " *" : ""}`)
+            : placeholder
+        }
+        onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className={`peer form-field resize-none ${error ? "form-field-error" : ""} ${textareaClassName}`.trim()}
         {...textareaProps}
       />

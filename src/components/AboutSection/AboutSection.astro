@@ -7,6 +7,7 @@ import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro"
 import { Image } from "astro:assets";
 import { siteData } from "@/content/siteData";
 import Marquee from "@/components/Marquee.astro";
+import BackgroundMedia from "@/components/BackgroundMedia.astro";
 import { sortByOrder } from "@/utils/query";
 import { byTag } from "@/utils/query/snippets";
 import aboutExpandImage from "@/assets/meoncomp.png";
@@ -201,6 +202,25 @@ const hasExpandSlot = Astro.slots.has("expand-content");
           eyebrow/headline/body copy props. */}
       {(hasExpandSlot || expandEyebrow || expandHeadline || expandBody) && (
         <div class="about-expand-content" data-about-expand-content>
+          {/* Reduced-motion end frame: the scroll-morphed figure is hidden (see
+              `.is-reduced .about-expand-media`), so the photo is painted here
+              as a plain optimised background instead — the state the morph
+              would have ended in. Always in the DOM but `display:none` until
+              `.is-reduced` is set, so it costs nothing in the animated path
+              (the <picture> is lazy). Same dim as the animated end state, via
+              the shared --axp-overlay. */}
+          <div class="about-expand-endbg" aria-hidden="true">
+            <BackgroundMedia
+              backgroundMedia={{
+                image: {
+                  src: expandImage,
+                  imageClass: "object-cover",
+                  maxWidth: 1920,
+                },
+                overlayClass: "about-expand-endbg__dim",
+              }}
+            />
+          </div>
           {hasExpandSlot ? (
             <slot name="expand-content" />
           ) : expandEyebrow ? (
@@ -565,17 +585,41 @@ const hasExpandSlot = Astro.slots.has("expand-content");
     display: flex;
     flex-direction: column;
   }
-  /* Show the in-grid resting image; the animated pinned figure is removed so it
-     can't sit full-bleed behind the page. Layout/content is otherwise identical. */
+  /* Show the in-grid resting image — the About grid keeps its own media. */
   .about-expand-region.is-reduced .about-expand-rest-img { display: block; }
-  .about-expand-region.is-reduced .about-expand-media { display: none; }
-  /* The pin collapses (display:contents) so its children — the (hidden) media and
-     the testimonials — become direct flex children of the region and can be ordered. */
+  /* The pin collapses (display:contents) so its children — the media and the
+     testimonials — become direct flex children of the region and can be ordered. */
   .about-expand-region.is-reduced .about-expand-pin {
     position: static;
     height: auto;
     overflow: visible;
     display: contents;
+  }
+  /* The scroll-morphed figure is removed entirely — under reduced motion the
+     end state is painted by a static <BackgroundMedia> behind the testimonials
+     instead (see .about-expand-endbg), so there is no transform to drive. */
+  .about-expand-region.is-reduced .about-expand-media { display: none; }
+
+  /* ── Reduced-motion end frame ──────────────────────────────────────────
+     Only rendered when the morph is off. Sits behind the testimonials inside
+     the content panel and fills it, giving the same full-bleed photo the
+     animation ends on — without any of the scroll machinery. */
+  .about-expand-endbg {
+    display: none;
+  }
+  .about-expand-region.is-reduced .about-expand-endbg {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1; /* behind the testimonials, inside the same panel */
+    overflow: hidden;
+  }
+  /* BackgroundMedia renders its overlay as a class, so the dim strength comes
+     from the same --axp-overlay the animated end state uses — one source of
+     truth for how dark the photo reads under the copy. */
+  .about-expand-region.is-reduced :global(.about-expand-endbg__dim) {
+    background: var(--color-bg);
+    opacity: var(--axp-overlay);
   }
   /* Bottom grid (with the resting image) + marquee come first. The scroll-overlap
      pull-up is removed so the static flow no longer collides with what follows. */
@@ -586,7 +630,9 @@ const hasExpandSlot = Astro.slots.has("expand-content");
   /* Testimonials: a clean 100svh panel after the marquee. */
   .about-expand-region.is-reduced .about-expand-content {
     order: 2;
-    position: static;
+    /* `relative`, not `static`: the end-frame background is absolutely
+       positioned and needs this panel as its containing block. */
+    position: relative;
     opacity: 1;
     transform: none;
     min-height: 100svh;
@@ -610,9 +656,15 @@ const hasExpandSlot = Astro.slots.has("expand-content");
       position: static;
       margin-top: clamp(1.5rem, 4vw, 3rem);
     }
-    /* No pinned frame to anchor to — hide the corner portrait. */
+    /* The corner portrait STAYS exactly where it is — same corner, same size.
+       Reduced motion only skips the scroll-driven up-and-out animation (the
+       ScrollTrigger in initPortrait() already bails), it does not remove the
+       image. The pin collapses to `position: static` above, so the portrait's
+       absolute placement resolves against the section instead of the pinned
+       frame; `bottom` is dropped so it can't ride up over the statement, and
+       it sits at the section's bottom-right corner as it does at rest. */
     .about-portrait {
-      display: none;
+      bottom: auto;
     }
     .about-word-layer--overlay {
       opacity: 1;
@@ -632,8 +684,10 @@ const hasExpandSlot = Astro.slots.has("expand-content");
     position: static;
     margin-top: clamp(1.5rem, 4vw, 3rem);
   }
+  /* Same as the media-query rule above: the portrait keeps its corner placement,
+     only the scroll animation is skipped. */
   :global([data-a11y-motion="reduced"]) .about-portrait {
-    display: none;
+    bottom: auto;
   }
   :global([data-a11y-motion="reduced"]) .about-word-layer--overlay {
     opacity: 1;

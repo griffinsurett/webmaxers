@@ -6,8 +6,8 @@
   },
   {
     "id": "footer-menu",
-    "title": "Footer Menu",
-    "description": "Legal footer links"
+    "title": "Navigate",
+    "description": "Footer navigation — mirrors the header's main menu. Kept as its own menu (rather than reusing main-menu) so the two can diverge: adding an item to the header does not silently change the footer. Legal links are NOT here — the footer queries the legal collection directly."
   },
   {
     "id": "footer-menu-2",

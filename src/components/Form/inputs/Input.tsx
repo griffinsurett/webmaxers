@@ -1,8 +1,5 @@
 // src/components/Form/inputs/Input.tsx
 import {
-  useState,
-  type ChangeEvent,
-  type FocusEvent,
   type HTMLInputTypeAttribute,
   type InputHTMLAttributes,
   type ReactNode,
@@ -48,27 +45,6 @@ export default function Input({
 }: InputProps) {
   const a11y = useField({ name, idProp, required, hint, error, describedBy });
 
-  // Track whether the label should float (field has content or is focused).
-  const [focused, setFocused] = useState(false);
-  const [hasValue, setHasValue] = useState(
-    Boolean(defaultValue ?? value ?? "")
-  );
-  const filled = focused || hasValue;
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setHasValue(e.target.value.length > 0);
-    onChange?.(e);
-  };
-  const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
-    setFocused(true);
-    onFocus?.(e);
-  };
-  const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
-    setFocused(false);
-    setHasValue(e.target.value.length > 0);
-    onBlur?.(e);
-  };
-
   return (
     <Field
       a11y={a11y}
@@ -77,7 +53,6 @@ export default function Input({
       hint={hint}
       error={error}
       floating={floating}
-      filled={filled}
       containerClassName={containerClassName}
       labelClassName={labelClassName}
     >
@@ -87,13 +62,17 @@ export default function Input({
         required={required}
         value={value}
         defaultValue={defaultValue}
-        // In floating mode the visible label replaces the placeholder, so we
-        // suppress the placeholder to avoid doubled text; callers can still pass
-        // one explicitly for a non-floating field.
-        placeholder={floating && label ? undefined : placeholder}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        // In placeholder mode the label is visually hidden, so the label text
+        // (plus a "*" for required) becomes the placeholder — it disappears as
+        // soon as the user types. An explicit `placeholder` still wins.
+        placeholder={
+          floating && label
+            ? (placeholder ?? `${label}${required ? " *" : ""}`)
+            : placeholder
+        }
+        onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className={`peer form-field ${error ? "form-field-error" : ""} ${inputClassName}`.trim()}
         {...inputProps}
       />

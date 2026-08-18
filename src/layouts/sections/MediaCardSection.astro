@@ -1,0 +1,118 @@
+---
+// src/layouts/sections/MediaCardSection.astro
+/**
+ * MediaCardSection — full-bleed photo with a raised card of copy over one side.
+ *
+ * Wireframe (desktop, default `side="start"`):
+ *   ┌─────────────────────────────┬──────────────────┐
+ *   │ ╭─────────────────────────╮ │   photo, full    │
+ *   │ │ card slot (the copy)    │ │   bleed to the   │
+ *   │ ╰─────────────────────────╯ │   viewport edge  │
+ *   └─────────────────────────────┴──────────────────┘
+ *
+ * The photo is a full-bleed BackgroundMediaFrame; a directional scrim darkens
+ * the card side and clears over the open side, so the copy stays legible
+ * without washing out the subject of the photo. On mobile the card goes full
+ * width and the scrim flips to bottom-up.
+ *
+ * Everything inside the card is a slot, so this layout carries no copy of its
+ * own — pass a heading, paragraphs, and a CTA cluster from the placement.
+ * Use `side="end"` to put the card on the right and keep the subject left.
+ */
+import Section from "@/components/Section.astro";
+import BackgroundMediaFrame from "@/components/BackgroundMediaFrame.astro";
+import type { AnimationType } from "@/integrations/scroll-animations/props";
+
+interface Props {
+  id?: string;
+  /** The full-bleed background photo. */
+  image: ImageMetadata;
+  /** object-position for the photo; defaults to keeping the right side visible. */
+  imageClass?: string;
+  imageMaxWidth?: number;
+  /** Which side the card sits on (from `lg`). */
+  side?: "start" | "end";
+  /** Caps the card width; the site's founder CTA uses the default. */
+  cardClass?: string;
+  /** Extra classes on the frame (min-height lives here). */
+  className?: string;
+  /** Light veil over the whole photo — the scrim does the real contrast work. */
+  mediaOverlayClass?: string;
+  animate?: AnimationType | false;
+  animateThreshold?: number;
+  [key: string]: any;
+}
+
+const {
+  id,
+  image,
+  imageClass = "w-full h-full object-cover object-[70%_center]",
+  imageMaxWidth = 2000,
+  side = "start",
+  cardClass = "",
+  className = "",
+  mediaOverlayClass = "bg-bg/35",
+  animate = "fade-in",
+  animateThreshold = 0.15,
+  ...rest
+} = Astro.props as Props;
+
+/* Directional scrim: solid at the card's edge, clear over the open side, so the
+   photo's subject stays visible. Mobile always fades bottom-up, since the card
+   stacks over the photo there. */
+const scrimDesktop =
+  side === "end"
+    ? "bg-[linear-gradient(270deg,var(--color-bg)_0%,color-mix(in_srgb,var(--color-bg)_75%,transparent)_38%,transparent_72%)]"
+    : "bg-[linear-gradient(90deg,var(--color-bg)_0%,color-mix(in_srgb,var(--color-bg)_75%,transparent)_38%,transparent_72%)]";
+
+const scrimMobile =
+  "max-lg:bg-[linear-gradient(0deg,var(--color-bg)_0%,color-mix(in_srgb,var(--color-bg)_82%,transparent)_55%,color-mix(in_srgb,var(--color-bg)_45%,transparent)_100%)]";
+---
+
+{/* Full-bleed: no `outer-section`/`inner-section` wrapper, so the photo spans
+    the whole viewport width. The copy inside is still constrained by
+    `section-container`, keeping the card aligned to the site's text inset. */}
+<Section id={id} animate={animate} animateThreshold={animateThreshold} {...rest}>
+  <BackgroundMediaFrame
+    imageSrc={image}
+    imageClass={imageClass}
+    imageMaxWidth={imageMaxWidth}
+    mediaOverlayClass={mediaOverlayClass}
+    className={`media-card-frame rounded-none! border-0! shadow-none! ${className}`.trim()}
+  >
+    <div aria-hidden="true" class:list={["absolute inset-0 z-0", scrimDesktop, scrimMobile]}></div>
+
+    {/* section-container gives the card the same inset as the rest of the
+        site's copy, so it lines up with the sections above it. */}
+    <div
+      class:list={[
+        "section-container relative z-10 flex py-14 lg:py-20",
+        side === "end" && "lg:justify-end",
+      ]}
+    >
+      {/* The card — raised surface holding the copy, over one side of the photo. */}
+      <div
+        class:list={[
+          "w-full max-w-184 rounded-[1.8rem] border border-border bg-bg/92 p-7 shadow-2xl backdrop-blur-xl md:p-10 lg:p-12",
+          cardClass,
+        ]}
+      >
+        <slot />
+      </div>
+    </div>
+  </BackgroundMediaFrame>
+</Section>
+
+<style>
+  /* Give the frame enough height for the photo to read as a scene rather than a
+     thin strip. On mobile the card stacks over the photo, so it needs more. */
+  .media-card-frame {
+    min-height: 34rem;
+  }
+
+  @media (max-width: 1023px) {
+    .media-card-frame {
+      min-height: 44rem;
+    }
+  }
+</style>

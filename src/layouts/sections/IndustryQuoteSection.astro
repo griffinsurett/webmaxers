@@ -84,7 +84,11 @@ const highlights = [
 </SplitCardSection>
 
 <style>
-  .industry-quote-highlights {
+  /* This markup is passed into SplitCardSection's slots, so Astro renders it
+     without this component's scope hash — scoped selectors would never match.
+     `:global()` is required here; the `industry-quote-*` prefix keeps it
+     namespaced to this section. */
+  :global(.industry-quote-highlights) {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -92,13 +96,13 @@ const highlights = [
     gap: 1.25rem;
   }
 
-  .industry-quote-highlight {
+  :global(.industry-quote-highlight) {
     display: flex;
     align-items: flex-start;
     gap: 0.9rem;
   }
 
-  .industry-quote-icon {
+  :global(.industry-quote-icon) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -111,32 +115,32 @@ const highlights = [
     flex-shrink: 0;
   }
 
-  .industry-quote-highlight-title {
+  :global(.industry-quote-highlight-title) {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--color-heading);
   }
 
-  .industry-quote-highlight-text {
+  :global(.industry-quote-highlight-text) {
     margin: 0;
     max-width: 30rem;
     line-height: 1.55;
     color: color-mix(in srgb, var(--color-text) 74%, transparent);
   }
 
-  .industry-quote-card__header {
+  :global(.industry-quote-card__header) {
     margin-bottom: 1.5rem;
   }
 
-  .industry-quote-card__title {
+  :global(.industry-quote-card__title) {
     margin: 0;
     font-size: 1.6rem;
     font-weight: 600;
     color: var(--color-heading);
   }
 
-  .industry-quote-card__description {
+  :global(.industry-quote-card__description) {
     margin: 0.65rem 0 0;
     line-height: 1.6;
     color: color-mix(in srgb, var(--color-text) 74%, transparent);

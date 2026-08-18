@@ -5,16 +5,20 @@
  *   Top   : eyebrow + large heading (left), CTA button (right).
  *   Lower : left  = copyright + "Ask AI about Us" prompt buttons.
  *           right = LEGAL column + SOCIAL icons.
- * (No RevealStack wordmark reveal here — that's a webmaxers-only effect. The
- * RevealStack component still exists if it's wanted elsewhere.)
+ *   Base  : full-bleed logo + wordmark lockup, uncovered as the content above
+ *           lifts off it (see RevealStack).
  */
 import { siteData, ctaData } from "@/content/siteData";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import { query } from "@/utils/query";
-import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
+import { query, sortByOrder } from "@/utils/query";
+import { related } from "@/utils/query/snippets";
+import CookiePreferencesButton from "@/integrations/preferences/consent/ui/CookiePreferencesButton";
+import LanguageButton from "@/integrations/preferences/language/ui/LanguageButton";
 import Button from "@/components/Button/Button";
 import AIIconPrompt from "@/components/Footer/AIIconPrompt";
 import Eyebrow from "@/components/Eyebrow";
+import Logo from "@/components/Logo/Logo.astro";
+import RevealStack from "@/components/StickyStack/RevealStack.astro";
 
 const eyebrow = "Let's build work that inspires.";
 const heading = "Ready to build";
@@ -40,31 +44,26 @@ const legalColClass = [
   "[&>div]:mb-4 [&_.h4]:text-sm [&_.h4]:font-light [&_.h4]:uppercase [&_.h4]:tracking-[0.24em] [&_.h4]:text-muted [&_.h4]:mb-0",
 ].join(" ");
 
-// Build the legal menu items: query the `legal` collection, prepare its entries
-// (so each gets its proper URL), then append the "Your Privacy Choices" control
-// as a synthetic ACTION item. FooterMenuVariant renders the action row as the
-// cookie-preferences button, so it lives INSIDE the same list — and the
-// "hover one, mute the rest" effect covers it too — instead of being appended
-// separately after the section.
-const legalResult = await query("legal").get();
-const legalItems = await prepareCollectionEntries(
-  legalResult.entries,
-  "legal",
-  getCollectionMeta("legal"),
-);
-const legalMenuItems = [
-  ...legalItems,
-  { id: "your-privacy-choices", title: "Your Privacy Choices", action: "cookie-preferences" },
-];
-
 ---
 
 <footer
-  class="relative mt-auto border-t border-border-soft"
+  class="relative mt-auto"
   role="contentinfo"
   aria-label="Site footer"
 >
-  <div class="relative inner-section grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2">
+  {/* Adobe-style reveal: the footer content is the `cover` that scrolls up and
+      off; the giant wordmark is the `base` parked beneath, uncovered as the
+      cover lifts away. The effect is confined to the footer (RevealStack clips
+      its own overflow). */}
+  <RevealStack>
+  {/* The cover is split in two: this outer div paints the opaque background
+      edge to edge (so it covers the wordmark across the full width, not just
+      inside the container inset), while the inner one keeps the
+      `inner-section` container and the content grid. */}
+  <div slot="cover" class="footer-content">
+  <div
+    class="relative inner-section grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2"
+  >
     {/* Top-left — eyebrow + heading */}
     <div class="flex flex-col gap-3">
       <Eyebrow>{eyebrow}</Eyebrow>
@@ -80,12 +79,18 @@ const legalMenuItems = [
       </Button>
     </div>
 
-    {/* Lower-left — copyright + Ask-AI prompt buttons */}
+    {/* Lower-left — copyright + privacy control, then the Ask-AI prompt buttons */}
     <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2">
-      <p class="text-sm text-muted">
-        &copy; {new Date().getFullYear()}
-        {siteData.legalName}
-      </p>
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted">
+        <p class="m-0">
+          &copy; {new Date().getFullYear()}
+          {siteData.legalName}
+        </p>
+        {/* Live here rather than inside the legal query, so that list stays a
+            plain collection of pages. */}
+        <CookiePreferencesButton client:visible />
+        <LanguageButton client:visible />
+      </div>
       <!-- <AIIconPrompt
         prompt={aiFooterPrompt}
         className="items-start text-left lg:flex-row lg:justify-start"
@@ -94,17 +99,30 @@ const legalMenuItems = [
       /> -->
     </div>
 
-    {/* Lower-right — LEGAL + SOCIAL, aligned under the CTA */}
+    {/* Lower-right — NAVIGATE + LEGAL + SOCIAL, aligned under the CTA */}
     <div
       class="flex flex-wrap gap-x-16 gap-y-10 lg:col-start-2 lg:row-start-2 lg:justify-end"
     >
       <div class="flex flex-col gap-3">
-        {/* Legal links + "Your Privacy Choices" come through as one item list
-            (see legalMenuItems above), so the hover-mutes-the-rest effect spans
-            all of them. */}
+        {/* Navigation links — the footer's OWN menu, so adding an item to the
+            header's main-menu never silently changes the footer. Collection
+            pages join it the same dynamic way they join the header, via
+            `addToMenu` in their _meta.mdx. */}
+        <ContentRenderer
+          id="footer-nav-section"
+          query={related("menu-items", "menu", "footer-menu").orderBy(sortByOrder())}
+          variant="FooterMenuVariant"
+          title="Navigate"
+          showButtonSection={false}
+          className={legalColClass}
+        />
+      </div>
+      <div class="flex flex-col gap-3">
+        {/* Legal links straight from the collection — a bare query, no synthetic
+            cookie-preferences row (that now sits by the copyright). */}
         <ContentRenderer
           id="footer-legal-section"
-          items={legalMenuItems}
+          query={query("legal")}
           variant="FooterMenuVariant"
           title="Legal"
           showButtonSection={false}
@@ -123,6 +141,31 @@ const legalMenuItems = [
       </div>
     </div>
   </div>
+  </div>
+
+  {/* Full-bleed logo + wordmark lockup — the RevealStack `base`, parked at the
+      footer's bottom and uncovered as the content above lifts off. Spans the
+      viewport, clipped at both edges. Desktop/tablet only (hidden on mobile).
+      The mark reuses the header's scroll-driven animated logo. */}
+  <div slot="base" class="footer-wordmark" aria-hidden="true">
+    {/* The same <Logo> lockup the header uses — mark plus the two-line
+        "Griffin's / WEB SERVICES" text the component already renders from
+        siteData. Only the scale differs: the mark box comes from
+        `logoMediaClass`, and the two text lines from the component's own
+        `titleFirstClass` / `titleRestClass`, so the lockup's proportions and
+        wrapping stay exactly as the component defines them. */}
+    <Logo
+      trigger="scroll"
+      loading="lazy"
+      altContext="Footer"
+      logoMediaClass="footer-wordmark__mark block object-contain"
+      logoWidths={[160, 240, 320]}
+      logoSizes="(min-width: 1024px) 14vw, 18vw"
+      titleFirstClass="footer-wordmark__line-lg text-heading -ml-[0.1rem] leading-wide no-translate"
+      titleRestClass="footer-wordmark__line-sm font-light emphasized-text pt-2 uppercase whitespace-nowrap p-0 m-0 tracking-[0.2em]"
+    />
+  </div>
+  </RevealStack>
 
   {/* Bottom legal bar + preference controls — commented out for now. */}
   {/* <div class="border-t border-border-soft">
@@ -141,6 +184,85 @@ const legalMenuItems = [
 </footer>
 
 <style>
+  /* The reveal mechanic (clip/sticky/stacking) lives in <RevealStack>. Here we
+     only style the footer's own content + wordmark lockup. */
+
+  /* One continuous background across the whole footer — same bg3→bg gradient
+     the body paints, and `fixed` like the body's, so the footer reads as one
+     surface with no seam against the page above it or between its own parts. */
+  footer {
+    background-image: linear-gradient(to right, var(--color-bg3), var(--color-bg));
+    background-size: cover;
+    background-attachment: fixed;
+  }
+
+  /* The RevealStack `cover` has to be OPAQUE so the wordmark stays hidden until
+     it is revealed. Repeating the identical fixed gradient (rather than a flat
+     colour) means it covers the lockup completely while still being visually
+     indistinguishable from the footer behind it — `fixed` makes both resolve
+     against the viewport, so the two line up exactly. */
+  .footer-content {
+    background-image: linear-gradient(to right, var(--color-bg3), var(--color-bg));
+    background-size: cover;
+    background-attachment: fixed;
+  }
+
+  /* Full-bleed logo + wordmark lockup (the RevealStack `base`): sized to span
+     the viewport, clipped flush to the bottom edge so it bleeds off the
+     left/right margins. Shown at every width. */
+  .footer-wordmark {
+      /* Scaled-up version of the header lockup, sized so the whole thing spans
+         the viewport edge to edge. The mark and both text lines key off vw so
+         they grow together and keep the header's proportions — the small line
+         stays ~22% of the large one, as in the header's 1.8rem / 0.66rem
+         pairing. */
+      --footer-mark: 22vw;
+      --footer-type-lg: 20.5vw;
+      --footer-type-sm: 4.58vw;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      width: 100%;
+      /* Breathing room above and below the lockup so it does not sit flush
+         against the footer content lifting off it or the page edge. */
+      padding-block: clamp(1.75rem, 4vw, 3.5rem);
+      pointer-events: none;
+  }
+
+  /* Scale the gap between mark and text with the lockup. The lockup keeps its
+     horizontal mark-beside-text arrangement at every width — only the scale
+     changes. */
+  .footer-wordmark :global(a) {
+    gap: 3.25vw;
+  }
+
+  /* The lockup's sizes are set here rather than as arbitrary Tailwind values
+     on the class props: those class strings are assembled inside a component
+     prop, which Tailwind's scanner never sees, so `text-[var(--…)]` would
+     never be generated. `:global` is required because these elements are
+     rendered by <Logo>, not by this file. */
+  .footer-wordmark :global(.footer-wordmark__mark) {
+    width: var(--footer-mark);
+    height: var(--footer-mark);
+  }
+
+  /* TextLogoStatic sets `style="line-height: normal"` inline on both lines.
+     At header sizes that leading is invisible, but at ~275px it leaves ~83px
+     of empty space inside the large line's box, reading as a gap between the
+     two lines. `!important` is what it takes to beat the inline style, and
+     this is scoped to the footer so the header lockup is unaffected. */
+  .footer-wordmark :global(.footer-wordmark__line-lg) {
+    font-size: var(--footer-type-lg);
+    line-height: 0.78 !important;
+  }
+
+  .footer-wordmark :global(.footer-wordmark__line-sm) {
+    font-size: var(--footer-type-sm);
+    line-height: 1 !important;
+  }
+
   .footer-col__heading {
     margin-bottom: 1rem;
     font-size: 0.875rem;

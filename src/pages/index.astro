@@ -13,6 +13,7 @@ import HomeFounderCtaSection from "@/layouts/sections/HomeFounderCtaSection.astr
 // TrustPanel removed from the homepage — see the commented render below.
 // import TrustPanel from "@/layouts/sections/TrustPanel.astro";
 import AboutSection from "@/components/AboutSection/AboutSection.astro";
+import CurtainReveal from "@/layouts/sections/CurtainReveal.astro";
 import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
 import { animationProps } from "@/integrations/scroll-animations/props";
 
@@ -61,26 +62,33 @@ const heroDescription =
         that expands to a full-bleed background with a marquee scrolling over it.
         The testimonials carousel is revealed over the full-bleed image via the
         `expand-content` slot. Followed by the PROJECTS filmstrip. */}
-    <AboutSection
-      id="about"
-      statement={`${siteData.title} builds fast, trustworthy websites that help local businesses get found, look credible, and win more work.`}
-      leftText="We design for clarity first, build it right the first time, and keep it fast long after launch."
-      rightText="Our goal is simple: a website that makes your business easier to trust, easier to find, and easier to contact."
-      ctaText="See What We Do"
-      ctaLink="/capabilities"
-      showStats
-    >
-      <div slot="expand-content" class="w-full">
-        <TestimonialCarousel id="testimonials-home" />
-      </div>
-    </AboutSection>
+    {/* The ABOUT/testimonials block hands off to the PROJECTS filmstrip through
+        a curtain: about pins at its lowest point, then lifts to reveal the
+        filmstrip pinned at its highest. Neither section's height is forced. */}
+    <CurtainReveal>
+      <AboutSection
+        slot="top"
+        id="about"
+        statement={`${siteData.title} builds fast, trustworthy websites that help local businesses get found, look credible, and win more work.`}
+        leftText="We design for clarity first, build it right the first time, and keep it fast long after launch."
+        rightText="Our goal is simple: a website that makes your business easier to trust, easier to find, and easier to contact."
+        ctaText="See What We Do"
+        ctaLink="/capabilities"
+        showStats
+      >
+        <div slot="expand-content" class="w-full">
+          <TestimonialCarousel id="testimonials-home" />
+        </div>
+      </AboutSection>
 
-    <ContentRenderer
-      query={byTag("projects", "featured").orderBy(sortByOrder())}
-      variant="FilmstripVariant"
-      title={"Selected work\n& explorations"}
-      collectionUrl="/projects"
-    />
+      <ContentRenderer
+        slot="bottom"
+        query={byTag("projects", "featured").orderBy(sortByOrder())}
+        variant="FilmstripVariant"
+        title={"Selected work\n& explorations"}
+        collectionUrl="/projects"
+      />
+    </CurtainReveal>
 
     <div class="section-rule-t">
       <ContentRenderer

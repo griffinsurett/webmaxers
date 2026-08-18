@@ -1,0 +1,203 @@
+---
+// src/layouts/sections/CurtainReveal.astro
+/**
+ * CurtainReveal — a two-slot scroll transition between adjacent sections.
+ *
+ * The `top` slot ends pinned with its BOTTOM edge at the viewport bottom
+ * (its lowest point, up to 100svh of it showing). As you keep scrolling it
+ * lifts away to reveal the `bottom` slot, which is held pinned with its TOP
+ * edge at the viewport top (its highest point).
+ *
+ *   ┌──────────────┐  ← top slot, pinned at its lowest point
+ *   │   top slot   │
+ *   ├──────────────┤  ← the seam lifts on scroll
+ *   │ bottom slot  │  ← held pinned at its highest point
+ *   └──────────────┘
+ *
+ * NEITHER SLOT'S HEIGHT IS FORCED. Both render at their natural height and
+ * flow normally — a tall slot scrolls through as usual before its pinned
+ * phase, a short one is never stretched. The one viewport of overlap comes
+ * from an explicit `--curtain-travel` spacer, so the transition is identical
+ * whether a slot is 20vh or 300vh tall.
+ *
+ * GEOMETRY (each piece is load-bearing — see the probes that established it):
+ *   - The travel spacer sits ABOVE the top panel, inside the stage. `sticky
+ *     bottom: 0` only holds an element *down*, so the panel has to enter the
+ *     stage from below for the bottom edge to pin at all. With the spacer
+ *     below the panel instead, the panel starts above the pin line and sticky
+ *     never engages.
+ *   - The top panel uses `bottom: 0`, which pins its bottom edge to the
+ *     viewport bottom at ANY natural height — no measuring required.
+ *   - The bottom panel is pulled up by the same travel distance so it sits
+ *     under the curtain, and `top: 0` holds it still while the curtain slides
+ *     off it.
+ *
+ * WHY STICKY, NOT TRANSFORM: the site's two animation systems are both
+ * viewport-relative — `data-animate` via IntersectionObserver (root: null) and
+ * `data-animate-css` via `animation-timeline: view()`. A transformed or
+ * fixed-position wrapper would shift the interior elements' viewport geometry
+ * and desync every animation inside both slots. `position: sticky` changes
+ * only paint position during the pinned phase and leaves each slot's contents
+ * in normal flow with their own layout box, so interior animations run exactly
+ * as they do without this wrapper.
+ *
+ * Reduced motion: the component turns itself OFF completely — the two slots
+ * render exactly as they would if <CurtainReveal> were not in the tree at all.
+ * No pinning, no overlap, no stacking context, no spacer height, no background.
+ *
+ * This site has TWO reduced-motion signals and the curtain honours both:
+ *   1. the OS setting, `prefers-reduced-motion: reduce`
+ *   2. the in-app accessibility toggle, which sets `data-a11y-motion="reduced"`
+ *      on <html> (see AccessibilityScript.astro / useMotionPreference.ts)
+ * Honouring only the media query is not enough: someone who switches motion off
+ * in the site's own accessibility panel keeps their OS default, so the curtain
+ * would still pin and slide for them. AboutSection — the usual `top` slot —
+ * already guards on both, so gating on one left the curtain moving while the
+ * section inside it had gone static.
+ */
+
+interface Props {
+  id?: string;
+  /** Extra classes on the wrapper. */
+  class?: string;
+  className?: string;
+  /**
+   * How far you scroll through the reveal, as a multiple of the viewport.
+   * 1 = exactly one viewport of travel. Larger feels slower / more deliberate.
+   */
+  travel?: number;
+  /**
+   * Paints the site background behind the top slot so the bottom slot cannot
+   * show through while the curtain still covers it. Pass `false` when the top
+   * slot already paints its own opaque background edge to edge.
+   */
+  opaqueTop?: boolean;
+  [key: string]: any;
+}
+
+const {
+  id,
+  class: classAttr,
+  className,
+  travel = 1,
+  opaqueTop = true,
+  ...rest
+} = Astro.props as Props;
+
+const classes = [classAttr, className].filter(Boolean).join(" ");
+---
+
+<div
+  id={id}
+  class:list={["curtain", opaqueTop && "curtain--opaque-top", classes]}
+  style={`--curtain-travel: ${travel};`}
+  {...rest}
+>
+  {/* STAGE — the travel spacer plus the top panel. The spacer ABOVE the panel
+      is what lets `sticky bottom: 0` engage (see the header note). */}
+  <div class="curtain__stage">
+    <div class="curtain__travel" aria-hidden="true"></div>
+
+    {/* TOP — pinned by its BOTTOM edge to the viewport bottom, then released
+        at the stage's end so it lifts away and reveals what is underneath. */}
+    <div class="curtain__panel curtain__top">
+      <slot name="top" />
+    </div>
+  </div>
+
+  {/* BOTTOM STAGE — pulled up under the curtain by the travel distance. The
+      trailing spacer gives the panel's `top: 0` somewhere to hold: without it
+      the panel has no room left in its container and sticky never engages, so
+      the curtain would drag it along instead of sliding off it. */}
+  <div class="curtain__bottom-stage">
+    <div class="curtain__panel curtain__bottom">
+      <slot name="bottom" />
+    </div>
+    <div class="curtain__travel curtain__travel--tail" aria-hidden="true"></div>
+  </div>
+</div>
+
+<style>
+  /* ── The motion gate ──────────────────────────────────────────────────────
+     Every rule that makes the curtain DO something is written twice-gated:
+       - the OS query wraps it (`prefers-reduced-motion: no-preference`)
+       - the selector requires <html> WITHOUT data-a11y-motion="reduced"
+     With either signal on, none of it applies and the wrapper is completely
+     inert: slots keep static position, spacers collapse to zero height, no
+     stacking context, no background. That is the "as if the curtain were never
+     here" state the design calls for.
+
+     The html prefix is spelled out on each selector rather than nested, because
+     the scoped-style compiler does not reliably hoist a nested `:global(html…)`
+     prefix onto inner selectors — nesting compiled to bare `.curtain` rules and
+     silently dropped the gate. `:global()` is required either way: <html> lives
+     outside this component, so Astro's scoping would never match it. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html:not([data-a11y-motion="reduced"])) .curtain {
+      position: relative;
+    }
+
+    /* The top panel paints over the bottom one during the overlap, and pins its
+       BOTTOM edge to the viewport bottom at any natural height. */
+    :global(html:not([data-a11y-motion="reduced"])) .curtain__top {
+      z-index: 2;
+      position: sticky;
+      bottom: 0;
+    }
+
+    /* Pulled up under the curtain by the travel distance. The tail spacer holds
+       the bottom panel pinned while the curtain lifts off it — shortening it
+       eats the lift phase and the page runs out of scroll with the curtain
+       still covering the panel. */
+    :global(html:not([data-a11y-motion="reduced"])) .curtain__bottom-stage {
+      position: relative;
+      z-index: 1;
+      margin-top: calc(var(--curtain-travel, 1) * -100svh);
+    }
+
+    /* The ONLY source of reveal distance. It lives between the slots rather
+       than being derived from either one, so how long the transition lasts is
+       independent of both slots' natural heights. */
+    :global(html:not([data-a11y-motion="reduced"])) .curtain__travel {
+      height: calc(var(--curtain-travel, 1) * 100svh);
+      pointer-events: none;
+    }
+
+    :global(html:not([data-a11y-motion="reduced"])) .curtain__bottom {
+      position: sticky;
+      /* Top edge pinned to the viewport top — its highest point. */
+      top: 0;
+      /* The revealed panel has to be able to fill the viewport it is revealed
+         into: a slot SHORTER than 100svh (the site footer being the obvious
+         case) would otherwise leave the curtain still covering part of it when
+         the page runs out of scroll. A floor, not a fixed height — anything
+         taller keeps its natural height untouched. */
+      min-height: 100svh;
+      /* Short content settles at the BOTTOM of that viewport rather than
+         top-aligning with a gap under it, so the fill reads as deliberate. */
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    /* A flex column would otherwise shrink a tall slot's contents; keep them at
+       their natural size and let the panel grow instead.
+       The child selector MUST stay `:global(*)`: the children come through the
+       <slot>, so they carry the CALLER's scope hash, not this component's.
+       Without it Astro compiles the `*` to `[data-astro-cid-<this file>]`, the
+       rule matches nothing, the slot content shrinks inside the flex column and
+       the curtain has no full-height panel left to reveal. */
+    :global(html:not([data-a11y-motion="reduced"])) .curtain__bottom > :global(*) {
+      flex-shrink: 0;
+    }
+
+    /* Opaque backing so the revealed panel cannot bleed through the curtain.
+       Gated with the rest: with no curtain running there is nothing to hide,
+       and forcing a background here would override whatever the top slot
+       paints for itself. */
+    :global(html:not([data-a11y-motion="reduced"])) .curtain--opaque-top .curtain__top {
+      background: var(--color-bg);
+    }
+  }
+</style>
+

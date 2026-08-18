@@ -3,30 +3,17 @@
 /**
  * HomeFounderCtaSection — closing CTA, sitting between the blog and the footer.
  *
- * Wireframe (desktop):
- *   ┌─────────────────────────────┬──────────────────┐
- *   │ eyebrow                     │                  │
- *   │ headline                    │   photo, full    │
- *   │ paragraphs                  │   bleed to the   │
- *   │ [ CTA ]                     │   viewport edge  │
- *   └─────────────────────────────┴──────────────────┘
- *
- * The photo is a full-bleed background (BackgroundMediaFrame, the site's
- * existing background-media component) and the copy sits on a raised card over
- * its left portion — so the subject stays visible on the right.
- *
- * On mobile the card goes full width and the overlay darkens further, so the
- * copy stays readable over whatever part of the photo sits behind it.
+ * The layout (full-bleed photo + raised copy card over one side) lives in
+ * MediaCardSection; this file supplies only the copy and the CTA cluster.
  *
  * Copy lives in props so it can move to a collection later without markup
  * changes — same approach as HomeOfferSection.
  */
-import Section from "@/components/Section.astro";
-import BackgroundMediaFrame from "@/components/BackgroundMediaFrame.astro";
+import MediaCardSection from "@/layouts/sections/MediaCardSection.astro";
 import Eyebrow from "@/components/Eyebrow";
 import CtaWithProof from "@/components/CtaWithProof.astro";
 import { contactCtaData } from "@/content/siteData";
-import founderImage from "@/assets/me-on-phone.png";
+import founderImage from "@/assets/me-on-the-phone.png";
 
 interface Props {
   eyebrow?: string;
@@ -54,74 +41,30 @@ const {
 } = Astro.props as Props;
 ---
 
-{/* Full-bleed: no `outer-section`/`inner-section` wrapper, so the photo spans
-    the whole viewport width. The copy inside is still constrained by
-    `section-container`, keeping the card aligned to the site's text inset. */}
-<Section animate="fade-in" animateThreshold={0.15}>
-  {/* `mediaOverlayClass` is a light veil only — the card behind the copy does
-      the real contrast work, so the photo stays visible rather than washed out. */}
-  <BackgroundMediaFrame
-    imageSrc={image}
-    imageClass="w-full h-full object-cover object-[70%_center]"
-    imageMaxWidth={2000}
-    mediaOverlayClass="bg-bg/35"
-    className="founder-cta-frame rounded-none! border-0! shadow-none!"
+<MediaCardSection image={image}>
+  <Eyebrow>{eyebrow}</Eyebrow>
+
+  {/* `text-balance` evens the two lines. It only misbehaves on very long
+      headings (squeezing every line to ~69% of the container), so keep
+      this heading short enough to wrap to two lines. */}
+  <h2
+    class="mt-4 mb-0 text-[clamp(1.85rem,3.1vw,3rem)] font-light leading-[1.12] tracking-[-0.02em] text-heading text-balance"
   >
-      {/* Left-to-right scrim: darkens behind the card, clears over the subject.
-          Keeps the copy legible without dimming the whole photo. */}
-      <div
-        aria-hidden="true"
-        class="absolute inset-0 z-0 bg-[linear-gradient(90deg,var(--color-bg)_0%,color-mix(in_srgb,var(--color-bg)_75%,transparent)_38%,transparent_72%)] max-lg:bg-[linear-gradient(0deg,var(--color-bg)_0%,color-mix(in_srgb,var(--color-bg)_82%,transparent)_55%,color-mix(in_srgb,var(--color-bg)_45%,transparent)_100%)]"
-      >
-      </div>
+    {heading}
+  </h2>
 
-      {/* section-container gives the card the same left inset as the rest of the
-          site's copy, so it lines up with the sections above it. */}
-      <div class="section-container relative z-10 flex py-14 lg:py-20">
-        {/* The card — raised surface holding the copy, over the left of the photo. */}
-        <div
-          class="w-full max-w-184 rounded-[1.8rem] border border-border bg-bg/92 p-7 shadow-2xl backdrop-blur-xl md:p-10 lg:p-12"
-        >
-          <Eyebrow>{eyebrow}</Eyebrow>
+  <div class="mt-6 flex flex-col gap-5">
+    {body.map((paragraph) => (
+      <p class="m-0 text-[1.02rem] leading-[1.62] text-text/85">
+        {paragraph}
+      </p>
+    ))}
+  </div>
 
-          {/* `text-balance` evens the two lines. It only misbehaves on very long
-              headings (squeezing every line to ~69% of the container), so keep
-              this heading short enough to wrap to two lines. */}
-          <h2
-            class="mt-4 mb-0 text-[clamp(1.85rem,3.1vw,3rem)] font-light leading-[1.12] tracking-[-0.02em] text-heading text-balance"
-          >
-            {heading}
-          </h2>
-
-          <div class="mt-6 flex flex-col gap-5">
-            {body.map((paragraph) => (
-              <p class="m-0 text-[1.02rem] leading-[1.62] text-text/85">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-
-          {/* Same CTA + proof cluster as the front-page hero, via CtaWithProof. */}
-          <CtaWithProof
-            primaryCTA={{ text: ctaText, link: ctaLink, external: ctaExternal }}
-            id="founder-cta-testimonial-circles"
-            class="mt-9"
-          />
-        </div>
-      </div>
-  </BackgroundMediaFrame>
-</Section>
-
-<style>
-  /* Give the frame enough height for the photo to read as a scene rather than a
-     thin strip. On mobile the card stacks over the photo, so it needs more. */
-  .founder-cta-frame {
-    min-height: 34rem;
-  }
-
-  @media (max-width: 1023px) {
-    .founder-cta-frame {
-      min-height: 44rem;
-    }
-  }
-</style>
+  {/* Same CTA + proof cluster as the front-page hero, via CtaWithProof. */}
+  <CtaWithProof
+    primaryCTA={{ text: ctaText, link: ctaLink, external: ctaExternal }}
+    id="founder-cta-testimonial-circles"
+    class="mt-9"
+  />
+</MediaCardSection>
