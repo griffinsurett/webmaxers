@@ -27,7 +27,7 @@ export const contactCtaData = {
   external: true,
 };
 
-export const pricingCtaData = {
-  text: "View Pricing",
-  link: "/pricing",
+export const quoteCtaData = {
+  text: "Get a Free Quote",
+  link: "/contact-us",
 };

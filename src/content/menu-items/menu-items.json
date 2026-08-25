@@ -7,7 +7,12 @@
     "icon": "fa6-solid:house",
     "order": 0,
     "openInNewTab": false,
-    "menu": ["main-menu", "footer-menu", "links-menu", "footer-menu-2"]
+    "menu": [
+      "main-menu",
+      "footer-menu",
+      "links-menu",
+      "footer-menu-2"
+    ]
   },
   {
     "id": "about",
@@ -17,17 +22,10 @@
     "icon": "fa6-solid:circle-info",
     "order": 1,
     "openInNewTab": false,
-    "menu": ["main-menu", "footer-menu"]
-  },
-  {
-    "id": "pricing",
-    "title": "Pricing",
-    "description": "Get an instant project estimate",
-    "url": "/pricing",
-    "icon": "fa6-solid:calculator",
-    "order": 5,
-    "openInNewTab": false,
-    "menu": ["main-menu", "footer-menu", "footer-menu-2"]
+    "menu": [
+      "main-menu",
+      "footer-menu"
+    ]
   },
   {
     "id": "contact-us",
@@ -37,6 +35,10 @@
     "icon": "fa6-solid:envelope",
     "order": 6,
     "openInNewTab": false,
-    "menu": ["main-menu", "footer-menu", "footer-menu-2"]
+    "menu": [
+      "main-menu",
+      "footer-menu",
+      "footer-menu-2"
+    ]
   }
 ]

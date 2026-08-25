@@ -8,7 +8,7 @@ import Icon from "@/components/Icon";
 import Counter from "@/components/Counter.astro";
 import FloatingLogoBadge from "@/components/FloatingLogoBadge.astro";
 import AIIconPrompt from "@/components/Footer/AIIconPrompt";
-import { contactCtaData, pricingCtaData, siteData } from "@/content/siteData";
+import { contactCtaData, quoteCtaData, siteData } from "@/content/siteData";
 import { byItemKeys } from "@/utils/query/snippets";
 import performanceImg from "@/assets/100performance.png";
 import meoncompImg from "@/assets/meoncomp.png";
@@ -24,7 +24,7 @@ const {
   primaryCtaText = contactCtaData.text,
   primaryCtaLink = contactCtaData.link,
   secondaryCtaText = "See Pricing",
-  secondaryCtaLink = pricingCtaData.link,
+  secondaryCtaLink = quoteCtaData.link,
 } = Astro.props as Props;
 
 const proofEntry = await byItemKeys("about-us", "our-proof").first();

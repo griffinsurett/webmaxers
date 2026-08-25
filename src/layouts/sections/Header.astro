@@ -18,13 +18,19 @@ import { related } from "@/utils/query/snippets";
 >
   <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center head-foot-section py-2 gap-2 sm:gap-4">
     <div class="justify-self-start min-w-0 overflow-hidden">
+      {/* The mark and wordmark both step down on small screens: at 390px the
+          header also carries the theme gear, the Ask-AI pill and the hamburger,
+          and at full size the lockup crowded them out. */}
       <Logo
         loading="eager"
         trigger="scroll"
         animateOutText={true}
         altContext="Home"
-        titleFirstClass="text-[1.8rem] sm:text-3xl text-heading -ml-[0.1rem] leading-wide no-translate"
-        titleRestClass="font-light emphasized-text uppercase whitespace-nowrap text-[0.66rem] sm:text-xs lg:text-sm p-0 m-0 tracking-[0.16em] sm:tracking-[0.2em]"
+        logoMediaClass="block w-[30px] h-[30px] sm:w-[38px] sm:h-[38px] lg:w-[45px] lg:h-[45px] object-contain animate-spin-once"
+        logoWidths={[30, 45, 60, 90]}
+        logoSizes="(min-width: 1024px) 45px, (min-width: 640px) 38px, 30px"
+        titleFirstClass="text-[1.15rem] sm:text-2xl lg:text-3xl text-heading -ml-[0.1rem] leading-wide no-translate"
+        titleRestClass="font-light emphasized-text uppercase whitespace-nowrap text-[0.55rem] sm:text-xs lg:text-sm p-0 m-0 tracking-[0.12em] sm:tracking-[0.2em]"
       />
     </div>
 
