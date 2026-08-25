@@ -65,7 +65,7 @@ const QUESTIONS: Question[] = [
     label: 'Content Management (CMS)',
     description: 'Will you need a backend to edit the website content yourself?',
     type: 'dropdown',
-    options: ['Yes', 'No, Griffin\'s can handle updates']
+    options: ['Yes', 'No, Webmaxxers can handle updates']
   },
   {
     id: 'q6',

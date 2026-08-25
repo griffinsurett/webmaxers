@@ -77,7 +77,7 @@ function BotAvatar({ lg }: { lg?: boolean }) {
   );
 }
 
-const OWN_DOMAIN = "griffinswebservices.com";
+const OWN_DOMAIN = "webmaxxers.com";
 
 const PAGE_LABELS: Record<string, string> = {
   "/pricing":    "View Pricing",
@@ -161,7 +161,7 @@ function Fab({ open, unread, onClick }: { open: boolean; unread: number; onClick
       id="chatbot-trigger"
       onClick={onClick}
       type="button"
-      aria-label={open ? "Close chat" : "Chat with Griffin's Assistant"}
+      aria-label={open ? "Close chat" : "Chat with the Webmaxxers Assistant"}
       aria-expanded={open}
       className={`fixed bottom-[clamp(1.25rem,4vw,1.75rem)] right-[clamp(1.25rem,4vw,1.75rem)] z-[100003]
         w-14 h-14 rounded-full cursor-pointer
@@ -269,7 +269,7 @@ function ChatBot() {
     <>
       {/* Panel */}
       <div
-        role="dialog" aria-modal="true" aria-label="Chat with Griffin's Web Services"
+        role="dialog" aria-modal="true" aria-label="Chat with Webmaxxers"
         className={`fixed z-[100002]
           bottom-[calc(clamp(1.25rem,4vw,1.75rem)+3.5rem+.875rem)]
           right-[clamp(1.25rem,4vw,1.75rem)]
@@ -290,7 +290,7 @@ function ChatBot() {
         <header className="flex items-center gap-3 px-4 py-3.5 shrink-0 card-bg">
           <BotAvatar lg />
           <div className="flex-1 min-w-0">
-            <p className="text-[.9rem] font-bold text-heading m-0 leading-tight truncate">Griffin's Assistant</p>
+            <p className="text-[.9rem] font-bold text-heading m-0 leading-tight truncate">Webmaxxers Assistant</p>
             <p className="text-[.7rem] text-muted m-0 flex items-center gap-1.5 mt-0.5">
               <span className="w-[.42rem] h-[.42rem] rounded-full bg-green-400 shadow-[0_0_5px_#4ade80] animate-chatbot-pulse shrink-0" />
               24×7 Support

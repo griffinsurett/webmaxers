@@ -14,13 +14,17 @@ export {
   iconSizeMap,
   type IconSize,
   type IconRenderOptions,
-} from './utils/iconLoader';
+} from "./utils/iconLoader.js";
 
-export { iconMap, type IconKey, type IconData } from './utils/iconMap.generated';
+export {
+  iconMap,
+  type IconKey,
+  type IconData,
+} from "./utils/iconMap.generated.js";
 
 export {
   ICON_LIBRARIES,
   SCANNABLE_PREFIXES,
   ICON_ALIAS_MAP,
   normalizeLibraryPrefix,
-} from './utils/iconConfig.js';
+} from "./utils/iconConfig.js";

@@ -9,6 +9,7 @@ import { resolveImageMetadata } from "@/utils/images";
 import { getImage } from "astro:assets";
 import type { CollectionLayoutProps } from "./types";
 import { find, isCollectionReference } from "@/utils/query";
+import { siteData } from "@/content/siteData";
 
 const {
   entry,
@@ -54,7 +55,7 @@ const publishedDate = data.publishDate
     }).format(new Date(data.publishDate))
   : "";
 
-const articleAiPrompt = `Please summarize this article from Griffin's Web Services in a clear, useful way for a business owner.
+const articleAiPrompt = `Please summarize this article from ${siteData.title} in a clear, useful way for a business owner.
 
 Article title: ${data.title || "Blog article"}
 ${data.description ? `Article description: ${data.description}` : ""}

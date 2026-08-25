@@ -45,10 +45,10 @@ const {
   colorMode = "invert",
 } = Astro.props;
 
-// Build alt text: "Griffin's Web Services Logo" + optional context
+// Build alt text from the site title + optional context
 const alt = altContext
-  ? `Griffin's Web Services Logo - ${altContext}`
-  : "Griffin's Web Services Logo";
+  ? `${siteData.title} Logo - ${altContext}`
+  : `${siteData.title} Logo`;
 
 const shouldUseLottie =
   useLottie &&

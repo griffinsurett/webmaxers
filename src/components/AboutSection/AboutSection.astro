@@ -155,7 +155,11 @@ const hasExpandSlot = Astro.slots.has("expand-content");
   </aside>
 
   <!-- Rolling logo divider -->
-  <div class="about-roll-shell relative overflow-visible" aria-hidden="true">
+  <div
+    class="about-roll-shell relative overflow-visible"
+    aria-hidden="true"
+    style={`--about-roll-size:${logoSize}px;`}
+  >
     <div class="about-roll-track pointer-events-none absolute top-0 left-0 w-full overflow-visible">
       <!-- about-roll-bounce: travel + entry drop -->
       <!-- about-roll-spin: scroll-linked rotation wrapper around LogoMark -->
@@ -712,9 +716,17 @@ const hasExpandSlot = Astro.slots.has("expand-content");
     animation-delay: 0.1s;
   }
 
-  /* Spin wrapper: only rotates, scroll-linked */
+  /* Spin wrapper: only rotates, scroll-linked.
+     The box is pinned to the mark's own size (--about-roll-size) and centred on
+     a grid, so the rotation happens INSIDE a fixed-size box. Without this the
+     wrapper is sized by its rotating child's bounding box, which for a square
+     mark swells to size×√2 at 45° and back at 0°/90° — the logo reads as
+     growing and shrinking as it rolls even though its scale never changes. */
   .about-roll-spin {
-    display: block;
+    display: grid;
+    place-items: center;
+    width: var(--about-roll-size);
+    height: var(--about-roll-size);
     transform: rotate(0deg);
     will-change: transform;
   }
@@ -735,13 +747,17 @@ const hasExpandSlot = Astro.slots.has("expand-content");
     }
   }
 
+  /* Entry drop only — no squash/stretch. The scaleX/scaleY pairs this used to
+     carry read as the logo shrinking (most visibly at the end of its travel,
+     where the mark is small against the page edge), so the bounce now animates
+     position alone and the mark holds one constant size throughout. */
   @keyframes about-logo-bounce {
-    0%   { transform: translateX(-50%) translateY(calc(-50% - 220px)) scaleY(1.1) scaleX(0.9); }
-    55%  { transform: translateX(-50%) translateY(-50%) scaleY(0.7)  scaleX(1.25); }
-    70%  { transform: translateX(-50%) translateY(calc(-50% - 40px))  scaleY(1.05) scaleX(0.97); }
-    82%  { transform: translateX(-50%) translateY(-50%) scaleY(0.88) scaleX(1.1); }
-    91%  { transform: translateX(-50%) translateY(calc(-50% - 12px))  scaleY(1)   scaleX(1); }
-    100% { transform: translateX(-50%) translateY(-50%) scaleY(1)    scaleX(1); }
+    0%   { transform: translateX(-50%) translateY(calc(-50% - 220px)); }
+    55%  { transform: translateX(-50%) translateY(-50%); }
+    70%  { transform: translateX(-50%) translateY(calc(-50% - 40px)); }
+    82%  { transform: translateX(-50%) translateY(-50%); }
+    91%  { transform: translateX(-50%) translateY(calc(-50% - 12px)); }
+    100% { transform: translateX(-50%) translateY(-50%); }
   }
 
   @keyframes about-logo-travel {

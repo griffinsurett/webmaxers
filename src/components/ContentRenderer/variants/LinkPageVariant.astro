@@ -13,6 +13,7 @@ import HorizontalLegalFooter from "@/components/Footer/HorizontalLegalFooter";
 import BackgroundMedia from "@/components/BackgroundMedia.astro";
 import type { BaseVariantProps } from "../ContentRenderer.types";
 import { toArray } from "@/utils/array";
+import { siteData } from "@/content/siteData";
 import { getCollection } from "astro:content";
 import { query } from "@/utils/query";
 import { prepareCollectionEntries, getCollectionMeta } from "@/utils/collections";
@@ -90,7 +91,7 @@ const linkHeroVideoSrc = "/video3.mp4";
 
         <div class="justify-self-end">
           <LinkPageShareButton
-            shareTitle="Griffin's Web Services Links"
+            shareTitle={`${siteData.title} Links`}
             client:idle
           />
         </div>
@@ -134,7 +135,7 @@ const linkHeroVideoSrc = "/video3.mp4";
 
             <div class="justify-self-end">
               <LinkPageShareButton
-                shareTitle="Griffin's Web Services Links"
+                shareTitle={`${siteData.title} Links`}
                 client:idle
               />
             </div>

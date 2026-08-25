@@ -57,9 +57,9 @@ export default function SupportChat({ className = "" }: SupportChatProps) {
         {/* Chat header */}
         <div className="bg-bg2 px-3 py-2 flex items-center gap-2 border-b border-text/10">
           <div className="w-5 h-5 rounded-full overflow-hidden">
-            <img src={FAVICON_DATA_URI} alt="GWS" className="w-full h-full object-cover" />
+            <img src={FAVICON_DATA_URI} alt="Webmaxxers" className="w-full h-full object-cover" />
           </div>
-          <span className="text-xs font-medium text-text">Griffin's Web Services</span>
+          <span className="text-xs font-medium text-text">Webmaxxers</span>
           <div className="ml-auto flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
             <span className="text-[10px] text-text/70">Online</span>

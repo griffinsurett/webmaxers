@@ -1162,7 +1162,7 @@ function buildEstimateMarkdown({
   if (messages.length) {
     lines.push(`\n## Conversation Transcript`);
     messages.forEach((m) => {
-      lines.push(`\n**${m.role === "user" ? "Client" : "Griffin Web Services AI"}:**`);
+      lines.push(`\n**${m.role === "user" ? "Client" : "Webmaxxers AI"}:**`);
       lines.push(m.content);
     });
   }
@@ -1197,7 +1197,7 @@ function buildAiResearchPrompt({ bizName, bizLoc, niches, price, pages, answers 
   const pageList = pages.map((p: any) => p.name).filter(Boolean).join(", ");
   const siteType = answers.goal === "ecommerce" ? "e-commerce" : "business";
   const nicheStr = niches.length ? niches.join(", ") : "general business";
-  return `I just used a pricing calculator from Griffin's Web Services (griffinswebservices.com) and got an estimate for my ${siteType} website.
+  return `I just used a pricing calculator from Webmaxxers (webmaxxers.com) and got an estimate for my ${siteType} website.
 
 Here's a summary of what was recommended for my business:
 - Business: ${bizName || "my business"} — ${nicheStr}${bizLoc ? `, based in ${bizLoc}` : ""}
@@ -1209,7 +1209,7 @@ I'd like your honest take on a few things:
 1. Is this price range reasonable for a professionally built ${siteType} website with ${price.u} pages in 2025?
 2. What questions should I ask a web design agency before signing anything?
 3. What should I look for to make sure I'm getting a quality result — not just a template with my logo slapped on it?
-4. Based on the site griffinswebservices.com — does this agency seem credible and worth the investment for a small business?
+4. Based on the site webmaxxers.com — does this agency seem credible and worth the investment for a small business?
 
 Be direct and practical. I'm trying to make a smart decision.`;
 }
@@ -1472,7 +1472,7 @@ function QuoteForm({ bizName, bizLoc, bizDesc, bizServes, niches, implNotes, ans
           <span className="text-[12px] text-muted leading-[1.5]">
             I agree to the{" "}
             <a href="/legal/privacy-policy" className="text-accent underline">Privacy Policy</a>
-            . Griffin Web Services may contact me to follow up on this estimate.
+            . Webmaxxers may contact me to follow up on this estimate.
           </span>
         </label>
         {errorMsg && (
@@ -1821,7 +1821,7 @@ export default function PricingCalculatorLegacy({ industryNames, formspreeId = "
       <div className="text-text font-['DM_Sans','Helvetica_Neue',sans-serif]">
         <div className="border-b border-b-border px-6 pt-4 pb-[0.875rem]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-text/25 tracking-[0.1em] uppercase">Griffin Web Services — Pricing</span>
+            <span className="text-[11px] font-bold text-text/25 tracking-[0.1em] uppercase">Webmaxxers — Pricing</span>
             <span className="text-[11px] text-muted">Submission received</span>
           </div>
           <div className="h-[2px] bg-border rounded-[2px] overflow-hidden">
@@ -1854,7 +1854,7 @@ export default function PricingCalculatorLegacy({ industryNames, formspreeId = "
       {/* Header bar */}
       <div className="border-b border-b-border px-6 pt-4 pb-[0.875rem]">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-bold text-text/25 tracking-[0.1em] uppercase">Griffin Web Services — Pricing</span>
+          <span className="text-[11px] font-bold text-text/25 tracking-[0.1em] uppercase">Webmaxxers — Pricing</span>
           <span className="text-[11px] text-muted">{stepLbl} · {pct}%</span>
         </div>
         <div className="h-[2px] bg-border rounded-[2px] overflow-hidden">

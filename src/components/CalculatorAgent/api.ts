@@ -39,7 +39,7 @@ function mapCms(val?: string): string {
   if (!val) return 'occasional';
   const lower = val.toLowerCase();
   if (lower.startsWith('yes')) return 'frequent';
-  if (lower.includes('griffin')) return 'managed_for_me';
+  if (lower.includes('webmaxxers')) return 'managed_for_me';
   return 'occasional';
 }
 

@@ -1,7 +1,7 @@
 ---
 // src/layouts/Footer.astro
 /**
- * Footer — webmaxers-style layout with Griffin's Web Services text + button styles:
+ * Footer — webmaxers-style layout with Webmaxxers text + button styles:
  *   Top   : eyebrow + large heading (left), CTA button (right).
  *   Lower : left  = copyright + "Ask AI about Us" prompt buttons.
  *           right = LEGAL column + SOCIAL icons.
@@ -148,8 +148,8 @@ const legalColClass = [
       viewport, clipped at both edges. Desktop/tablet only (hidden on mobile).
       The mark reuses the header's scroll-driven animated logo. */}
   <div slot="base" class="footer-wordmark" aria-hidden="true">
-    {/* The same <Logo> lockup the header uses — mark plus the two-line
-        "Griffin's / WEB SERVICES" text the component already renders from
+    {/* The same <Logo> lockup the header uses — mark plus the wordmark text
+        the component already renders from
         siteData. Only the scale differs: the mark box comes from
         `logoMediaClass`, and the two text lines from the component's own
         `titleFirstClass` / `titleRestClass`, so the lockup's proportions and
@@ -211,23 +211,48 @@ const legalColClass = [
      the viewport, clipped flush to the bottom edge so it bleeds off the
      left/right margins. Shown at every width. */
   .footer-wordmark {
-      /* Scaled-up version of the header lockup, sized so the whole thing spans
-         the viewport edge to edge. The mark and both text lines key off vw so
-         they grow together and keep the header's proportions — the small line
-         stays ~22% of the large one, as in the header's 1.8rem / 0.66rem
-         pairing. */
-      --footer-mark: 22vw;
-      --footer-type-lg: 20.5vw;
-      --footer-type-sm: 4.58vw;
+      /* Scaled-up version of the header lockup, sized so the whole lockup spans
+         the viewport edge to edge WITHOUT overflowing it. The mark and both text
+         lines key off vw so they grow together and keep the header's proportions
+         — the small line stays ~22% of the large one, as in the header's
+         1.8rem / 0.66rem pairing.
+
+         The type size is derived, not hand-picked: the lockup is
+         `mark + gap + text`, so the text can only take the width the mark and
+         gap leave behind. `--footer-mark` and `--footer-gap` are the inputs;
+         `--footer-type-lg` divides the remaining width by the wordmark's
+         width-to-font-size ratio (`--footer-type-ratio`), measured from the
+         rendered face. That keeps the lockup flush to both edges for ANY title
+         length — a longer name shrinks the type instead of overflowing the
+         clip. Re-measure the ratio only if the title or header font changes. */
+      --footer-mark: 14vw;
+      --footer-gap: 3.25vw;
+      /* Rendered width of the wordmark ÷ its font-size, for the current title
+         in TikTok Sans (measured: 1869px wide at 295.2px = 6.33). */
+      --footer-type-ratio: 6.33;
+      /* 98vw not 100vw: leaves a hair of side breathing room and absorbs
+         sub-pixel rounding so the lockup never re-triggers the clip. */
+      --footer-type-lg: calc(
+        (98vw - var(--footer-mark) - var(--footer-gap)) / var(--footer-type-ratio)
+      );
+      --footer-type-sm: calc(var(--footer-type-lg) * 0.223);
 
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       width: 100%;
-      /* Breathing room above and below the lockup so it does not sit flush
-         against the footer content lifting off it or the page edge. */
-      padding-block: clamp(1.75rem, 4vw, 3.5rem);
+      /* The wordmark is the page's closing baseline, so it sits ON the bottom
+         edge: no bottom padding. The `line-height: 0.78` on the large line
+         already pulls the box tight around the letters, leaving ~4px under
+         them at 1440 — enough that descenders clear the `overflow: hidden`
+         without the glyphs floating above the edge.
+
+         All the breathing room goes on top, where it separates the lockup from
+         the footer content lifting off it. Measured: this is the gap that read
+         as "too much Y spacing" — it was above the wordmark, not below. */
+      padding-top: clamp(0.75rem, 1.5vw, 1.5rem);
+      padding-bottom: 0;
       pointer-events: none;
   }
 
@@ -235,7 +260,7 @@ const legalColClass = [
      horizontal mark-beside-text arrangement at every width — only the scale
      changes. */
   .footer-wordmark :global(a) {
-    gap: 3.25vw;
+    gap: var(--footer-gap);
   }
 
   /* The lockup's sizes are set here rather than as arbitrary Tailwind values
