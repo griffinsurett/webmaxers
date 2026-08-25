@@ -42,7 +42,9 @@ interface Props {
   className?: string;
 }
 
-function SparkleIcon({ className = "" }: { className?: string }) {
+/** The Ask-AI sparkle mark. Exported so other entry points into this modal —
+ *  e.g. the header's pill trigger — use the same icon rather than a copy. */
+export function SparkleIcon({ className = "" }: { className?: string }) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
       <path

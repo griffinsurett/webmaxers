@@ -6,6 +6,8 @@
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import Logo from "@/components/Logo/Logo.astro";
 import ThemeControls from "@/components/ThemeControls/ThemeControls.jsx";
+import Button from "@/components/Button/Button";
+import ScrollFadeOut from "@/components/ScrollFadeOut.astro";
 import { related } from "@/utils/query/snippets";
 ---
 <header
@@ -14,8 +16,8 @@ import { related } from "@/utils/query/snippets";
   role="banner"
   aria-label="Primary site header"
 >
-  <div class="grid grid-cols-[1fr_auto_1fr] items-center head-foot-section py-2 gap-4">
-    <div class="justify-self-start">
+  <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center head-foot-section py-2 gap-2 sm:gap-4">
+    <div class="justify-self-start min-w-0 overflow-hidden">
       <Logo
         loading="eager"
         trigger="scroll"
@@ -28,12 +30,28 @@ import { related } from "@/utils/query/snippets";
 
     <ThemeControls client:idle />
 
-    <div class="justify-self-end">
+    <div class="justify-self-end shrink-0">
       <nav
-        class="flex items-center justify-center sm:gap-4"
+        class="flex items-center justify-center gap-2 sm:gap-4"
         aria-label="Primary navigation"
         role="navigation"
       >
+        {/* Ask-AI trigger — opens the same modal as the floating ask bar that
+            appears further down the page, via the ASK_AI_OPEN_EVENT the AskAi
+            island already listens for. Wrapped in <ScrollFadeOut> so it recedes
+            on scroll in step with the logo wordmark (which uses the same
+            component) and returns on the way back up. */}
+        <ScrollFadeOut>
+          <Button
+            id="header-ask-ai"
+            type="button"
+            variant="pillOutline"
+            client:idle
+          >
+            Ask AI
+          </Button>
+        </ScrollFadeOut>
+
         <ContentRenderer
           query={related("menu-items", "menu", "main-menu")}
           variant="MenuVariant"
@@ -46,6 +64,21 @@ import { related } from "@/utils/query/snippets";
     </div>
   </div>
 </header>
+
+<script is:inline>
+  // Open the Ask-AI modal from the header trigger. Delegated off the document so
+  // it works no matter when the Button island hydrates, and survives view
+  // transitions. "ask-ai:open" is the literal ASK_AI_OPEN_EVENT string that the
+  // AskAi island listens for — kept inline so this script doesn't pull the React
+  // component into the header's bundle.
+  document.addEventListener("click", (e) => {
+    const target = e.target;
+    if (target && target.closest && target.closest("#header-ask-ai")) {
+      e.preventDefault();
+      window.dispatchEvent(new Event("ask-ai:open"));
+    }
+  });
+</script>
 
 <script is:inline>
   (() => {

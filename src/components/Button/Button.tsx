@@ -20,6 +20,7 @@ import LinkPageButton from './variants/LinkPageButton';
 import FilterTabButton from './variants/FilterTabButton';
 import FilterIconButton from './variants/FilterIconButton';
 import FormButton from './variants/FormButton';
+import PillOutlineButton from './variants/PillOutlineButton';
 
 /* ────────────────────────────────────────────────────────────────────────
  * Accessible name (WCAG 2.5.3 — Label in Name)
@@ -153,6 +154,7 @@ const VARIANT_MAP = {
   filterTab: FilterTabButton,
   filterIcon: FilterIconButton,
   form: FormButton,
+  pillOutline: PillOutlineButton,
 };
 
 export type ButtonVariant = keyof typeof VARIANT_MAP;

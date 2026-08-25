@@ -1,0 +1,148 @@
+---
+// src/components/ScrollFadeOut.astro
+/**
+ * Scroll-Fade-Out Wrapper
+ *
+ * Fades + lifts its slotted content away as soon as the page is scrolled, and
+ * brings it back on the way up. This is the header's "recedes while you read"
+ * behaviour — the logo wordmark and the header's Ask-AI trigger both use it, so
+ * they animate out together as one lockup.
+ *
+ * Mechanism (unchanged from the one TextLogoStatic has always used, just made
+ * reusable and multi-instance):
+ *   - Modern browsers: a CSS scroll-driven animation (`animation-timeline:
+ *     scroll(root)`), so the fade tracks the scroll position with zero JS.
+ *   - Older browsers: a passive scroll listener toggles `data-scrolled`, and a
+ *     plain transition does the work.
+ *   - `prefers-reduced-motion`: no animation, always visible.
+ *
+ * The activation dance (`data-scroll-activated`) exists because mobile browsers
+ * can restore a page at a non-zero scroll offset; without it the content would
+ * start already faded. We only arm the animation once we've seen the page at
+ * the top.
+ */
+
+interface Props {
+  /** Extra classes for the wrapper. */
+  class?: string;
+  /** Set false to render the content without any scroll behaviour. */
+  enabled?: boolean;
+}
+
+const { class: className = "", enabled = true } = Astro.props;
+---
+
+<div class={className} data-scroll-fade-css={enabled ? "true" : undefined}>
+  <slot />
+</div>
+
+<style>
+  /* Visible by default — before activation, and for anyone the animation
+     never reaches. */
+  [data-scroll-fade-css] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Modern path: scroll-driven, zero JavaScript. */
+  @supports (animation-timeline: scroll()) {
+    [data-scroll-fade-css][data-scroll-activated] {
+      animation: scroll-fade-out linear forwards;
+      animation-timeline: scroll(root);
+      animation-range: 0px 50px;
+    }
+
+    @keyframes scroll-fade-out {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-1rem);
+      }
+    }
+  }
+
+  /* Fallback path: JS toggles the attribute, CSS transitions it. */
+  @supports not (animation-timeline: scroll()) {
+    [data-scroll-fade-css] {
+      transition:
+        opacity 300ms ease,
+        transform 300ms ease;
+    }
+
+    [data-scroll-fade-css][data-scrolled="true"] {
+      opacity: 0;
+      transform: translateY(-1rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-scroll-fade-css] {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
+  /* Faded-out content must not swallow clicks meant for the page beneath it. */
+  [data-scroll-fade-css][data-scrolled="true"] {
+    pointer-events: none;
+  }
+</style>
+
+<script is:inline>
+  // Drives every [data-scroll-fade-css] on the page. Guarded so that multiple
+  // instances of this component (header logo + header Ask-AI button) don't each
+  // install their own listener — the first one to run wires up all of them, and
+  // re-runs (view transitions) pick up any newly-added elements.
+  (() => {
+    if (window.__scrollFadeOutInit) return;
+    window.__scrollFadeOutInit = true;
+
+    const SELECTOR = "[data-scroll-fade-css]";
+    const supportsScrollTimeline =
+      typeof CSS !== "undefined" &&
+      CSS.supports &&
+      CSS.supports("animation-timeline: scroll()");
+
+    let ticking = false;
+    let armed = false;
+
+    const update = () => {
+      const els = document.querySelectorAll(SELECTOR);
+      const y = window.scrollY;
+
+      if (supportsScrollTimeline) {
+        // Arm the scroll-driven animation only once we've seen the top of the
+        // page, so a restored scroll position can't start it mid-fade.
+        if (!armed && y <= 5) {
+          armed = true;
+          els.forEach((el) => el.setAttribute("data-scroll-activated", "true"));
+        }
+      } else {
+        els.forEach((el) => {
+          if (y > 50) el.setAttribute("data-scrolled", "true");
+          else el.removeAttribute("data-scrolled");
+        });
+      }
+
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("astro:after-swap", () => {
+      armed = false;
+      update();
+    });
+
+    requestAnimationFrame(update);
+  })();
+</script>
