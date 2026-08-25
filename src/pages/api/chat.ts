@@ -137,10 +137,10 @@ export const POST: APIRoute = async ({ request }) => {
             } else {
               console.log(`[Chat API RAG Matches] Count: ${matchedChunks?.length ?? 0}`);
               if (matchedChunks && matchedChunks.length > 0) {
-                // Dynamically strip the strict pricing calculator rule from static prompt
+                // Dynamically strip the strict pricing rule from the static prompt
                 // so the model is allowed to quote prices from the uploaded document chunks.
                 combinedKnowledge = combinedKnowledge.replace(
-                  /6\.\s*PRICING:[\s\S]*?personalized estimate\./gi,
+                  /6\.\s*PRICING:[\s\S]*?personalized quote\./gi,
                   ""
                 );
 

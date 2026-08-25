@@ -6,6 +6,8 @@
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import Logo from "@/components/Logo/Logo.astro";
 import ThemeControls from "@/components/ThemeControls/ThemeControls.jsx";
+// Both are used only by the commented-out Ask-AI trigger below; kept so
+// re-enabling it is a one-block uncomment.
 import Button from "@/components/Button/Button";
 import ScrollFadeOut from "@/components/ScrollFadeOut.astro";
 import { related } from "@/utils/query/snippets";
@@ -16,25 +18,27 @@ import { related } from "@/utils/query/snippets";
   role="banner"
   aria-label="Primary site header"
 >
-  <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center head-foot-section py-2 gap-2 sm:gap-4">
+  <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center head-foot-section py-2 gap-2 sm:gap-4">
     <div class="justify-self-start min-w-0 overflow-hidden">
-      {/* The mark and wordmark both step down on small screens: at 390px the
-          header also carries the theme gear, the Ask-AI pill and the hamburger,
-          and at full size the lockup crowded them out. */}
+      {/* The mark and wordmark both step down on small screens so the lockup
+          doesn't crowd the theme gear and hamburger (and the Ask-AI pill, when
+          it's re-enabled below). */}
       <Logo
         loading="eager"
         trigger="scroll"
         animateOutText={true}
         altContext="Home"
-        logoMediaClass="block w-[30px] h-[30px] sm:w-[38px] sm:h-[38px] lg:w-[45px] lg:h-[45px] object-contain animate-spin-once"
-        logoWidths={[30, 45, 60, 90]}
-        logoSizes="(min-width: 1024px) 45px, (min-width: 640px) 38px, 30px"
-        titleFirstClass="text-[1.15rem] sm:text-2xl lg:text-3xl text-heading -ml-[0.1rem] leading-wide no-translate"
-        titleRestClass="font-light emphasized-text uppercase whitespace-nowrap text-[0.55rem] sm:text-xs lg:text-sm p-0 m-0 tracking-[0.12em] sm:tracking-[0.2em]"
+        logoMediaClass="block w-[30px] h-[30px] min-[360px]:w-[33px] min-[360px]:h-[33px] min-[390px]:w-[36px] min-[390px]:h-[36px] sm:w-[40px] sm:h-[40px] lg:w-[45px] lg:h-[45px] object-contain animate-spin-once"
+        logoWidths={[30, 33, 36, 40, 45, 72, 90]}
+        logoSizes="(min-width: 1024px) 45px, (min-width: 640px) 40px, (min-width: 390px) 36px, (min-width: 360px) 33px, 30px"
+        titleFirstClass="text-[1.1rem] min-[360px]:text-[1.2rem] min-[390px]:text-[1.4rem] sm:text-2xl lg:text-3xl text-heading -ml-[0.1rem] leading-wide no-translate"
+        titleRestClass="font-light emphasized-text uppercase whitespace-nowrap text-[0.6rem] min-[390px]:text-[0.65rem] sm:text-xs lg:text-sm p-0 m-0 tracking-[0.12em] sm:tracking-[0.2em]"
       />
     </div>
 
-    <ThemeControls client:idle />
+    <div class="justify-self-center">
+      <ThemeControls client:idle />
+    </div>
 
     <div class="justify-self-end shrink-0">
       <nav
@@ -42,11 +46,13 @@ import { related } from "@/utils/query/snippets";
         aria-label="Primary navigation"
         role="navigation"
       >
-        {/* Ask-AI trigger — opens the same modal as the floating ask bar that
-            appears further down the page, via the ASK_AI_OPEN_EVENT the AskAi
-            island already listens for. Wrapped in <ScrollFadeOut> so it recedes
-            on scroll in step with the logo wordmark (which uses the same
-            component) and returns on the way back up. */}
+        {/* TEMPORARILY DISABLED — Ask-AI trigger. Opens the same modal as the
+            floating ask bar further down the page, via the ASK_AI_OPEN_EVENT the
+            AskAi island listens for. <ScrollFadeOut> makes it recede on scroll in
+            step with the logo wordmark. Re-enable by uncommenting this block; the
+            click handler below and the `pillOutline` Button variant are both
+            still in place. */}
+        {/*
         <ScrollFadeOut>
           <Button
             id="header-ask-ai"
@@ -57,6 +63,7 @@ import { related } from "@/utils/query/snippets";
             Ask AI
           </Button>
         </ScrollFadeOut>
+        */}
 
         <ContentRenderer
           query={related("menu-items", "menu", "main-menu")}

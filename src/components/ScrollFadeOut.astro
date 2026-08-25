@@ -117,9 +117,17 @@ const { class: className = "", enabled = true } = Astro.props;
       if (supportsScrollTimeline) {
         // Arm the scroll-driven animation only once we've seen the top of the
         // page, so a restored scroll position can't start it mid-fade.
-        if (!armed && y <= 5) {
-          armed = true;
-          els.forEach((el) => el.setAttribute("data-scroll-activated", "true"));
+        if (!armed && y <= 5) armed = true;
+        // Arm every element each pass, not just on the transition to armed:
+        // wrappers around client:* islands (the header's Ask-AI pill) can enter
+        // the DOM after that moment, and would otherwise never be activated —
+        // they'd stay fully visible while the rest of the lockup faded.
+        if (armed) {
+          els.forEach((el) => {
+            if (!el.hasAttribute("data-scroll-activated")) {
+              el.setAttribute("data-scroll-activated", "true");
+            }
+          });
         }
       } else {
         els.forEach((el) => {
@@ -142,6 +150,13 @@ const { class: className = "", enabled = true } = Astro.props;
       armed = false;
       update();
     });
+
+    // Islands inside these wrappers hydrate after first paint, so watch for
+    // wrappers being added/populated and arm them as they appear.
+    if ("MutationObserver" in window) {
+      const mo = new MutationObserver(() => update());
+      mo.observe(document.body, { childList: true, subtree: true });
+    }
 
     requestAnimationFrame(update);
   })();

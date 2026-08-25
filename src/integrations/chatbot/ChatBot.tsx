@@ -80,7 +80,6 @@ function BotAvatar({ lg }: { lg?: boolean }) {
 const OWN_DOMAIN = "webmaxxers.com";
 
 const PAGE_LABELS: Record<string, string> = {
-  "/pricing":    "View Pricing",
   "/projects":   "View Portfolio",
   "/blog":       "Read Our Blog",
   "/faq":        "View FAQs",
