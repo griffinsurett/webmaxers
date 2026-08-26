@@ -175,7 +175,10 @@ export default function ThemeControls({ className = "" }: ThemeControlsProps) {
       {/* Preferences popup (all screen sizes). */}
       {open && (
         <div
-          className="absolute left-1/2 top-full z-10 mt-4 w-[min(18rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-2xl card-bg-2 p-3 shadow-2xl"
+          /* Right-anchored on mobile, where the gear sits beside the hamburger at
+             the row's edge — centering it there would push the panel off-screen.
+             From sm the gear is centred in the header, so the panel centres too. */
+          className="absolute right-0 top-full z-10 mt-4 w-[min(18rem,calc(100vw-1.5rem))] rounded-2xl card-bg-2 p-3 shadow-2xl sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
           onPointerDown={(event) => event.stopPropagation()}
           role="menu"
           aria-label="Preferences"

@@ -86,6 +86,9 @@ const legalColClass = [
           &copy; {new Date().getFullYear()}
           {siteData.legalName}
         </p>
+        {siteData.dbaNotice && (
+          <p class="m-0 basis-full">{siteData.dbaNotice}</p>
+        )}
         {/* Live here rather than inside the legal query, so that list stays a
             plain collection of pages. */}
         <CookiePreferencesButton client:visible />

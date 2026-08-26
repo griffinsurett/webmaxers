@@ -18,29 +18,35 @@ import { related } from "@/utils/query/snippets";
   role="banner"
   aria-label="Primary site header"
 >
-  <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center head-foot-section py-2 gap-2 sm:gap-4">
+  {/* Mobile: the middle column collapses to auto width so the gear sits tight
+      against the hamburger at the right, giving the logo the rest of the row.
+      sm and up: the middle column grows back to 1fr and the gear re-centres. */}
+  <div class="grid grid-cols-[minmax(0,1fr)_auto_auto] sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center head-foot-section py-2 gap-2 sm:gap-4">
     <div class="justify-self-start min-w-0 overflow-hidden">
-      {/* The mark and wordmark both step down on small screens so the lockup
-          doesn't crowd the theme gear and hamburger (and the Ask-AI pill, when
-          it's re-enabled below). */}
+      {/* With the gear off-center on mobile, the lockup has room to sit a step
+          larger than it did when it shared the row's middle with the gear. */}
       <Logo
         loading="eager"
         trigger="scroll"
         animateOutText={true}
         altContext="Home"
-        logoMediaClass="block w-[30px] h-[30px] min-[360px]:w-[33px] min-[360px]:h-[33px] min-[390px]:w-[36px] min-[390px]:h-[36px] sm:w-[40px] sm:h-[40px] lg:w-[45px] lg:h-[45px] object-contain animate-spin-once"
-        logoWidths={[30, 33, 36, 40, 45, 72, 90]}
-        logoSizes="(min-width: 1024px) 45px, (min-width: 640px) 40px, (min-width: 390px) 36px, (min-width: 360px) 33px, 30px"
-        titleFirstClass="text-[1.1rem] min-[360px]:text-[1.2rem] min-[390px]:text-[1.4rem] sm:text-2xl lg:text-3xl text-heading -ml-[0.1rem] leading-wide no-translate"
-        titleRestClass="font-light emphasized-text uppercase whitespace-nowrap text-[0.6rem] min-[390px]:text-[0.65rem] sm:text-xs lg:text-sm p-0 m-0 tracking-[0.12em] sm:tracking-[0.2em]"
+        logoMediaClass="block w-[34px] h-[34px] min-[360px]:w-[38px] min-[360px]:h-[38px] min-[390px]:w-[41px] min-[390px]:h-[41px] sm:w-[40px] sm:h-[40px] lg:w-[45px] lg:h-[45px] object-contain animate-spin-once"
+        logoWidths={[34, 38, 41, 40, 45, 82, 90]}
+        logoSizes="(min-width: 1024px) 45px, (min-width: 640px) 40px, (min-width: 390px) 41px, (min-width: 360px) 38px, 34px"
+        titleFirstClass="text-[1.25rem] min-[360px]:text-[1.35rem] min-[390px]:text-[1.5rem] sm:text-2xl lg:text-3xl text-heading -ml-[0.1rem] leading-wide no-translate"
+        titleRestClass="font-light emphasized-text uppercase whitespace-nowrap text-[0.65rem] min-[390px]:text-[0.7rem] sm:text-xs lg:text-sm p-0 m-0 tracking-[0.12em] sm:tracking-[0.2em]"
       />
     </div>
 
-    <div class="justify-self-center">
+    {/* One ThemeControls island that changes grid cell across the breakpoint:
+        mobile puts it in column 2 right beside the hamburger (column 3), and
+        sm+ returns it to the centre cell. Popup alignment follows in the
+        component's own classes. */}
+    <div class="col-start-2 row-start-1 justify-self-end sm:justify-self-center shrink-0">
       <ThemeControls client:idle />
     </div>
 
-    <div class="justify-self-end shrink-0">
+    <div class="col-start-3 row-start-1 justify-self-end shrink-0">
       <nav
         class="flex items-center justify-center gap-2 sm:gap-4"
         aria-label="Primary navigation"

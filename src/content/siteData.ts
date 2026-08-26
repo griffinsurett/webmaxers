@@ -4,7 +4,11 @@ export const SITE_URL = `https://${SITE_DOMAIN}`;
 
 export const siteData = {
   title: "Webm@xxers",
-  legalName: "Webmaxxers is a registered DBA of Griffin's Web Services LLC.",
+  legalName: "Griffin’s Web Services LLC",
+  // Shown in the footer. Kept out of `legalName` because that value is
+  // interpolated mid-sentence in the legal pages, the schema.org publisher, and
+  // the chatbot system prompt, where a full sentence breaks the grammar.
+  dbaNotice: "Webmaxxers is a registered DBA of Griffin’s Web Services LLC.",
   description: "Every great business deserves a powerful online presence. We create websites that do more than just exist — they load instantly, showcase your brand, engage visitors, and grow alongside your business. We don’t just design your site — we make it lightning-fast, manage it, and protect it for the long term.",
   domain: SITE_DOMAIN,
   url: SITE_URL,
