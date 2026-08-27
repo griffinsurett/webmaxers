@@ -16,6 +16,7 @@
  * user (and their screen reader) keep context — no full-page reload.
  */
 import {
+  useEffect,
   useRef,
   useState,
   type FormEvent,
@@ -50,6 +51,24 @@ export interface FormWrapperProps {
   formspreeEndpoint?: string;
   formspreeFormName?: string;
   formspreeExcludeKeys?: string[];
+  /**
+   * Post the form natively (a real browser submit) instead of via fetch.
+   *
+   * Required when the Formspree form has reCAPTCHA enabled: Formspree refuses
+   * AJAX submissions unless the form also has a custom key, answering with
+   * "In order to submit via AJAX, you need to set a custom key or reCAPTCHA
+   * must be disabled". A native POST lets Formspree serve its own challenge
+   * page and then redirect back via `_next`.
+   *
+   * Trade-off: the page navigates away, so the inline success/error status is
+   * not used — Formspree handles the round trip. Client-side validation still
+   * runs first, so users keep the accessible per-field errors.
+   */
+  useNativeFormSubmission?: boolean;
+  /** Method for native submission. */
+  formMethod?: "post" | "get";
+  /** Return URL after a native submit. Defaults to the current page. */
+  reloadOnSuccess?: boolean;
 
   successMessage?: string;
   errorMessage?: string;
@@ -75,6 +94,9 @@ export default function FormWrapper({
   fieldsClassName = "grid gap-4 md:grid-cols-2",
   onSubmit,
   formspreeEndpoint,
+  useNativeFormSubmission = false,
+  formMethod = "post",
+  reloadOnSuccess,
   formspreeFormName,
   formspreeExcludeKeys = [],
   successMessage = "Thanks — your message has been sent. We'll be in touch shortly.",
@@ -91,7 +113,19 @@ export default function FormWrapper({
   submitButton,
 }: FormWrapperProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const shouldUseNativeSubmission =
+    useNativeFormSubmission && Boolean(formspreeEndpoint);
+  const shouldReloadAfterSuccess = reloadOnSuccess ?? shouldUseNativeSubmission;
   const [status, setStatus] = useState<Status>("idle");
+  // Native submission navigates away, so we hand Formspree a `_next` URL to
+  // come back to. Read on the client only (window is undefined during SSR).
+  const [currentUrl, setCurrentUrl] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && shouldUseNativeSubmission) {
+      setCurrentUrl(window.location.href);
+    }
+  }, [shouldUseNativeSubmission]);
   const [message, setMessage] = useState<string>("");
   // Per-field error map + terms error, keyed by field name.
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -135,12 +169,12 @@ export default function FormWrapper({
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
 
     const validationErrors = runValidation(formData);
     if (Object.keys(validationErrors).length > 0) {
+      e.preventDefault();
       setErrors(validationErrors);
       setStatus("error");
       setMessage("Please fix the highlighted fields and try again.");
@@ -148,6 +182,18 @@ export default function FormWrapper({
       requestAnimationFrame(() => focusFirstError(validationErrors));
       return;
     }
+
+    // Native submission: validation passed, so let the browser POST to
+    // Formspree for real. Do NOT preventDefault — that is the whole point, and
+    // it is what lets Formspree serve its reCAPTCHA challenge.
+    if (shouldUseNativeSubmission) {
+      setErrors({});
+      setStatus("submitting");
+      setMessage(loadingMessage);
+      return;
+    }
+
+    e.preventDefault();
 
     setErrors({});
     setStatus("submitting");
@@ -251,10 +297,19 @@ export default function FormWrapper({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
+      // Native submission posts straight to Formspree so it can run its own
+      // reCAPTCHA challenge; AJAX mode leaves these unset and uses fetch.
+      action={shouldUseNativeSubmission ? formspreeEndpoint : undefined}
+      method={shouldUseNativeSubmission ? formMethod : undefined}
+      encType={shouldUseNativeSubmission ? "multipart/form-data" : undefined}
       className={className}
       noValidate
       aria-busy={isSubmitting}
     >
+      {/* Where Formspree sends the user back to after a native submit. */}
+      {shouldUseNativeSubmission && shouldReloadAfterSuccess && currentUrl && (
+        <input type="hidden" name="_next" value={currentUrl} />
+      )}
       {/* Single always-mounted live region. Errors interrupt (assertive);
           submitting/success are polite. Same node is the visible status box. */}
       {status !== "idle" && message && (

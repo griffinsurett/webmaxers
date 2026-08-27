@@ -61,6 +61,7 @@ const contactFormAction = contactFormId
 
   <FormWrapper
     client:load
+    useNativeFormSubmission={true}
     fields={fields}
     fieldsClassName="grid gap-4 md:grid-cols-2"
     formspreeEndpoint={contactFormAction}
