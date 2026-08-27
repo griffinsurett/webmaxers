@@ -99,8 +99,14 @@ export default function CookieConsentBanner() {
                 sit on one row from `lg` up, stacking below that so the buttons
                 stay full-width and thumb-reachable on phones. */}
             <div className="relative z-10 section-container mx-auto flex w-full max-w-[1600px] flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl" role="img" aria-label="Cookie">
+              {/* items-center so the cookie sits level with the text block
+                  rather than pinned to its first line. */}
+              <div className="flex items-center gap-3">
+                <span
+                  className="text-2xl leading-none shrink-0"
+                  role="img"
+                  aria-label="Cookie"
+                >
                   🍪
                 </span>
                 <p className="text-sm text-text leading-relaxed">
