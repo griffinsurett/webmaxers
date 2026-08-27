@@ -159,9 +159,22 @@ const items: SerializedItem[] = await Promise.all(
        the wrapper so both the floated image and the quote inherit it.
        min = mobile (a lot smaller), max = desktop (a little smaller). */
     --tc-quote-size: clamp(1.35rem, 4vw, 3.25rem);
+    /* Long quotes step the face down so they don't overrun the fixed-height
+       stage. The float image sizes itself from this same variable, so it scales
+       with the text and the two-line alignment is preserved. */
     /* overflow:hidden creates a block formatting context — contains the float */
     overflow: hidden;
     margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  /* ~240+ chars */
+  :global(.tc-quote-wrap[data-length="md"]) {
+    --tc-quote-size: clamp(1.2rem, 3.35vw, 2.7rem);
+  }
+
+  /* ~330+ chars */
+  :global(.tc-quote-wrap[data-length="sm"]) {
+    --tc-quote-size: clamp(1.1rem, 2.9vw, 2.3rem);
   }
 
   /*

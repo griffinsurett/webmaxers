@@ -16,6 +16,19 @@ interface Props {
   autoPlayInterval?: number;
 }
 
+/**
+ * Long quotes need a smaller face or they overrun the panel — the carousel is a
+ * fixed-height stage, so the type has to yield, not the box. Tiers (not a
+ * continuous scale) keep sizes consistent between similar-length quotes instead
+ * of every slide rendering at its own arbitrary size.
+ */
+function quoteLengthTier(quote: string): "sm" | "md" | "lg" {
+  const n = quote.length;
+  if (n > 330) return "sm";
+  if (n > 240) return "md";
+  return "lg";
+}
+
 export default function TestimonialCarousel({ items, autoPlayInterval = 6000 }: Props) {
   const [active, setActive] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -73,7 +86,10 @@ export default function TestimonialCarousel({ items, autoPlayInterval = 6000 }: 
     >
       <div className="tc-inner">
         {/* Quote block — image floats left, text wraps around it */}
-        <div className={`tc-quote-wrap tc-quote-wrap${animClass}`}>
+        <div
+          className={`tc-quote-wrap tc-quote-wrap${animClass}`}
+          data-length={quoteLengthTier(current.quote)}
+        >
           {current.imageSrc ? (
             <img
               key={current.id + "-img"}
