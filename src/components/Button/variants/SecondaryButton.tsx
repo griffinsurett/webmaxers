@@ -10,6 +10,7 @@ export default function SecondaryButton({
   leftIcon,
   rightIcon,
   className = "",
+  animated = true,
   buttonWrapperClasses,
   fullWidth = false,
   ...props
@@ -24,19 +25,21 @@ export default function SecondaryButton({
     .filter(Boolean)
     .join(" ");
 
-  return (
-    <span
-      className={[
-        fullWidth ? "inline-flex w-full" : "inline-flex w-full lg:w-auto",
-        buttonWrapperClasses,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      {...animationProps("fade-in-up", { once: true })}
-    >
+  const wrapperClasses = [
+    fullWidth ? "inline-flex w-full" : "inline-flex w-full lg:w-auto",
+    buttonWrapperClasses,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  // The scroll-reveal wrapper starts at opacity:0 and clears only when its
+  // IntersectionObserver fires. Inside a position:fixed container (the cookie
+  // banner) it never does, leaving the button invisible and unclickable — so
+  // fixed-position callers opt out with animated={false}.
+  const inner = (
       <AnimatedBorder
         variant="progress-b-f"
-        triggers="visible"
+        triggers={animated ? "visible" : "always"}
         color="var(--color-accent)"
         borderWidth={2}
         borderRadius={BORDER_RADIUS_CLASS}
@@ -51,6 +54,18 @@ export default function SecondaryButton({
           rightIcon={renderButtonIcon(rightIcon, props.size)}
         />
       </AnimatedBorder>
+  );
+
+  if (!animated) {
+    return <span className={wrapperClasses}>{inner}</span>;
+  }
+
+  return (
+    <span
+      className={wrapperClasses}
+      {...animationProps("fade-in-up", { once: true })}
+    >
+      {inner}
     </span>
   );
 }

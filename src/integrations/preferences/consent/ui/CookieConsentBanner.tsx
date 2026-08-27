@@ -122,8 +122,10 @@ export default function CookieConsentBanner() {
                   variant="secondary"
                   onClick={handleRejectAll}
                   fullWidth={true}
+                  animated={false}
                   type="button"
                   buttonWrapperClasses="text-center"
+                  className="text-xs lg:w-auto lg:whitespace-nowrap"
                   size="md"
                   disabled={isPending}
                 >
@@ -133,7 +135,7 @@ export default function CookieConsentBanner() {
                   variant="primary"
                   onClick={handleAcceptAll}
                   fullWidth={true}
-                  className="flex-1"
+                  className="flex-1 text-xs lg:w-auto lg:flex-none lg:whitespace-nowrap"
                   animated={false}
                   type="button"
                   size="md"
