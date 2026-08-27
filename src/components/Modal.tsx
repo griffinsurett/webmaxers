@@ -34,6 +34,7 @@ export interface ModalProps {
   ariaDescribedBy?: string;
   position?:
     | "center"
+    | "bottom-full"
     | "bottom-left"
     | "bottom-right"
     | "top-left"
@@ -84,6 +85,9 @@ function getPortalRoot(): HTMLElement {
 // Position classes - computed once
 const POSITION_CLASSES = {
   center: "flex items-center justify-center",
+  // Full-bleed bottom bar: no padding, so the panel reaches the viewport edges.
+  // The panel itself is responsible for insetting its own content.
+  "bottom-full": "flex items-end justify-stretch",
   "bottom-left": "flex items-end justify-start p-4",
   "bottom-right": "flex items-end justify-end p-4",
   "top-left": "flex items-start justify-start p-4",

@@ -312,5 +312,5 @@ body {
 }
 
 @utility consent-banner {
-  @apply max-w-xl w-full bg-transparent border-0 p-0 shadow-none;
+  @apply w-full bg-transparent border-0 p-0 shadow-none;
 }

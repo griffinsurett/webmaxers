@@ -78,7 +78,7 @@ export default function CookieConsentBanner() {
         isOpen={showBanner}
         onClose={() => setShowBanner(false)}
         closeButton={false}
-        position="bottom-left"
+        position="bottom-full"
         className="consent-banner"
         overlayClass="bg-transparent pointer-events-none"
         allowScroll={true}
@@ -90,12 +90,15 @@ export default function CookieConsentBanner() {
           id="cookie-consent-banner"
           className="outer-card-transition group text-left"
         >
-          <div className="outer-card-style card-bg-2">
+          <div className="outer-card-style card-bg-2 rounded-none border-x-0 border-b-0 px-0 py-6">
             <div
               className="inner-card-style inner-card-transition inner-card-color"
               aria-hidden="true"
             />
-            <div className="relative z-10 flex flex-col gap-6">
+            {/* Full-bleed bar, container-width content: the copy and the actions
+                sit on one row from `lg` up, stacking below that so the buttons
+                stay full-width and thumb-reachable on phones. */}
+            <div className="relative z-10 section-container mx-auto flex w-full max-w-[1600px] flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
               <div className="flex items-start gap-3">
                 <span className="text-2xl" role="img" aria-label="Cookie">
                   🍪
@@ -114,7 +117,7 @@ export default function CookieConsentBanner() {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 lg:shrink-0">
                 <Button
                   variant="secondary"
                   onClick={handleRejectAll}

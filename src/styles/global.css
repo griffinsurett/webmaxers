@@ -561,8 +561,11 @@ body {
     @apply inset-0 bg-transparent;
   }
 
+  /* Full-bleed bottom banner. Width is unconstrained here so the notice spans
+     the viewport; the inner card re-constrains its CONTENT to the site container
+     width, so copy doesn't stretch edge-to-edge on wide displays. */
   @utility consent-banner {
-  @apply max-w-xl w-full bg-transparent border-0 p-0 shadow-none;
+  @apply w-full bg-transparent border-0 p-0 shadow-none;
 }
 
   @utility hero-spacing {
