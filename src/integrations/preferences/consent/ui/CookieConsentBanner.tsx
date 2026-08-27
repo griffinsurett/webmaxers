@@ -9,10 +9,16 @@
  */
 
 import { useState, useEffect, useTransition, lazy, Suspense } from "react";
-import { useCookieStorage } from "@/hooks/useCookieStorage";
 import { enableConsentedScripts } from "@/integrations/preferences/consent/core/scripts/scriptManager";
 import Modal from "@/components/Modal";
-import type { CookieConsent } from "@/integrations/preferences/consent/core/types";
+import {
+  defaultConsent,
+  fullConsent,
+} from "@/integrations/preferences/consent/core/types";
+import {
+  getConsent,
+  saveConsent,
+} from "@/integrations/preferences/consent/core/utils/consent";
 import Button from "@/components/Button/Button";
 
 const CookiePreferencesModal = lazy(() => import("./CookiePreferencesModal"));
@@ -21,37 +27,24 @@ export default function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const { setCookie } = useCookieStorage();
 
   useEffect(() => {
-    // Check if consent already exists (returning user)
-    if (document.cookie.includes("cookie-consent=")) {
-      // Enable consented scripts for returning users
+    // Returning visitor with a valid, current-version choice: honour it.
+    // getConsent() returns null for a pre-v2 cookie, so those visitors see the
+    // banner again and reconsent under the Consent Mode types.
+    if (getConsent()) {
       enableConsentedScripts();
       return;
     }
 
-    // New user - show banner
     setShowBanner(true);
   }, []);
 
   const handleAcceptAll = () => {
-    const consent: CookieConsent = {
-      necessary: true,
-      functional: true,
-      performance: true,
-      targeting: true,
-      timestamp: Date.now(),
-    };
-
-    // Save consent
-    setCookie("cookie-consent", JSON.stringify(consent), { expires: 365 });
-
-    // Enable all consented scripts immediately
+    // saveConsent writes the cookie and dispatches "consent-changed", which the
+    // GTM inline script listens for to send its `consent update`.
+    saveConsent(fullConsent());
     enableConsentedScripts();
-
-    // Dispatch custom event for cross-tab/component sync
-    window.dispatchEvent(new Event("consent-changed"));
 
     startTransition(() => {
       setShowBanner(false);
@@ -59,22 +52,10 @@ export default function CookieConsentBanner() {
   };
 
   const handleRejectAll = () => {
-    const consent: CookieConsent = {
-      necessary: true,
-      functional: false,
-      performance: false,
-      targeting: false,
-      timestamp: Date.now(),
-    };
-
-    // Save minimal consent
-    setCookie("cookie-consent", JSON.stringify(consent), { expires: 365 });
-
-    // Enable only necessary scripts (if any)
+    // Records an explicit refusal (essentials only) rather than leaving the
+    // visitor in the "no choice made" state — the banner must not reappear.
+    saveConsent(defaultConsent());
     enableConsentedScripts();
-
-    // Dispatch custom event
-    window.dispatchEvent(new Event("consent-changed"));
 
     startTransition(() => {
       setShowBanner(false);
@@ -89,6 +70,10 @@ export default function CookieConsentBanner() {
 
   return (
     <>
+      {/* modal={false}: this is a non-blocking notice, not a dialog. As a modal
+          the Modal marks header/main/footer `inert`, which leaves the page
+          scrollable but makes nothing on it clickable until the banner is
+          answered. */}
       <Modal
         isOpen={showBanner}
         onClose={() => setShowBanner(false)}
@@ -97,6 +82,7 @@ export default function CookieConsentBanner() {
         className="consent-banner"
         overlayClass="bg-transparent pointer-events-none"
         allowScroll={true}
+        modal={false}
         ssr={false}
         ariaLabel="Cookie consent banner"
       >

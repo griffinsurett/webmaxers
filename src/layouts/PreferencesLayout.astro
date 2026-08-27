@@ -1,0 +1,28 @@
+---
+// src/layouts/PreferencesLayout.astro
+/**
+ * Preferences Layout
+ *
+ * Restores the greastro consent mount point. Renders the first-visit cookie
+ * consent banner, which is what actually lets a visitor grant/deny consent —
+ * without it, GoogleTagManager.astro's `consent default` (everything denied)
+ * is never followed by an `update`, so GTM stays blocked and nothing measures.
+ *
+ * Deliberately narrower than greastro's version, because webmaxxers already
+ * mounts the other preference pieces elsewhere and duplicating them would
+ * double-render:
+ * - ConsentScript          → IntHeadScripts
+ * - Translation            → IntBodyScripts (TranslationLoader, the light
+ *                            replacement for greastro's BrowserTranslateScript)
+ * - Language / theme / a11y → the header's ThemeControls gear
+ * - Cookie preferences link → the footer's CookiePreferencesButton
+ *
+ * The banner styles itself from the site theme (outer-card-style / card-bg-2 /
+ * inner-card-color + the shared Button), so it already matches webmaxxers.
+ */
+import CookieConsentBanner from "@/integrations/preferences/consent/ui/CookieConsentBanner";
+---
+
+{/* First-visit consent banner. client:idle so it never blocks first paint;
+    it self-hides for returning visitors who already have a consent cookie. */}
+<CookieConsentBanner client:idle />

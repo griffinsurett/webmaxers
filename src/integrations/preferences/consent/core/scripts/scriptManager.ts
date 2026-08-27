@@ -7,7 +7,7 @@
  */
 
 import { isTrackingAllowed } from '../utils/consent';
-import type { CookieCategory } from '../types';
+import { CONSENT_TYPES, type CookieCategory } from '../types';
 
 /**
  * Script element with consent attributes
@@ -48,8 +48,6 @@ function enableScript(blockedScript: ConsentScript): void {
   
   blockedScript.dataset.consentEnabled = 'true';
   blockedScript.parentNode?.insertBefore(newScript, blockedScript.nextSibling);
-  
-  console.log(`✅ Enabled ${blockedScript.dataset.consent} script:`, blockedScript.src || 'inline');
 }
 
 /**
@@ -67,14 +65,8 @@ export function enableScriptsForCategory(category: CookieCategory): void {
   if (typeof document === 'undefined') return;
   
   const blockedScripts = findBlockedScripts(category);
-  
-  if (blockedScripts.length === 0) {
-    console.log(`ℹ️  No blocked scripts found for category: ${category}`);
-    return;
-  }
-  
-  console.log(`🔓 Enabling ${blockedScripts.length} script(s) for category: ${category}`);
-  
+  if (blockedScripts.length === 0) return;
+
   blockedScripts.forEach(script => {
     enableScript(script);
   });
@@ -86,9 +78,7 @@ export function enableScriptsForCategory(category: CookieCategory): void {
 export function enableConsentedScripts(): void {
   if (typeof document === 'undefined') return;
   
-  const categories: CookieCategory[] = ['necessary', 'functional', 'performance', 'targeting'];
-  
-  categories.forEach(category => {
+  CONSENT_TYPES.forEach(category => {
     if (isTrackingAllowed(category)) {
       enableScriptsForCategory(category);
     }
@@ -108,6 +98,4 @@ export function initScriptManager(): void {
   } else {
     enableConsentedScripts();
   }
-  
-  console.log('📜 Script manager initialized');
 }

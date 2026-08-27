@@ -42,18 +42,30 @@ const { sectionNumber } = Astro.props;
   </p>
 
   <h3>What We Share</h3>
-  <p>When you enable certain features, we may share data with:</p>
+  <p>
+    Only when you enable the matching category. Until you do, these are not
+    loaded and nothing is sent to them:
+  </p>
   <ul>
     <li>
-      <strong>Google Translate</strong> — Translation services (functional cookies)
+      <strong>Google Translate</strong> — Translation services
+      (<em>Functionality</em>)
     </li>
     <li>
-      <strong>Google Analytics</strong> — Site analytics (performance cookies)
+      <strong>Google Tag Manager / Google Analytics</strong> — Site analytics
+      (<em>Analytics</em>)
     </li>
     <li>
-      <strong>Advertising Networks</strong> — Facebook, Google Ads (targeting cookies)
+      <strong>Advertising partners</strong> — (<em>Advertising</em>) We do not
+      currently run advertising or remarketing tags. This category keeps any
+      future advertising tag blocked unless you opt in.
     </li>
   </ul>
+  <p>
+    We use Google Consent Mode v2, so your choice is passed to Google as a
+    consent signal and tags that rely on a denied signal will not store
+    information or send measurement data.
+  </p>
 
   <div class="bg-bg border-2 border-primary rounded-lg p-6 my-6">
     <h3 class="mt-0">Opt Out Now</h3>

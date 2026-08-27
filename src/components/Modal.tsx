@@ -19,6 +19,17 @@ export interface ModalProps {
   overlayClass?: string;
   className?: string;
   allowScroll?: boolean;
+  /**
+   * Whether this dialog blocks the rest of the page.
+   *
+   * `true` (default): focus is trapped inside and every sibling of the dialog is
+   * marked `inert`, so neither pointer nor assistive tech can reach the page.
+   *
+   * `false`: a non-blocking notice (cookie banner, toast). No focus trap and no
+   * `inert`, so the page stays usable. Pair with a `pointer-events-none`
+   * overlay, or the overlay itself will still swallow clicks.
+   */
+  modal?: boolean;
   ariaLabel?: string;
   ariaDescribedBy?: string;
   position?:
@@ -88,6 +99,7 @@ function Modal({
   overlayClass = "bg-black bg-opacity-50",
   className = "bg-bg shadow-xl p-6 rounded-lg max-w-lg w-full mx-4",
   allowScroll = false,
+  modal = true,
   ariaLabel,
   ariaDescribedBy,
   position = "center",
@@ -175,9 +187,12 @@ function Modal({
   // Focus management (WCAG 2.4.3 / 4.1.2): on open, remember the trigger, move
   // focus into the dialog, trap Tab within it, and mark the rest of the page
   // `inert` so AT/keyboard can't reach it. On close, undo inert and restore
-  // focus to the trigger. This is what makes `aria-modal="true"` honest.
+  // focus to the trigger. This is what makes `aria-modal` honest.
   useEffect(() => {
     if (!mounted || !isOpen) return;
+    // Non-modal dialogs must leave the page usable: no focus trap and, above
+    // all, no `inert` on the rest of the document.
+    if (!modal) return;
     const panel = modalRef.current;
     if (!panel) return;
 
@@ -243,7 +258,7 @@ function Modal({
         previouslyFocused.focus();
       }
     };
-  }, [mounted, isOpen]);
+  }, [mounted, isOpen, modal]);
 
   // Unmount modal after exit animation completes
   const handleAnimationEnd = (): void => {
@@ -285,7 +300,7 @@ function Modal({
       onClick={handleOverlayClick}
       onTransitionEnd={handleAnimationEnd}
       role="dialog"
-      aria-modal="true"
+      aria-modal={modal}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
     >

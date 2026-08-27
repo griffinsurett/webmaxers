@@ -16,6 +16,7 @@ import Theme from "./Theme.astro";
 import IntHeadScripts from "@/integrations/IntHeadScripts.astro";
 import IntBodyScripts from "@/integrations/IntBodyScripts.astro";
 import IntFooterScripts from "@/integrations/IntFooterScripts.astro";
+import PreferencesLayout from "./PreferencesLayout.astro";
 
 export interface Props {
   [key: string]: any;
@@ -78,7 +79,11 @@ const {
 
     <slot name="after-main" />
 
-    {/* Integration footer scripts (cookie banners, widgets, etc.) */}
+    {/* Integration footer scripts (chat widget, etc.) */}
     {!noChat && <IntFooterScripts />}
+
+    {/* Consent banner — outside the noChat gate on purpose: consent is a legal
+        requirement and must not be switchable off with the chat widget. */}
+    <PreferencesLayout />
   </body>
 </html>

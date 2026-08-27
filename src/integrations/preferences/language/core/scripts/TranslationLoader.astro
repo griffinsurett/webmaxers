@@ -57,7 +57,7 @@ const {
         if (cookie.indexOf('cookie-consent=') === 0) {
           var value = decodeURIComponent(cookie.substring(15));
           var consent = JSON.parse(value);
-          return consent && consent.functional === true;
+          return consent && consent.functionality_storage === true;
         }
       }
     } catch (e) {}
