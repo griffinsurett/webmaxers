@@ -21,6 +21,9 @@ import FilterTabButton from './variants/FilterTabButton';
 import FilterIconButton from './variants/FilterIconButton';
 import FormButton from './variants/FormButton';
 import PillOutlineButton from './variants/PillOutlineButton';
+// Ported from the original Webmaxxers site alongside its front-page hero.
+import GhostButton from './variants/GhostButton';
+import HiddenUnderlineButton from './variants/HiddenUnderlineButton';
 
 /* ────────────────────────────────────────────────────────────────────────
  * Accessible name (WCAG 2.5.3 — Label in Name)
@@ -155,6 +158,8 @@ const VARIANT_MAP = {
   filterIcon: FilterIconButton,
   form: FormButton,
   pillOutline: PillOutlineButton,
+  ghost: GhostButton,
+  hiddenUnderline: HiddenUnderlineButton,
 };
 
 export type ButtonVariant = keyof typeof VARIANT_MAP;

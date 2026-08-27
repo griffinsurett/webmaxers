@@ -1,0 +1,60 @@
+---
+// src/components/ContentRenderer/variants/HeroStatsVariant.astro
+/**
+ * HeroStatsVariant — the hero's stat card. Sourced from the `stats` collection
+ * (ordered by `order`): each item gives an `icon`, a `value` (+ optional
+ * `prefix`/`suffix`/`decimals`) rendered as a count-up Counter, and `title` as
+ * the label.
+ *
+ * Visual: a projects-theme card (the SolutionsDeck surface — `bg-bg3` + a faint
+ * heading-derived border, rounded) with the stats in a row separated by
+ * full-height vertical dividers. The optional `description` renders UNDER the
+ * card. No hover effects.
+ */
+import type { BaseVariantProps } from "../ContentRenderer.types";
+import StatBlock from "@/components/StatBlock.astro";
+
+type Props = BaseVariantProps & {
+  /** Count-up duration in ms (passed through to each Counter). */
+  counterDuration?: number;
+};
+
+const {
+  items = [],
+  id,
+  className = "",
+  description,
+  counterDuration = 1400,
+} = Astro.props as Props;
+---
+
+<div class:list={["flex flex-col w-full", className]} id={id}>
+  <!-- Card: stat row only. The dividers run the full card height. -->
+  <div class="w-full rounded-lg bg-bg3 border border-[color-mix(in_srgb,var(--color-heading)_8%,transparent)] overflow-hidden">
+    <div class="grid items-stretch divide-x divide-text/15" style={`grid-template-columns: repeat(${items.length}, minmax(0, 1fr));`}>
+      {items.map((item: any) => (
+        <StatBlock
+          class="justify-center px-1.5 py-[1.1rem]"
+          value={item.value}
+          label={item.title}
+          icon={item.icon}
+          prefix={item.prefix ?? ""}
+          suffix={item.suffix ?? ""}
+          decimals={item.decimals}
+          duration={counterDuration}
+        />
+      ))}
+    </div>
+  </div>
+
+  <!-- Description — sits UNDER the card (desktop only; on mobile the hero shows
+       this copy under the heading instead).
+       text-text, not text-muted: muted is --color-text at 55% alpha, which reads
+       too grey against the dark hero. --color-text sits between muted and
+       --color-heading, and is defined for both themes. -->
+  {description && (
+    <p class="support-text text-text text-center lg:text-right w-full mt-3.5 hidden lg:block">
+      {description}
+    </p>
+  )}
+</div>

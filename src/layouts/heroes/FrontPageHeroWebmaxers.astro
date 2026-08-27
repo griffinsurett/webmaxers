@@ -1,0 +1,173 @@
+---
+// src/layouts/FrontPageHero.astro
+import { ctaData } from "@/content/siteData";
+import ScrollIndicator from "@/components/ScrollIndicator.astro";
+import Button from "@/components/Button/Button";
+import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
+import { query, sortByOrder } from "@/utils/query";
+
+export interface Props {
+  headline?: string;
+  headlineLine2?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  statLabel?: string;
+  statValue?: string;
+  statDescription?: string;
+  bodyText?: string;
+  /** Anchor the scroll indicator jumps to. */
+  scrollTarget?: string;
+  id?: string;
+}
+
+const {
+  headline = "Built to",
+  headlineLine2 = "grow your business.",
+  ctaText = ctaData.text ?? "Start a project",
+  ctaLink = ctaData.link ?? "/contact-us",
+  statLabel = "EST. 2020",
+  statValue = "Web design",
+  statDescription = "Websites, AI products, and systems built for clarity and growth.",
+  bodyText,
+  scrollTarget = "#under-hero",
+  id = "hero",
+} = Astro.props;
+---
+
+<section
+  id={id}
+  class="relative w-full section-container min-h-[100svh] flex flex-col hero-gap-py"
+>
+
+  <!-- Hero body. Mobile: the whole stack is vertically CENTRED (left-aligned
+       horizontally) so it reads as a normal, fast hero with no dead space.
+       lg+: headline pinned top and the stats/circles/arrow row pinned bottom
+       via justify-between — the elegant full-viewport layout. -->
+  <div class="relative z-10 flex-1 flex flex-col justify-center lg:justify-between w-full py-0">
+
+    <!-- Top row: headline left, (empty right). On mobile this block flexes to
+         fill everything above the scroll arrow and centres its own content, so
+         the headline sits optically centred rather than leaving a large gap
+         underneath. lg+: back to a natural-height block at the hero's top. -->
+    <div class="flex flex-1 items-center justify-between gap-8 w-full lg:flex-none lg:items-start">
+
+      <!-- Left: headline (+ CTA on desktop). Children spaced by a flex gap
+           rather than per-element top margins. -->
+      <div class="max-w-3xl lg:pt-28 flex flex-col gap-2 text-left">
+        {/* Hero headline. heading-display sets the desktop clamp; on mobile we
+            override to a smaller size so it doesn't dominate the viewport. */}
+        <h1 class="heading-display text-[2.25rem]! sm:text-[2.75rem]! md:text-[clamp(2.8rem,6.5vw,6rem)]!">
+          {headline}<br />{headlineLine2}
+        </h1>
+
+        {/* Mobile only: supporting text under the heading. On desktop this copy
+            lives in the stat card (bottom-right) instead. */}
+        <p class="support-text text-text max-w-[16rem] lg:hidden">
+          {bodyText || statDescription}
+        </p>
+
+        {/* Mobile: CTAs above the testimonial circles, left-aligned. */}
+        <div class="flex flex-col items-start gap-4 py-6 lg:hidden">
+          <Button
+            variant="primary"
+            href={ctaLink}
+            rightIcon="lu:arrow-up-right"
+            client:load
+          >
+            {ctaText}
+          </Button>
+          <Button variant="underline" href="/projects" className="!self-start" client:load>
+            View Our Work
+          </Button>
+        </div>
+
+        {/* Mobile only: testimonial circles under the CTAs. */}
+        <ContentRenderer
+          query={query("testimonials")
+            .where((entry) => entry.data.featured === true)
+            .limit(3)}
+          variant="TestimonialCirclesCounterVariant"
+          className="lg:hidden [&_.text-2xl]:text-3xl [&_.support-text]:text-base"
+          counterStart={10}
+          counterEnd={100}
+          counterDuration={1800}
+          counterSuffix="+"
+          counterLabel="Happy Clients"
+        />
+
+        {/* CTAs — DESKTOP: under the headline (top-left). MOBILE: shown above. */}
+        <div class="hidden lg:flex flex-wrap items-center gap-6 mt-8">
+          <Button
+            variant="primary"
+            href={ctaLink}
+            rightIcon="lu:arrow-up-right"
+            client:load
+          >
+            {ctaText}
+          </Button>
+
+          <Button
+            variant="underline"
+            href="/projects"
+            className="!self-center"
+            client:load
+          >
+            View Our Work
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom row — pinned to the bottom of the hero by the parent's
+         justify-between. Mobile: only the scroll arrow (CTAs + circles live up
+         under the headline; stats hidden). lg+: [circles] [scroll arrow centred]
+         [stat box]. -->
+    <div class="flex flex-col gap-10 mt-auto lg:mt-0 lg:flex-row lg:items-end lg:justify-between w-full">
+      <!-- Desktop only: testimonial circles pinned bottom-left. -->
+      <ContentRenderer
+        query={query("testimonials")
+          .where((entry) => entry.data.featured === true)
+          .limit(3)}
+        variant="TestimonialCirclesCounterVariant"
+        className="hidden lg:flex shrink-0 lg:w-[340px] lg:mb-10"
+        counterStart={10}
+        counterEnd={100}
+        counterDuration={1800}
+        counterSuffix="+"
+        counterLabel="Happy Clients"
+      />
+
+      <!-- Scroll indicator: centred in the row on desktop, below on mobile -->
+      <ScrollIndicator href={scrollTarget} className="order-last lg:order-none self-center lg:self-auto relative bottom-auto left-auto translate-x-0 static-in-row" />
+
+      <!-- Stat box + body text — DESKTOP bottom-right only. Hidden on mobile
+           (the same stats reappear in the About section). -->
+      <ContentRenderer
+        query={query("stats").orderBy(sortByOrder())}
+        variant="HeroStatsVariant"
+        description={bodyText || statDescription}
+        showHeadingSection={false}
+        className="hidden lg:flex shrink-0 lg:w-[380px] lg:mb-10"
+      />
+    </div>
+  </div>
+
+  <slot />
+</section>
+
+<style>
+  /* The hero fills the viewport under the fixed header, and its bottom row is
+     pinned to the bottom edge with the SAME vertical padding the header uses for
+     its own row (py-2), so the top and bottom edges read as symmetrical. */
+  .hero-gap-py {
+    padding-top: var(--site-header-height, 3.8rem);
+    padding-bottom: 0.5rem; /* matches the header's py-2 */
+  }
+  /* Override ScrollIndicator's default absolute positioning when inline in the row */
+  :global(.static-in-row) {
+    position: static !important;
+    transform: none !important;
+    bottom: auto !important;
+    left: auto !important;
+  }
+</style>

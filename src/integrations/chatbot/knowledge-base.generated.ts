@@ -435,6 +435,19 @@ Selected sites and campaigns built for our clients.
   icon: lucide:instagram
 
 ---
+## By the numbers
+Headline stats shown as animated counters.
+- Years of Experience
+  value: 7
+  suffix: +
+  icon: lu:users
+- Client Revenue
+  value: 1
+  prefix: $
+  suffix: M+
+  icon: lu:trending-up
+
+---
 ## Technologies
 We've mastered the tools that matter.
 - HTML: The foundation of every web page

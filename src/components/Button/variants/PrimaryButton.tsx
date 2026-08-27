@@ -26,6 +26,11 @@ export default function PrimaryButton({
   const variantClasses = [
     baseShell,
     fullWidth ? "!w-full" : "",
+    // Squared-off shell with an eyebrow-styled label — the hero CTA treatment,
+    // now the project-wide primary. `rounded-xl` overrides the base shell's
+    // `rounded-full`; both are plain classes, so the later one in the string
+    // wins only by specificity tie-break — keep it after `baseShell`.
+    "!rounded-xl px-6 py-3.5 eyebrow-text font-medium shadow-md group",
     "primary-button-transition border-2 border-primary primary-gradient gradient-disappear-on-hover text-bg hover:text-heading [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-[0.16rem] hover:[&_svg]:-translate-y-[0.16rem]",
   ]
     .filter(Boolean)

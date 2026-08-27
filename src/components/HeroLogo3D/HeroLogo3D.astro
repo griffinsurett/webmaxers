@@ -1,0 +1,46 @@
+---
+// src/components/HeroLogo3D/HeroLogo3D.astro
+/**
+ * HeroLogo3D — thin Astro wrapper around the React island.
+ *
+ * Responsive hydration (xl breakpoint, 1280px): the heavy Three.js + GLB scene
+ * is a NET NEGATIVE on phones/tablets (cost + jank > payoff), so below `xl`
+ * NOTHING renders — no 3D, and no static poster either (it adds no value on
+ * mobile and only competes for attention). HydrateResponsive keeps the desktop
+ * slot display:none below xl, so the island's client:visible
+ * IntersectionObserver never fires → no Three.js bundle runs. With no `mobile`
+ * slot, the component renders empty below xl. At/above xl the island hydrates
+ * `client:visible` (lazy on scroll), shows the poster immediately, then swaps to
+ * the live 3D canvas.
+ *
+ * Positioning is yours via `class`. The break scrubs across `breakSelector`.
+ */
+import HeroLogo3DIsland from "./HeroLogo3D.tsx";
+import HydrateResponsive from "@/components/HydrateResponsive.astro";
+
+interface Props {
+  class?: string;
+  /** Contained (footer box) vs full-viewport (hero). Only affects sizing. */
+  contained?: boolean;
+  /** Hide the root once scrolled past the break range. */
+  hideOnLeave?: boolean;
+  breakSelector?: string;
+}
+
+const { class: className = "", contained, hideOnLeave, breakSelector } = Astro.props;
+---
+
+{/* xl+ : the hydrated 3D island (lazy via client:visible). Below xl: nothing —
+    no mobile slot, so neither the island nor a poster renders. */}
+<HydrateResponsive min="1280px">
+  <HeroLogo3DIsland
+    slot="desktop"
+    className={className}
+    contained={contained}
+    hideOnLeave={hideOnLeave}
+    breakSelector={breakSelector}
+    client:visible
+  >
+    <slot />
+  </HeroLogo3DIsland>
+</HydrateResponsive>
