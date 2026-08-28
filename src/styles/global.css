@@ -253,14 +253,13 @@ body {
 
   body {
     font-family: var(--font-body, "TikTok Sans", Helvetica, Arial, sans-serif);
-    /* The page background. A horizontal bg3→bg gradient painted directly on the
-       body — it looks identical at every scroll position (the gradient only varies
-       left→right), so it needs no fixed overlay layer. Sections that paint their own
-       opaque background to cover transparent gaps (AboutSection, the Curtain front)
-       match this gradient so there is no seam where they begin. */
-    background-image: linear-gradient(to right, var(--color-bg3), var(--color-bg));
-    background-size: cover;
-    background-attachment: fixed;
+    /* The page background: one flat brand colour. This was a horizontal bg3→bg
+       gradient with `background-attachment: fixed`, which forces the browser to
+       repaint the whole body background on every scroll frame — a real scroll
+       cost for something that read as a single tone anyway. Anything that paints
+       its own opaque backing to cover a transparent gap (the footer, the menu
+       panel) uses this same flat colour so there is no seam where it begins. */
+    background-color: var(--color-bg);
     /* overscroll-behavior: none; */
     @apply overflow-x-hidden;
   }

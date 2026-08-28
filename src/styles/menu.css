@@ -61,6 +61,8 @@
   }
 }
 
+/* Opaque header backing while the mobile menu is open — the same flat
+   --color-bg the body paints, so it matches the page with no seam. */
 .mobile-menu-open .site-header {
-  background-image: linear-gradient(to right, var(--color-bg3), var(--color-bg));
+  background-color: var(--color-bg);
 }

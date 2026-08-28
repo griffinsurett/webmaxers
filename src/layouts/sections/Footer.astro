@@ -190,24 +190,20 @@ const legalColClass = [
   /* The reveal mechanic (clip/sticky/stacking) lives in <RevealStack>. Here we
      only style the footer's own content + wordmark lockup. */
 
-  /* One continuous background across the whole footer — same bg3→bg gradient
-     the body paints, and `fixed` like the body's, so the footer reads as one
-     surface with no seam against the page above it or between its own parts. */
+  /* One continuous background across the whole footer — the same flat --color-bg
+     the body paints, so the footer reads as one surface with no seam against the
+     page above it or between its own parts. (Was a fixed bg3→bg gradient,
+     dropped along with the body's: `background-attachment: fixed` repaints on
+     every scroll frame, and a flat colour matches by definition.) */
   footer {
-    background-image: linear-gradient(to right, var(--color-bg3), var(--color-bg));
-    background-size: cover;
-    background-attachment: fixed;
+    background-color: var(--color-bg);
   }
 
   /* The RevealStack `cover` has to be OPAQUE so the wordmark stays hidden until
-     it is revealed. Repeating the identical fixed gradient (rather than a flat
-     colour) means it covers the lockup completely while still being visually
-     indistinguishable from the footer behind it — `fixed` makes both resolve
-     against the viewport, so the two line up exactly. */
+     it is revealed. The same flat colour as the footer behind it covers the
+     lockup completely while staying visually indistinguishable. */
   .footer-content {
-    background-image: linear-gradient(to right, var(--color-bg3), var(--color-bg));
-    background-size: cover;
-    background-attachment: fixed;
+    background-color: var(--color-bg);
   }
 
   /* Full-bleed logo + wordmark lockup (the RevealStack `base`): sized to span
