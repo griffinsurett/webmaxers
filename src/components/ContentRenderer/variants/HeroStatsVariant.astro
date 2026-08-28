@@ -30,8 +30,14 @@ const {
 
 <div class:list={["flex flex-col w-full", className]} id={id}>
   <!-- Card: stat row only. The dividers run the full card height. -->
-  <div class="w-full rounded-lg bg-bg3 border border-[color-mix(in_srgb,var(--color-heading)_8%,transparent)] overflow-hidden">
-    <div class="grid items-stretch divide-x divide-text/15" style={`grid-template-columns: repeat(${items.length}, minmax(0, 1fr));`}>
+  {/* Square corners, and the SAME surface as the primary button and the AskAi
+      input bar: `bg-bg2` inside a hairline `heading/15` border. Keeping the one
+      recipe across every quiet inset control is what makes them read as a set.
+      (Was `rounded-lg bg-bg3` with an 8% heading border.) */}
+  <div class="w-full bg-bg2 border border-heading/15 overflow-hidden">
+    {/* Dividers use the same `heading/15` as the frame (was `text/15`) so the
+        internal rules and the outer border are one weight. */}
+    <div class="grid items-stretch divide-x divide-heading/15" style={`grid-template-columns: repeat(${items.length}, minmax(0, 1fr));`}>
       {items.map((item: any) => (
         <StatBlock
           class="justify-center px-1.5 py-[1.1rem]"

@@ -60,7 +60,10 @@ const alignClass = align === "start" ? "items-start text-left" : "items-center t
       class="leading-none"
     />
   </span>
+  {/* `text-text`, not `text-muted`: muted is only 55% of --color-text, which read
+      as washed-out gray on the stat's dark surface. The label names the number,
+      so it's content rather than a hint. */}
   {label && (
-    <span class="support-text text-muted capitalize mt-0.5">{label}</span>
+    <span class="support-text text-text capitalize mt-0.5">{label}</span>
   )}
 </div>

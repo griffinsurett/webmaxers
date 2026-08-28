@@ -34,9 +34,13 @@ const {
 } = Astro.props;
 ---
 
+{/* Mobile runs taller than one viewport (112svh) so the stacked headline → copy
+    → CTAs → circles column has room to breathe instead of being squeezed to fit,
+    and the extra height signals there's more page below. lg+ stays exactly one
+    viewport, where the layout pins its rows top and bottom. */}
 <section
   id={id}
-  class="relative w-full section-container min-h-[100svh] flex flex-col hero-gap-py"
+  class="relative w-full section-container min-h-[112svh] lg:min-h-svh flex flex-col hero-gap-py"
 >
 
   <!-- Hero body. Mobile: the whole stack is vertically CENTRED (left-aligned
@@ -53,21 +57,34 @@ const {
 
       <!-- Left: headline (+ CTA on desktop). Children spaced by a flex gap
            rather than per-element top margins. -->
-      <div class="max-w-3xl lg:pt-28 flex flex-col gap-2 text-left">
+      {/* `w-full` on mobile so the column fills the row (no leftover free space
+          on the right); `lg:w-auto lg:max-w-3xl` restores the desktop measure. */}
+      <div class="w-full lg:w-auto lg:max-w-3xl lg:pt-28 flex flex-col gap-2 text-left">
         {/* Hero headline. heading-display sets the desktop clamp; on mobile we
             override to a smaller size so it doesn't dominate the viewport. */}
-        <h1 class="heading-display text-[2.25rem]! sm:text-[2.75rem]! md:text-[clamp(2.8rem,6.5vw,6rem)]!">
+        <h1 class="heading-display text-[2.85rem]! sm:text-[2.75rem]! md:text-[clamp(2.8rem,6.5vw,6rem)]!">
           {headline}<br />{headlineLine2}
         </h1>
 
         {/* Mobile only: supporting text under the heading. On desktop this copy
-            lives in the stat card (bottom-right) instead. */}
-        <p class="text-base leading-relaxed text-text max-w-[20rem] lg:hidden">
+            lives in the stat card (bottom-right) instead.
+            No mobile max-width: the column already spans the section's content
+            box, so the copy wraps to the full available measure. (A `75vw` cap
+            here was measured against the VIEWPORT while the row is already inset
+            by the section's 24px side padding, so it could never fill the row —
+            it left ~46px of dead space on the right at 375px.) */}
+        <p class="text-base leading-relaxed text-text lg:max-w-[20rem] lg:hidden">
           {bodyText || statDescription}
         </p>
 
-        {/* Mobile: CTAs above the testimonial circles, left-aligned. */}
-        <div class="flex flex-col items-start gap-4 py-6 lg:hidden">
+        {/* Mobile: CTAs above the testimonial circles, stacked and sharing one
+            edge. `items-stretch` makes both fill this box, and the underline
+            button's own `w-fit max-w-xs self-start` (which keeps its rule
+            tracking the text elsewhere) is overridden below to match.
+            `w-3/4` caps the BOX at three quarters of the hero text column, so
+            the buttons stay narrower than the copy instead of running its full
+            measure — without it they inherited the column's width exactly. */}
+        <div class="flex flex-col items-stretch gap-4 py-6 w-2/3 lg:w-auto lg:hidden">
           <Button
             variant="primary"
             href={ctaLink}
@@ -76,7 +93,12 @@ const {
           >
             {ctaText}
           </Button>
-          <Button variant="underline" href="/projects" className="!self-start" client:load>
+          <Button
+            variant="underline"
+            href="/projects"
+            className="w-full! max-w-none! self-stretch!"
+            client:load
+          >
             View Our Work
           </Button>
         </div>
@@ -137,8 +159,16 @@ const {
         counterLabel="Happy Clients"
       />
 
-      <!-- Scroll indicator: centred in the row on desktop, below on mobile -->
-      <ScrollIndicator href={scrollTarget} className="order-last lg:order-none self-center lg:self-auto relative bottom-auto left-auto translate-x-0 static-in-row" />
+      <!-- Scroll indicator: centred in the row on desktop, below on mobile.
+           Deliberately does NOT carry the siblings' `lg:mb-10` — the circles and
+           stat block are lifted off the hero's bottom edge, while the arrow sits
+           at the lowest point of the bottom bar (`lg:self-end`, no bottom
+           margin) so it reads as the page's "keep going" marker. On mobile
+           `mb-2` keeps it just clear of the hero's edge. -->
+      <ScrollIndicator
+        href={scrollTarget}
+        className="order-last lg:order-none self-center lg:self-end mb-2 lg:mb-0 relative bottom-auto left-auto translate-x-0 static-in-row"
+      />
 
       <!-- Stat box + body text — DESKTOP bottom-right only. Hidden on mobile
            (the same stats reappear in the About section). -->
