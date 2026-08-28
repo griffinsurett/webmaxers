@@ -1,5 +1,4 @@
 import OptimizedLottie from "@/components/OptimizedLottie";
-import { useMotionPreference } from "@/hooks/useMotionPreference";
 import type { PropsWithChildren } from "react";
 
 interface LottieLogoProps {
@@ -29,20 +28,11 @@ export default function LottieLogo({
   decorative = true,
   children,
 }: PropsWithChildren<LottieLogoProps>) {
-  const shouldDisableMotion = useMotionPreference(respectReducedMotion);
-  const accessibilityProps = decorative
-    ? { "aria-hidden": true, role: "presentation" as const }
-    : { "aria-label": alt };
-
-  // If reduced motion is enabled, just render the static fallback - don't load Lottie at all
-  if (shouldDisableMotion) {
-    return (
-      <div className={`${className} relative ${mediaClasses}`} {...accessibilityProps}>
-        {children}
-      </div>
-    );
-  }
-
+  // OptimizedLottie already renders `children` as the static fallback and keeps
+  // it shown whenever motion is disabled (never loading the Lottie player), so
+  // we let it own the reduced-motion path. Branching to a separate tree here
+  // remounted the subtree on every motion toggle, which re-fired the logo's
+  // one-shot spin animation — the placeholder "going insane".
   return (
     <OptimizedLottie
       animationUrl={ANIMATION_URL}

@@ -141,9 +141,9 @@ function hideImages() {
     img.style.display = "none";
   });
 
-  // Handle Lottie containers
-  const lottieContainers = document.querySelectorAll<HTMLElement>('.logo-class:not([data-a11y-hidden])');
-  lottieContainers.forEach((container) => {
+  // Handle decorative logo containers
+  const logoContainers = document.querySelectorAll<HTMLElement>('.logo-class:not([data-a11y-hidden])');
+  logoContainers.forEach((container) => {
     const alt = container.getAttribute("aria-label") || "Animation";
 
     // Create placeholder
