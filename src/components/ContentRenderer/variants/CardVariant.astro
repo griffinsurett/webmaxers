@@ -22,6 +22,11 @@ interface Props extends BaseVariantProps {
   ctaHref?: string;
   ctaText?: string;
   card?: CardPropOverrides;
+  /** Class for the inner wrapper. Defaults to `inner-section`; pass "" to opt
+   *  out when the caller already supplies its own section padding. */
+  contentClassName?: string;
+  /** Extra classes appended to the card grid, after the header margin. */
+  gridClassName?: string;
   ctaInlineOnDesktop?: boolean;
   /** Show MDX body content in cards instead of just description */
   showBody?: boolean;
@@ -46,6 +51,8 @@ const {
   ctaHref,
   ctaText,
   card,
+  contentClassName = "inner-section",
+  gridClassName = "",
   ctaInlineOnDesktop = false,
   showBody = false,
   showHeadingSection = true,
@@ -147,7 +154,9 @@ const resolveRingDuration = (item: FeatureCardData): number => {
   return typeof record?.ringDuration === "number" ? record.ringDuration : 800;
 };
 
-const gridMarginClass = showHeader ? "mt-12" : "";
+const gridMarginClass = [showHeader ? "mt-12" : "", gridClassName]
+  .filter(Boolean)
+  .join(" ");
 const showCTA =
   showButtonSection &&
   shouldShowCollectionCTA(collectionUrl, safeItems.length) &&
@@ -159,7 +168,7 @@ const sectionOverflowClass = isSplitLayout ? "" : "overflow-hidden";
 ---
 
 <Section id={id} class={`relative ${sectionOverflowClass} ${className}`.trim()}>
-  <div class="inner-section">
+  <div class={contentClassName}>
     {isSplitLayout ? (
       showSidebar ? (
         <div class="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-12 xl:gap-16">

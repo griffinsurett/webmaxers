@@ -2,32 +2,39 @@
 /**
  * GPU shatter material for HeroLogo3D.
  *
- * The mark's fracture used to be computed in JavaScript: every frame walked all
- * ~53,000 vertices, recomputed each shard's displacement, and re-uploaded the
- * whole position buffer. That works, but it spends main-thread time on maths the
- * GPU does for free — and the main thread is the one resource a scrolling page
- * cannot spare.
+ * See `docs/hero-logo-3d-spec.md` for what this is supposed to look like. In
+ * short: the mark disintegrates into ~17,700 individually-staggered fragments
+ * that shrink as they break free, then blow around the frame like torn paper —
+ * thrown outward, pushed by a shared gust, each scrap fluttering on its own.
  *
- * Here the per-shard constants (offset, delay, strength, centroid, seeds…) are
- * uploaded ONCE as vertex attributes, and each frame the CPU sets exactly two
- * uniforms — `uBreak` and `uTime`. The vertex shader reproduces the original
- * displacement maths per-vertex, in parallel, on the GPU.
+ * ── The two invariants ─────────────────────────────────────────────────────
+ * A previous version of this effect glitched badly, and both causes were
+ * structural rather than a matter of tuning. These rules are what prevent them,
+ * and every term below is written to obey them:
  *
- * The motion model is unchanged from the CPU version, and its two invariants are
- * preserved deliberately (see HeroLogo3D.tsx for the full history):
+ *  1. TIME IS ALWAYS BOUNDED. `uTime` may appear ONLY inside sin/cos. It
+ *     animates the SHAPE of the flutter, never its amplitude, and never an angle
+ *     or a position directly.
  *
- *  1. Every free-float term is scaled by THIS shard's own break amount, so
- *     displacement is a pure function of `uBreak`. Scrolling up retraces
- *     scrolling down exactly, and `uBreak == 0` means provably whole geometry —
- *     no drift, however long the page has been open.
- *  2. `uTime` animates the SHAPE of the flutter but never its AMPLITUDE, and
- *     only ever appears inside bounded functions (sin/cos). No term may grow
- *     monotonically with time, or the shards would creep outward forever and
- *     reassembly would stop being the inverse of breakup.
+ *     The old tumble was `ang = (uTime * rate + seed) * free` — an angle fed
+ *     straight into a rotation matrix, growing forever. After 15 minutes on the
+ *     page each shard had spun 206 times, and because the term was scaled by
+ *     `free` the rate also changed as you scrolled. That is what "spins wildly
+ *     and unpredictably" was.
  *
- * Built on MeshStandardMaterial via onBeforeCompile so the mark keeps real
- * lighting (the scene's key/fill/ambient lights still apply) instead of dropping
- * to a flat custom shader.
+ *  2. AMPLITUDES ARE SCALED TO THE CAMERA FRAME. At z=5 with a 45° fov the
+ *     visible area is only ±3.31 × ±2.07 units and the mark is 2.5 units. The
+ *     old scatter threw shards ~15 units — 7× outside the frame — so the rubble
+ *     left the screen instantly instead of filling it, and a flutter 4× the
+ *     frame height swept the survivors in and out of view. Every amplitude here
+ *     is chosen against those numbers; see CFG in HeroLogo3D.tsx.
+ *
+ * Because every displacement term is scaled by the shard's own break amount,
+ * displacement is a pure function of `uBreak`: scrolling up retraces scrolling
+ * down exactly, and `uBreak == 0` is provably the untouched mark.
+ *
+ * Built on MeshStandardMaterial via onBeforeCompile so the mark keeps the
+ * scene's real lighting instead of dropping to a flat custom shader.
  */
 
 /** Per-shard attribute buffers, built once at load and uploaded to the GPU. */
@@ -44,30 +51,30 @@ export interface ShatterAttributes {
   aJitterSeed: Float32Array;
   /** [phaseX, phaseY, phaseZ, freqScale] for the slow wide drift. */
   aDriftSeed: Float32Array;
-  /** [phaseX, phaseY, phaseZ, —] for the confetti tumble. */
+  /** [phaseX, phaseY, phaseZ, rateScale] for the flutter/tumble. */
   aTumbleSeed: Float32Array;
 }
 
 export interface ShatterUniforms {
+  /** 0 = whole, 1 = fully shattered. Scroll-driven. */
   uBreak: { value: number };
+  /** Flutter clock, seconds. Only ever inside sin/cos — see invariant 1. */
   uTime: { value: number };
   uJitter: { value: number };
   uDrift: { value: number };
   uTumble: { value: number };
   uShardShrink: { value: number };
+  /** Peak rock of the per-shard flutter, radians. Bounded by construction. */
+  uTumbleSwing: { value: number };
 }
 
-/**
- * The displacement maths, shared by the vertex shader.
- *
- * Kept as one string so the position and normal passes cannot drift apart, and
- * so this reads as a direct translation of the original `applyBreak`.
- */
 const SHATTER_CHUNK = /* glsl */ `
-  // How broken THIS shard is, 0 → 1 (its delay-staggered progress).
+  // How broken THIS shard is, 0 → 1 (its delay-staggered progress). The stagger
+  // is what makes the mark erode in a spreading wave instead of detonating.
+  //
   // LINEAR on purpose: uBreak is already smoothstepped once by the CPU
-  // (breakFromProgress). Smoothstepping again here stacks two S-curves, and the
-  // squared spread term below then turns that into a 6th-order ramp whose
+  // (breakFromProgress). Smoothstepping again stacks two S-curves, and the
+  // squared spread term below turns that into a 6th-order ramp whose
   // acceleration spikes mid-burst — shards lurch, coast, then lurch to a halt.
   float delay    = aShard.x;
   float strength = aShard.y;
@@ -75,7 +82,7 @@ const SHATTER_CHUNK = /* glsl */ `
   float tumbRate = aShard.w;
 
   float shard = clamp((uBreak - delay) / max(1.0 - delay, 1e-4), 0.0, 1.0);
-  // free IS the shard's break amount — scroll owns "how loose", time owns
+  // free IS the shard's break amount — scroll owns "how loose", time owns only
   // "how it flutters". This is what makes the effect exactly reversible.
   float free = shard;
 
@@ -97,22 +104,29 @@ const SHATTER_CHUNK = /* glsl */ `
       float shardScale = 1.0 - uShardShrink * free;
       vec3 local = (position - shardPivot) * shardScale;
 
-      // ── Confetti tumble ────────────────────────────────────────────────
-      // Angles are scaled by free OUTSIDE the trig, so a shard rotates from
-      // exactly 0 as it breaks free and unwinds back to 0 as it reassembles.
-      // (Multiplying inside sin/cos would make the angle sweep whenever free
-      // changed — a scroll-speed-dependent, non-reversible rotation.)
+      // ── Flutter / tumble ───────────────────────────────────────────────
+      // A BOUNDED ROCK, not a spin. uTime lives strictly inside sin(), and
+      // free scales the resulting AMPLITUDE — so a scrap rocks through at most
+      // ±uTumbleSwing radians, starts from exactly 0 as it breaks free, and
+      // unwinds to exactly 0 as it reassembles.
+      //
+      // It must NOT be (uTime * rate) * free: that is an angle that grows
+      // without bound, so shards spin ever faster and change rate as you scroll.
+      // Keeping the swing modest also matters for the wind-down — the group's
+      // own spin fades to zero as the mark breaks, and if each scrap then
+      // whirled through ±150° the rotation would not have stopped at all, it
+      // would just have moved from one object to fifty thousand.
       float rate = tumbRate * uTumble;
       vec3 ang = vec3(
-        (uTime * rate            + aTumbleSeed.x),
-        (uTime * rate * 0.83     + aTumbleSeed.y),
-        (uTime * rate * 1.17     + aTumbleSeed.z)
-      ) * free;
+        sin(uTime * rate         + aTumbleSeed.x),
+        sin(uTime * rate * 0.83  + aTumbleSeed.y),
+        sin(uTime * rate * 1.17  + aTumbleSeed.z)
+      ) * (uTumbleSwing * free);
 
       vec3 s = sin(ang);
       vec3 c = cos(ang);
 
-      // Rotate about X, then Y, then Z — matching the original CPU order.
+      // Rotate about X, then Y, then Z.
       vec3 r = local;
       float ny = r.y * c.x - r.z * s.x;
       float nz = r.y * s.x + r.z * c.x;
@@ -128,8 +142,10 @@ const SHATTER_CHUNK = /* glsl */ `
 
       displaced = shardPivot + r;
 
-      // ── Scatter ────────────────────────────────────────────────────────
-      // The primary throw: each shard flies along its own random vector.
+      // ── Throw ──────────────────────────────────────────────────────────
+      // The primary scatter: each shard flies along its own random vector,
+      // fastest at the moment it breaks free. Sized so the field lands ON the
+      // frame (see invariant 2), not far beyond it.
       displaced += aOffset * (shard * strength);
 
       // ── Jitter: fast, small, in-place wobble ───────────────────────────
@@ -151,7 +167,9 @@ const SHATTER_CHUNK = /* glsl */ `
       // back up and reassembly would not be the inverse of breakup.
       displaced += aDriftDir * (free * uDrift * free);
 
-      // A shared slow gust, so the spread-out field keeps fluttering.
+      // A shared slow gust. Because every shard reads the SAME wt, the whole
+      // field drifts together as one mass — that is what reads as wind rather
+      // than as an explosion.
       float wt = uTime * 0.18;
       vec3 wind = vec3(
         sin(wt + aDriftSeed.x * 0.5) + 0.7 * sin(wt * 0.37 + 1.3) + 0.5 * sin(wt * 1.9 + aDriftSeed.x),
@@ -175,16 +193,22 @@ const SHATTER_CHUNK = /* glsl */ `
   }
 `;
 
-
 /**
  * Patch a MeshStandardMaterial to displace vertices on the GPU.
  *
  * Returns the uniforms object so the render loop can drive `uBreak` / `uTime`
- * without touching geometry.
+ * without touching geometry — the whole per-frame cost is two uniform writes,
+ * and the vertex shader does the maths for every vertex in parallel.
  */
 export function applyShatterToMaterial(
   material: any,
-  opts: { jitter: number; drift: number; tumble: number; shardShrink: number },
+  opts: {
+    jitter: number;
+    drift: number;
+    tumble: number;
+    shardShrink: number;
+    tumbleSwing: number;
+  },
 ): ShatterUniforms {
   const uniforms: ShatterUniforms = {
     uBreak: { value: 0 },
@@ -193,6 +217,7 @@ export function applyShatterToMaterial(
     uDrift: { value: opts.drift },
     uTumble: { value: opts.tumble },
     uShardShrink: { value: opts.shardShrink },
+    uTumbleSwing: { value: opts.tumbleSwing },
   };
 
   material.onBeforeCompile = (shader: any) => {
@@ -209,6 +234,7 @@ export function applyShatterToMaterial(
         uniform float uDrift;
         uniform float uTumble;
         uniform float uShardShrink;
+        uniform float uTumbleSwing;
         attribute vec3 aOffset;
         attribute vec4 aShard;
         attribute vec3 aCentroid;
@@ -230,8 +256,11 @@ export function applyShatterToMaterial(
       );
   };
 
-  // Force a recompile if the material was already used.
+  // Force a recompile if the material was already used, and vary the program
+  // cache key so three.js cannot hand this material a program compiled for an
+  // unpatched MeshStandardMaterial.
   material.needsUpdate = true;
+  material.customProgramCacheKey = () => "logo-shatter-v2";
 
   return uniforms;
 }
@@ -241,6 +270,10 @@ export function applyShatterToMaterial(
  *
  * Every vertex of a triangle gets the SAME shard values, so the three corners
  * move together and the face stays rigid.
+ *
+ * Randomness is a deterministic hash of the triangle index rather than
+ * Math.random(), so a reload produces the identical shatter — one less way for
+ * "it looked different that time" to be true.
  */
 export function buildShatterAttributes(
   original: Float32Array,
@@ -256,31 +289,26 @@ export function buildShatterAttributes(
   const aDriftSeed = new Float32Array(vertCount * 4);
   const aTumbleSeed = new Float32Array(vertCount * 4);
 
-  for (let i = 0; i < faceCount; i++) {
-    const ox = (Math.random() - 0.5) * cfg.scatter[0];
-    const oy = (Math.random() - 0.5) * cfg.scatter[1];
-    const oz = (Math.random() - 0.5) * cfg.scatter[2];
-    const delay = Math.random() * cfg.breakDelaySpread;
-    const strength = 0.5 + Math.random() * 1.5;
+  // Deterministic hash → [0,1). Same model, same shatter, every load.
+  let seedN = 0;
+  const rand = () => {
+    seedN += 1;
+    const x = Math.sin(seedN * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  };
 
-    const jp = [
-      Math.random() * Math.PI * 2,
-      Math.random() * Math.PI * 2,
-      Math.random() * Math.PI * 2,
-      0.6 + Math.random() * 1.8,
-    ];
-    const dp = [
-      Math.random() * Math.PI * 2,
-      Math.random() * Math.PI * 2,
-      Math.random() * Math.PI * 2,
-      0.5 + Math.random() * 1.0,
-    ];
-    const tp = [
-      Math.random() * Math.PI * 2,
-      Math.random() * Math.PI * 2,
-      Math.random() * Math.PI * 2,
-      0.6 + Math.random() * 1.4,
-    ];
+  const TAU = Math.PI * 2;
+
+  for (let i = 0; i < faceCount; i++) {
+    const ox = (rand() - 0.5) * cfg.scatter[0];
+    const oy = (rand() - 0.5) * cfg.scatter[1];
+    const oz = (rand() - 0.5) * cfg.scatter[2];
+    const delay = rand() * cfg.breakDelaySpread;
+    const strength = 0.5 + rand() * 1.5;
+
+    const jp = [rand() * TAU, rand() * TAU, rand() * TAU, 0.6 + rand() * 1.8];
+    const dp = [rand() * TAU, rand() * TAU, rand() * TAU, 0.5 + rand() * 1.0];
+    const tp = [rand() * TAU, rand() * TAU, rand() * TAU, 0.6 + rand() * 1.4];
 
     const i0 = (i * 3 + 0) * 3;
     const i1 = (i * 3 + 1) * 3;
@@ -290,7 +318,7 @@ export function buildShatterAttributes(
     const cZ = (original[i0 + 2] + original[i1 + 2] + original[i2 + 2]) / 3;
 
     // Flag long thin triangles — they render as streaks once loose, so the
-    // shader collapses them to a point as they break free (see SHATTER_CHUNK).
+    // shader collapses them to a point as they break free.
     const eA = Math.hypot(
       original[i1] - original[i0],
       original[i1 + 1] - original[i0 + 1],
@@ -309,15 +337,14 @@ export function buildShatterAttributes(
     const longest = Math.max(eA, eB, eC);
     const shortest = Math.min(eA, eB, eC);
     const SLIVER_ASPECT = 6;
-    const sliver =
-      shortest <= 1e-6 || longest / shortest >= SLIVER_ASPECT ? 1 : 0;
+    const sliver = shortest <= 1e-6 || longest / shortest >= SLIVER_ASPECT ? 1 : 0;
 
     // Outward dispersal direction: centroid-away-from-origin, biased wide on the
     // screen plane and damped in Z so the field fans across the frame rather
     // than diving toward the camera.
-    let dX = cX + (Math.random() - 0.5) * 3;
-    let dY = cY + (Math.random() - 0.5) * 3;
-    let dZ = (cZ + (Math.random() - 0.5) * 1.5) * 0.4;
+    let dX = cX + (rand() - 0.5) * 3;
+    let dY = cY + (rand() - 0.5) * 3;
+    let dZ = (cZ + (rand() - 0.5) * 1.5) * 0.4;
     const dLen = Math.hypot(dX, dY, dZ) || 1;
     dX /= dLen;
     dY /= dLen;
@@ -351,13 +378,5 @@ export function buildShatterAttributes(
     }
   }
 
-  return {
-    aOffset,
-    aShard,
-    aCentroid,
-    aDriftDir,
-    aJitterSeed,
-    aDriftSeed,
-    aTumbleSeed,
-  };
+  return { aOffset, aShard, aCentroid, aDriftDir, aJitterSeed, aDriftSeed, aTumbleSeed };
 }
