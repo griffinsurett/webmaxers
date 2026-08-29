@@ -146,7 +146,7 @@ export const ItemsAddToMenuFields = z.object({
   // Advanced
   customSort: z.string().optional(),
   groupBy: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 // ============================================================================
@@ -184,7 +184,7 @@ export const AddToMenuFields = ({ image }: { image: Function }) =>
     excludeChildren: z.array(z.string()).optional(),
     
     // Metadata
-    metadata: z.record(z.any()).optional(),
+    metadata: z.record(z.string(), z.any()).optional(),
   });
 
 export type MenuItemData = z.infer<ReturnType<typeof MenuItemFields>>;
