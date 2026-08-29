@@ -79,7 +79,7 @@ export const collections = {
         statSuffix: z.string().optional(),
         statDescription: z.string().optional(),
         reviewLabel: z.string().optional(),
-        reviewLink: z.string().url().optional(),
+        reviewLink: z.url().optional(),
         featureItems: z
           .array(
             z.object({
@@ -106,13 +106,13 @@ export const collections = {
     loader: FileLoad("authors", "authors.json"),
     schema: ({ image }) =>
       baseSchema({ image }).extend({
-        email: z.string().email().optional(),
+        email: z.email().optional(),
         social: z
           .object({
-            twitter: z.string().url().optional(),
-            github: z.string().url().optional(),
-            linkedin: z.string().url().optional(),
-            website: z.string().url().optional(),
+            twitter: z.url().optional(),
+            github: z.url().optional(),
+            linkedin: z.url().optional(),
+            website: z.url().optional(),
           })
           .optional(),
         role: z.string().optional(),
@@ -155,11 +155,11 @@ export const collections = {
     schema: ({ image }) =>
       baseSchema({ image }).omit({ featuredImage: true }).extend({
         client: z.string().optional(),
-        projectUrl: z.string().url().optional(),
+        projectUrl: z.url().optional(),
         link: z
           .object({
             label: z.string(),
-            url: z.string().url(),
+            url: z.url(),
           })
           .optional(),
         technologies: z.array(z.string()).default([]),

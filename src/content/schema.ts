@@ -308,7 +308,7 @@ export const seoSchema = ({ image }: { image: Function }) =>
         .enum(["summary", "summary_large_image", "app", "player"])
         .optional(),
       robots: z.string().optional(),
-      canonicalUrl: z.string().url().optional(),
+      canonicalUrl: z.url().optional(),
       keywords: z.array(z.string()).optional(),
     })
     .optional();
