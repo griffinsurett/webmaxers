@@ -7,7 +7,8 @@
     "build": "astro build && node -e \"const fs = require('fs'); fs.rmSync('.vercel/output/functions/_render.func/public', { recursive: true, force: true });\"",
     "preview": "astro preview",
     "astro": "astro",
-    "generate:icons": "node src/utils/icons/generate-icon-map.mjs"
+    "generate:icons": "node src/utils/icons/generate-icon-map.mjs",
+    "sync:draco": "cp node_modules/three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js node_modules/three/examples/jsm/libs/draco/gltf/draco_decoder.wasm public/draco/"
   },
   "dependencies": {
     "@astrojs/mdx": "^6.0.3",

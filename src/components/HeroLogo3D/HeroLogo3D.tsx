@@ -237,7 +237,16 @@ export default function HeroLogo3D({
       // Load + fracture the GLB.
       const loader = new GLTFLoader();
       const draco = new DRACOLoader();
-      draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+      // Self-hosted decoder (public/draco/), NOT gstatic.com. Three reasons:
+      // it removes a third-party origin from the critical path (extra DNS +
+      // TLS + connection before the GLB can even start decoding); it keeps the
+      // site's external dependencies to the sanctioned list; and it pins the
+      // decoder to the exact `three` version in package.json, where the CDN URL
+      // hard-coded 1.5.7 independently of the installed loader.
+      //
+      // The files are copied from `three/examples/jsm/libs/draco/gltf/` by the
+      // `sync:draco` npm script — re-run it after bumping `three`.
+      draco.setDecoderPath("/draco/");
       loader.setDRACOLoader(draco);
 
       loader.load(
@@ -313,8 +322,19 @@ export default function HeroLogo3D({
       // The canvas is fixed (full-viewport), so the wrapper bounds WHEN it breaks
       // but not WHERE it paints — past the wrapper it would show through the
       // footer. Hide the root once scrolled past the wrapper's range.
+      // Also the run-gate for the animation loop. An IntersectionObserver is no
+      // use here: the hero canvas is `fixed inset-0`, so it technically
+      // intersects the viewport at every scroll position and IO never reports it
+      // as offscreen (measured — the loop kept running at 60fps far down the
+      // page). This callback already knows the truth, because `hideOnLeave`
+      // computes exactly when the mark stops being shown.
+      //
+      // Assigned late (see `onRunGate` below) so it can call start/stop, which
+      // are declared further down.
+      let onRunGate: ((visible: boolean) => void) | null = null;
       const setVisible = (v: boolean) => {
         if (rootRef.current) rootRef.current.style.visibility = v ? "visible" : "hidden";
+        onRunGate?.(v);
       };
       const trigger = document.querySelector<HTMLElement>(breakSelector);
       // Scroll → break. The break scrubs across the range; the tick loop owns the
@@ -387,7 +407,39 @@ export default function HeroLogo3D({
       // arrives already lightly eased by the ScrollTrigger's small `scrub` (see
       // there for why), and stacking another follow on top of it was what made
       // the mark lag the user and then visibly catch up.
-      const tick = () => {
+      // ── Run-gating ──────────────────────────────────────────────────────────
+      // The mark spins constantly while whole, so it is never "settled" in place
+      // — without a gate the loop wakes every frame for the life of the page,
+      // even scrolled far past the hero. Profiling an IDLE page found this loop
+      // alone responsible for ~630 rAF callbacks in 10s, a large share of the
+      // main-thread time Lighthouse attributes to "Other".
+      //
+      // So the loop runs only when the canvas is actually on screen AND the tab
+      // is visible. Both are event-driven (IntersectionObserver / visibility
+      // change) — no polling — and `start()` is idempotent so repeated signals
+      // can't stack multiple rAF chains.
+      let onScreen = true;
+      let running = false;
+
+      const stop = () => {
+        running = false;
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+      };
+
+      const start = () => {
+        if (running || !onScreen || document.hidden) return;
+        running = true;
+        // Reset the delta-time baseline: `last` is stale after a pause, and a
+        // huge dt would jump the spin/tilt on the first frame back. (dt is
+        // clamped anyway, but this keeps the resume seamless rather than merely
+        // bounded.)
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      };
+
+      function tick() {
+        if (!running) return;
         raf = requestAnimationFrame(tick);
         const now = performance.now();
         // Clamp dt so a backgrounded tab / long task can't teleport the animation
@@ -435,8 +487,24 @@ export default function HeroLogo3D({
         // fully whole + still (e.g. tab backgrounded, or settled), skip the
         // render so the canvas isn't a perpetual main-thread cost.
         if (dirty) renderer.render(scene, camera);
+      }
+
+      // Wire the run-gate now that start/stop exist: the moment `hideOnLeave`
+      // hides the mark (scrolled past its range) the loop sleeps, and it wakes
+      // again when the mark is shown. This is the big win — the hero is a small
+      // fraction of a long page, so most of a session now costs zero frames.
+      onRunGate = (visible: boolean) => {
+        onScreen = visible;
+        if (visible) start();
+        else stop();
       };
-      tick();
+
+      // A backgrounded tab throttles rAF to ~0 anyway; stopping outright also
+      // frees the GPU work and makes the resume deterministic (see `start`).
+      const onVisibility = () => (document.hidden ? stop() : start());
+      document.addEventListener("visibilitychange", onVisibility);
+
+      start();
 
       const onResize = () => {
         const { w, h } = getSize();
@@ -448,7 +516,8 @@ export default function HeroLogo3D({
       window.addEventListener("resize", onResize);
 
       cleanup = () => {
-        cancelAnimationFrame(raf);
+        stop();
+        document.removeEventListener("visibilitychange", onVisibility);
         window.removeEventListener("mousemove", onMove);
         window.removeEventListener("resize", onResize);
         st?.kill();
