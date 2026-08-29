@@ -12,6 +12,7 @@
 import { animationProps } from "@/integrations/scroll-animations";
 import { ButtonBase, type ButtonProps } from "../Button";
 import { getButtonBaseClasses, renderButtonIcon } from "../utils";
+import IconGradientDefs, { useIconGradient } from "@/components/IconGradientDefs";
 
 /**
  * Primary button: rounded pill, bg2 fill, hairline border, heading label.
@@ -25,6 +26,8 @@ export default function PrimaryButton({
   fullWidth = false,
   ...props
 }: ButtonProps) {
+  // Primary-gradient arrow. See @/utils/iconGradient.
+  const iconGrad = useIconGradient();
   const baseShell = getButtonBaseClasses(props.size);
   const variantClasses = [
     baseShell,
@@ -51,23 +54,24 @@ export default function PrimaryButton({
     // works against this inset, hairline-bordered surface.
     "transition-colors duration-200 ease-out border border-heading/15 bg-bg2 text-heading",
     "hover:border-primary/50 hover:bg-bg3 focus-visible:border-primary/50",
-    // The icon carries the brand accent while the label stays neutral — the one
-    // spot of colour on an otherwise quiet control (mirrors the AskAi bar, whose
-    // sparkle is accent against plain text). `text-accent` beats the shell's
-    // inherited `currentColor`.
-    "[&_svg]:text-accent",
+    // The icon carries the brand gradient while the label stays neutral — the
+    // one spot of colour on an otherwise quiet control. The paint comes from
+    // `iconGrad.style` below (an SVG gradient), not a text colour.
     "[&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-[0.16rem] hover:[&_svg]:-translate-y-[0.16rem]",
   ]
     .filter(Boolean)
     .join(" ");
 
   const buttonContent = (
-    <ButtonBase
-      {...props}
-      className={`${variantClasses} ${className}`.trim()}
-      leftIcon={renderButtonIcon(leftIcon, props.size)}
-      rightIcon={renderButtonIcon(rightIcon, props.size)}
-    />
+    <>
+      <IconGradientDefs {...iconGrad.defsProps} />
+      <ButtonBase
+        {...props}
+        className={`${variantClasses} ${className}`.trim()}
+        leftIcon={renderButtonIcon(leftIcon, props.size, iconGrad.style)}
+        rightIcon={renderButtonIcon(rightIcon, props.size, iconGrad.style)}
+      />
+    </>
   );
 
   const wrapperClasses = [

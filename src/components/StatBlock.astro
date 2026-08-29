@@ -9,6 +9,8 @@
 import Counter from "@/components/Counter.astro";
 import Icon from "@/components/Icon";
 import type { IconType } from "@/content/schema";
+import { iconGradient } from "@/utils/iconGradient";
+import IconGradientDefs from "@/components/IconGradientDefs.astro";
 
 interface Props {
   /** The number to count up to. */
@@ -41,13 +43,18 @@ const {
 } = Astro.props as Props;
 
 const alignClass = align === "start" ? "items-start text-left" : "items-center text-center";
+
+/** Primary-gradient icon paint. See @/utils/iconGradient for why SVG needs a
+ *  <defs> + url(#id) reference rather than a CSS gradient. */
+const iconGrad = iconGradient("stat", label ?? String(value));
 ---
 
 <div class:list={["flex flex-col", alignClass, className]}>
   <span class="flex items-center gap-2 text-2xl lg:text-3xl font-light leading-none text-heading">
     {icon && (
-      <span class="inline-flex shrink-0 text-text/80">
-        <Icon icon={icon} size="md" />
+      <span class="inline-flex shrink-0">
+        <IconGradientDefs id={iconGrad.id} stops={iconGrad.stops} />
+        <Icon icon={icon} size="md" style={iconGrad.style} />
       </span>
     )}
     <Counter

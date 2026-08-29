@@ -124,14 +124,21 @@ export default function CookieConsentBanner() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 lg:shrink-0">
+                {/* Same `underline` treatment as the hero's "View Our Work" —
+                    the quiet, secondary action next to a solid primary. It has
+                    no `fullWidth` prop (the variant sizes to its text so the
+                    rule tracks the label), so the width is set here: full on
+                    mobile where the two buttons stack, natural from lg. */}
                 <Button
-                  variant="secondary"
+                  variant="underline"
                   onClick={handleRejectAll}
-                  fullWidth={true}
                   animated={false}
                   type="button"
-                  buttonWrapperClasses="text-center"
-                  className="text-xs lg:w-auto lg:whitespace-nowrap"
+                  /* The variant defaults to an up-right arrow, which reads as
+                     "opens elsewhere" — wrong for an in-place consent choice.
+                     An explicit null suppresses it (see UnderlineButton). */
+                  rightIcon={null}
+                  className="w-full! max-w-none! self-center! text-xs lg:w-auto! lg:whitespace-nowrap"
                   size="md"
                   disabled={isPending}
                 >

@@ -1,5 +1,5 @@
 // src/components/Button/utils.tsx
-import { isValidElement, type ReactNode } from 'react';
+import { isValidElement, type CSSProperties, type ReactNode } from 'react';
 import Icon from '@/components/Icon';
 import type { IconSize } from '@/integrations/icons';
 import type { ButtonSize } from './Button';
@@ -21,14 +21,18 @@ function normalizeButtonIcon(icon: string): string {
 
 export function renderButtonIcon(
   icon: string | ReactNode | undefined,
-  size?: ButtonSize
+  size?: ButtonSize,
+  /** Optional inline style for the rendered <Icon> — e.g. an SVG gradient paint
+   *  from `useIconGradient()`. Only applies when `icon` is a name string; an
+   *  already-built element is passed through untouched. */
+  style?: CSSProperties
 ): ReactNode {
   if (!icon) return null;
 
   const iconSize = mapButtonSizeToIconSize(size);
   if (isValidElement(icon)) return icon;
   if (typeof icon === 'string') {
-    return <Icon icon={normalizeButtonIcon(icon)} size={iconSize} />;
+    return <Icon icon={normalizeButtonIcon(icon)} size={iconSize} style={style} />;
   }
   return null;
 }

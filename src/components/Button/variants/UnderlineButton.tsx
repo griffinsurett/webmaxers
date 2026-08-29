@@ -34,7 +34,14 @@ export default function UnderlineButton({
         className,
       ].join(' ')}
       leftIcon={leftIcon}
-      rightIcon={renderButtonIcon(rightIcon ?? 'lu:arrow-up-right', size)}
+      // Defaults to the up-right arrow, but an explicit `null` suppresses it —
+      // `??` alone would treat null as "not supplied" and re-add the arrow,
+      // leaving no way to opt out (an in-place action like "Reject All" should
+      // not carry a leaves-the-page arrow).
+      rightIcon={renderButtonIcon(
+        rightIcon === null ? undefined : rightIcon ?? 'lu:arrow-up-right',
+        size,
+      )}
     >
       {children}
     </ButtonBase>

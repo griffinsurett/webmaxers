@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Icon from "@/components/Icon";
+import IconGradientDefs, { useIconGradient } from "@/components/IconGradientDefs";
 import { UseMode } from "@/hooks/theme/UseMode";
 import { useAccentColor, type AccentColor } from "@/hooks/useAccentColor";
 import { useAccessibility } from "@/integrations/preferences/accessibility/core/hooks/useAccessibility";
@@ -52,6 +53,8 @@ function ThemeGlyph({ isLight, gradientId }: { isLight: boolean; gradientId: str
 }
 
 export default function ThemeControls({ className = "" }: ThemeControlsProps) {
+  // Gradient paint for the gear icon (shared system — see @/utils/iconGradient).
+  const gearGrad = useIconGradient();
   const ref = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>("root");
@@ -160,6 +163,11 @@ export default function ThemeControls({ className = "" }: ThemeControlsProps) {
         </defs>
       </svg>
 
+      {/* Gradient def for the gear, from the shared system. (The two gradients
+          above are this component's own richer 3-stop primary/accent ramps, used
+          by the popup's glyphs — left as they are.) */}
+      <IconGradientDefs {...gearGrad.defsProps} />
+
       {/* A single gear button (all screen sizes) that opens the preferences popup. */}
       <button
         type="button"
@@ -169,7 +177,15 @@ export default function ThemeControls({ className = "" }: ThemeControlsProps) {
         aria-haspopup="menu"
         onClick={() => (open ? close() : openMenu())}
       >
-        <Icon icon="lu:settings" size="sm" className="h-4 w-4 text-current" />
+        {/* Gradient-painted gear, via the shared icon-gradient system. Stroke
+            only — `lu:settings` is stroke-drawn with fill="none", and filling it
+            would blot the enclosed shapes. */}
+        <Icon
+          icon="lu:settings"
+          size="sm"
+          className="h-4 w-4"
+          style={gearGrad.style}
+        />
       </button>
 
       {/* Preferences popup (all screen sizes). */}

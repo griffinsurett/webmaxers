@@ -1,0 +1,33 @@
+---
+// src/components/IconGradientDefs.astro
+/**
+ * The hidden <defs> half of a gradient icon — see @/utils/iconGradient.
+ *
+ * Renders a zero-size, aria-hidden <svg> whose only job is to carry the
+ * <linearGradient> that an icon's `stroke`/`fill: url(#id)` points at. It paints
+ * nothing itself and takes up no space, so it can sit anywhere in the markup.
+ *
+ *   const grad = iconGradient("stat", label);
+ *   <IconGradientDefs id={grad.id} stops={grad.stops} />
+ *   <Icon icon={icon} style={grad.style} />
+ */
+import { ICON_GRADIENT_PRESETS } from "@/utils/iconGradient";
+
+interface Props {
+  /** Gradient dom id, from `iconGradient()`. */
+  id: string;
+  /** [from, to] colour stops. Defaults to the brand primary ramp. */
+  stops?: readonly [string, string];
+}
+
+const { id, stops = ICON_GRADIENT_PRESETS.primary } = Astro.props as Props;
+---
+
+<svg class="absolute h-0 w-0 overflow-hidden" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color={stops[0]} />
+      <stop offset="100%" stop-color={stops[1]} />
+    </linearGradient>
+  </defs>
+</svg>

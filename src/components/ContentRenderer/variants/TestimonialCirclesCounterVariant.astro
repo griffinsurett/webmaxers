@@ -29,7 +29,11 @@ const {
   counterPrefix = "",
   counterSuffix = "+",
   counterLabel = "Happy Clients",
-  counterClassName = "text-heading m-0 p-0 text-[1.7rem] sm:text-3xl lg:text-4xl",
+  /* Matches StatBlock's number exactly (`text-2xl lg:text-3xl font-light`), so
+     the Happy Clients counter reads at the same scale as the hero stat boxes it
+     sits beside. Was `text-[1.7rem] sm:text-3xl lg:text-4xl` at weight 400 —
+     36px vs the stat boxes' 30px. */
+  counterClassName = "text-heading m-0 p-0 text-2xl lg:text-3xl font-light",
   link = "/#testimonials-home",
   id,
 } = Astro.props as Props;
@@ -95,7 +99,9 @@ const resolveImage = (face: any) => {
         class="leading-none"
       />
     </span>
-    <p class="m-0 text-xs capitalize sm:text-sm">
+    {/* `support-text text-text mt-0.5` mirrors StatBlock's label so the two
+        number+label pairs are typographically identical. */}
+    <p class="support-text m-0 mt-0.5 text-base capitalize text-text">
       {counterLabel}
     </p>
   </div>
