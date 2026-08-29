@@ -36,10 +36,11 @@
  * MOBILE MENU CONTENT
  * ============================================================ */
 
-/* Base mobile menu content max-height */
+/* Base mobile menu content max-height. Keyed to the SAME header-height token
+   the element's `top` offset uses, so the two can't drift apart. */
 .mobile-menu-content {
-  max-height: calc(100vh - 6rem);
-  max-height: calc(100dvh - 6rem);
+  max-height: calc(100vh - var(--site-header-height, 5.5rem));
+  max-height: calc(100dvh - var(--site-header-height, 5.5rem));
 }
 
 /* Landscape adjustments for menu - uses shared .landscape-hero from global.css */
@@ -61,8 +62,21 @@
   }
 }
 
-/* Opaque header backing while the mobile menu is open — the same flat
-   --color-bg the body paints, so it matches the page with no seam. */
+/* While the mobile menu is open the panel runs the FULL height of the viewport
+   and passes BEHIND the header, so the menu's own background is what shows up
+   there. The header keeps its own stacking context above the panel (it is
+   z-[100000] to the modal's z-[99999]) so the logo, theme gear and close button
+   stay visible and clickable over the menu — but it must not paint an opaque
+   bar, or it reads as a strip cut out of the top of the menu.
+
+   Transparent, not `background: none`: the header may carry a scroll-state
+   background elsewhere, and this overrides that for the duration of the menu
+   only. */
 .mobile-menu-open .site-header {
-  background-color: var(--color-bg);
+  background-color: transparent;
+  /* Any blur/shadow the scrolled header applies would also read as a seam. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border-color: transparent;
 }

@@ -124,7 +124,15 @@ export default function MobileMenuDrawer({
           className={`${className} mobile-menu-nav landscape-hero relative h-full w-full overflow-hidden`}
           aria-label="Mobile navigation"
         >
-          <div className="mobile-menu-content inner-section absolute inset-x-0 top-24 bottom-72 md:bottom-52">
+          {/* The panel itself runs the FULL viewport height and passes behind
+              the header, so the menu background is continuous to the top edge.
+              The LINKS start below the header controls (logo / theme gear /
+              close) so they never sit under them — hence the header-height
+              offset rather than 0. */}
+          <div
+            className="mobile-menu-content inner-section absolute inset-x-0 bottom-72 md:bottom-52"
+            style={{ top: "var(--site-header-height, 5.5rem)" }}
+          >
             <div className="relative flex h-full w-full justify-center overflow-hidden">
               <div
                 className="flex h-full w-full transition-transform duration-300 ease-in-out"

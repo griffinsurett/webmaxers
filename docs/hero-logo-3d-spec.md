@@ -1,9 +1,9 @@
 # Hero Logo 3D — Effect Specification
 
-**Status:** specification for a rebuild. The current implementation
-(`src/components/HeroLogo3D/`) is a plain in-place dissolve and is **not** what
-this document describes — it should be replaced by an implementation that
-satisfies this spec.
+**Status:** IMPLEMENTED. `src/components/HeroLogo3D/` was rebuilt from scratch
+against this document — both `HeroLogo3D.tsx` and `shatterMaterial.ts` are new,
+not patched. This spec is now the reference for what the effect is meant to be;
+keep it in sync with any change to those files.
 
 **Goal:** recreate the original "shattering brand mark" effect *exactly as it was
 meant to look*, in a system that cannot produce the glitching the old one did.
@@ -22,8 +22,13 @@ A large white Webmaxxers logo mark sits centered behind the hero headline, faint
 text.
 
 It **rotates slowly and continuously**, like a display piece turning on a stand.
-It turns whether or not you are scrolling. It never speeds up and never slows
-down while it is whole; the rate is constant in real time.
+It never speeds up and never slows down while it is whole; the rate is constant
+in real time.
+
+The rotation is **idle-only**. It turns while you are still, and **holds its
+angle the moment you start scrolling** — up or down — picking the turn back up
+shortly after you stop. Scrolling drives the shatter and nothing else; the mark
+must never appear to spin as it comes apart.
 
 Moving the mouse up and down tilts the mark slightly toward the cursor, following
 with a soft lag. Subtle, but it makes the mark feel like a physical object in
@@ -52,8 +57,10 @@ small fraction of its original size. A loose piece should read as a fleck or mot
 — not as a recognisable chunk of letterform. The mark visibly loses substance as
 it comes apart.
 
-At the same time, the **rotation winds down**. The more shattered the mark
-becomes, the slower it turns, easing to a stop as it stops being a single object.
+The rotation is already held still here (you are scrolling), and it also
+**winds down permanently**: the more shattered the mark becomes, the slower its
+idle turn, reaching zero by the time it is rubble. So even if you stop
+mid-shatter it does not resume spinning.
 
 The mouse tilt also fades out over the same stretch — once it is rubble, the
 field must not tilt as a slab.
@@ -217,7 +224,8 @@ re-snapshot only on a real `resize`/`load`, never during a scroll.
 
 ### 4.1 Visual — must match §1
 
-- [ ] Constant slow rotation while whole, independent of scroll
+- [ ] Constant slow rotation while whole AND still
+- [ ] Rotation holds its angle while scrolling (up or down), resumes after
 - [ ] Mouse tilt with soft lag, fading out as the mark breaks
 - [ ] ~First third of the range: whole, no change
 - [ ] Disintegration into ~17,700 individually-staggered fragments (a spreading
@@ -247,28 +255,31 @@ These are what make the effect un-glitchable. They are structural, not tuning.
 7. **Monotonic wind-down.** Total visible rotation decreases through the break.
    (§3.3)
 
-### 4.3 The spin — the one genuine design tension
+### 4.3 The spin — idle only, never scroll-driven
 
-§1.1 wants a **continuous free spin** while whole (turning even when the user is
-still). §3.4 shows a free-running accumulator cannot be cleanly stopped, only
-frozen at an arbitrary angle.
-
-Resolution: **split the rotation into two additive parts.**
+The mark free-spins while the user is still and **holds its angle while they
+scroll**. Scroll drives the shatter and nothing else.
 
 ```
-rotation = idleSpin(t) · wholeness  +  scrollSpin(progress)
+rotation  = idleSpin                        (an angle that only ever accumulates)
+idleSpin += spinSpeed · wholeness · scrollHold · dt
 ```
 
-- `idleSpin` is the free, constant, time-driven turn. It is multiplied by
-  `wholeness`, so it fades to nothing as the mark breaks — and because it is a
-  *velocity contribution* that goes to zero, not a frozen angle, the wind-down is
-  smooth.
-- `scrollSpin` is a pure function of scroll progress, so the mark's orientation
-  is anchored to scroll position by the time it matters.
+Two gates on the INCREMENT, never on the accumulated angle:
 
-This gives a live-feeling idle spin at the top of the page **and** a rotation
-that genuinely comes to rest as the mark shatters. Any implementation that
-satisfies §4.2.7 is acceptable; this is the recommended shape.
+- `wholeness` (= 1 − break) — the turn slows as the mark comes apart and has
+  stopped by the time it is rubble, so the shards never orbit as a clump. This
+  is the permanent wind-down.
+- `scrollHold` — snaps to 0 on any scroll event and eases back to 1 once the
+  user has been still for `scrollHoldFor`. This is the momentary pause.
+
+Gating the increment rather than the total is what makes this a *pause*: the
+velocity goes to zero and the angle simply holds. Multiplying the accumulated
+angle by either factor would instead rotate the mark backwards toward 0.
+
+A free-running accumulator cannot be cleanly *stopped*, only frozen at an
+arbitrary angle (§3.4) — but it can be *paused*, which is what a physical object
+does and what this produces.
 
 ### 4.4 Performance
 
