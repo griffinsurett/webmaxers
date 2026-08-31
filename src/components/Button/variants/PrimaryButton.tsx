@@ -3,10 +3,12 @@
  * Primary Button Variant
  *
  * A fully rounded pill using the same surface treatment as the AskAi input bar:
- * a `bg2` fill inside a hairline `heading/15` border, with the brand accent
- * arriving on hover/focus (border warms to primary) rather than at rest. The
- * default and most prominent button style — used for form submissions and main
- * CTAs.
+ * a `bg2` fill inside a hairline border that carries the brand accent. Light
+ * mode: `primary/40` at rest, full `primary` on hover/focus. Dark mode inverts
+ * that — full `primary` at rest, easing to `primary/40` on hover — because on
+ * the dark ground the accent hairline is what marks this as the primary action.
+ * The default and most prominent button style — used for form submissions and
+ * main CTAs.
  */
 
 import { animationProps } from "@/integrations/scroll-animations";
@@ -45,15 +47,32 @@ export default function PrimaryButton({
     // excess width. The letterspaced look survives; the pill gets ~25px tighter.
     "px-6! py-3.5! eyebrow-text tracking-[0.12em]! font-medium group",
     // Same surface treatment as the AskAi input bar: a `bg2` fill inside a
-    // hairline `heading/15` border, so the CTA reads as a quiet inset control
-    // rather than a saturated slab. (Replaces the primary→primary-700 gradient
-    // fill.) Hover/focus warms the border to primary and lifts the label to
-    // full-contrast heading — the accent arrives on interaction, not at rest.
+    // hairline border, so the CTA reads as a quiet inset control rather than a
+    // saturated slab. (Replaces the primary→primary-700 gradient fill.)
+    //
+    // The border carries the BRAND ACCENT at rest, at 40% so it reads as a tint
+    // on the hairline rather than a hard outline — it is the same accent the
+    // arrow icon already carries, so the control is tied to the brand without
+    // becoming a coloured slab. Hover/focus brings it to full strength.
+    //
+    // Note `--color-primary` differs by theme: it is the blue accent in dark
+    // mode but zinc-900 in light, so this reads as a blue hairline on dark and
+    // a crisp near-black one on light. Both are intentional — it is the same
+    // token the rest of the UI treats as "primary".
+    //
     // A plain colour transition rather than `primary-button-transition`: that
     // utility adds a 700ms lift + shadow-2xl, which reads as a floating slab and
     // works against this inset, hairline-bordered surface.
-    "transition-colors duration-200 ease-out border border-heading/15 bg-bg2 text-heading",
-    "hover:border-primary/50 hover:bg-bg3 focus-visible:border-primary/50",
+    "transition-colors duration-200 ease-out border border-primary/40 bg-bg2 text-heading",
+    "hover:border-primary hover:bg-bg3 focus-visible:border-primary",
+    // DARK MODE: the two border states are swapped. On the dark ground the
+    // accent hairline is what makes the CTA read as the primary action, so it
+    // gets the FULL-strength primary border at rest and settles back to the
+    // 40% tint on hover — the inverse of the light-mode treatment above, where
+    // the accent arrives on interaction. `bg-bg2` is likewise held on hover so
+    // the surface does not lift. The arrow's translate animation is untouched
+    // and still runs in both themes.
+    "dark:border-primary dark:hover:border-primary/40 dark:hover:bg-bg2 dark:focus-visible:border-primary/40",
     // The icon carries the brand gradient while the label stays neutral — the
     // one spot of colour on an otherwise quiet control. The paint comes from
     // `iconGrad.style` below (an SVG gradient), not a text colour.
