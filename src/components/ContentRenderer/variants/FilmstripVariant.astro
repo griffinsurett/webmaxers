@@ -76,7 +76,7 @@ const totalPanels = items.length + 2;
 
 <section
   id={id}
-  class="fs-section bg-gradient"
+  class="fs-section"
   style={`--fs-total-panels: ${totalPanels};`}
   data-filmstrip
   aria-label={title?.replace?.("\n", " ") ?? "Selected work"}
@@ -179,7 +179,10 @@ const totalPanels = items.length + 2;
     position: relative;
     height: calc((var(--fs-total-panels) - 1) * var(--fs-panel-w) + 100vh);
     /* Outer top/bottom section rule is applied per-placement on the page via
-       the `section-rule-*` utilities — not baked in here. */
+       the `section-rule-*` utilities — not baked in here. Likewise the
+       background: the page wraps this section (with the benefits stack) in an
+       opaque `bg-gradient`. That backing is REQUIRED here — it's what covers
+       the fixed 3D hero logo once the filmstrip scrolls over it. */
   }
 
   /* ── Sticky viewport ─────────────────────────────────────────── */

@@ -11,6 +11,10 @@
  * Borders match the filmstrip: section top/bottom rules + a divider between the
  * two columns and between each right square. No cards, no JS — pure sticky.
  * Below md the left heading stacks on top and squares flow normally.
+ *
+ * Background: none — inherited. This section and the projects filmstrip share
+ * a single `bg-gradient` wrapper on the page so the gradient runs across both
+ * as one surface instead of restarting per section.
  */
 import type { BaseVariantProps } from "../ContentRenderer.types";
 import SectionHeading from "@/components/SectionHeading.astro";
