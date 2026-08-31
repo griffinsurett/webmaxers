@@ -39,13 +39,28 @@ const textColorClass =
 const words = title.split(" ");
 const firstWord = words[0] || "";
 const restOfTitle = words.slice(1).join(" ");
+
+// Split the first word around any "@" so the glyph can be optically sized down.
+// The @ is drawn with a surrounding ring that overshoots lowercase x-height, so
+// at a matched font-size it reads noticeably larger than the letters beside it.
+// Splitting on the character (rather than hardcoding the brand) keeps this a
+// property of the wordmark, so a title without an @ renders exactly as before.
+const firstWordParts = firstWord.split("@");
+const hasAtSign = firstWordParts.length > 1;
 ---
 
 <!-- The logo is branding, not a section title — never a heading (WCAG 1.3.1).
      The logo link already carries the accessible name. -->
 <ScrollFadeOut class={className} enabled={animateOutText}>
   <span class={`${firstClass} ${textColorClass} leading-wide font-semibold no-translate`} style="line-height: normal;">
-    {firstWord}
+    {hasAtSign
+      ? firstWordParts.map((part, i) => (
+          <>
+            {i > 0 && <span class="logo-at">@</span>}
+            {part}
+          </>
+        ))
+      : firstWord}
   </span>
   {restOfTitle && (
     <span class={`${restClass} font-light emphasized-text uppercase tracking-[0.2em]`} style="line-height: normal;">
@@ -55,6 +70,15 @@ const restOfTitle = words.slice(1).join(" ");
 </ScrollFadeOut>
 
 <style>
+  /* Optical sizing for the @ in the wordmark. Sized by em so it tracks whatever
+     font-size the surrounding span carries (the header and footer render the
+     wordmark at very different scales). The baseline nudge re-centres the glyph
+     against the lowercase letters once it's been scaled down. */
+  .logo-at {
+    font-size: 0.78em;
+    vertical-align: 0.06em;
+  }
+
   /* The scroll-fade behaviour itself (keyframes, fallback transition, reduced
      motion) lives in @/components/ScrollFadeOut.astro, which also drives the
      header's Ask-AI trigger — the wordmark and that button fade out together as

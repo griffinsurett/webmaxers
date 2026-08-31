@@ -203,8 +203,11 @@ const hydrationMode =
 
   {showText && (
     <div>
+      {/* The stylized wordmark, not siteData.title: the @ is presentation.
+          The link's accessible name still comes from the logo image alt, which
+          uses the plain title. */}
       <TextLogoStatic
-        title={siteData.title}
+        title={siteData.wordmark ?? siteData.title}
         className="flex flex-col p-0 m-0"
         fadeDuration={textFadeMs}
         animateOutText={animateOutText}

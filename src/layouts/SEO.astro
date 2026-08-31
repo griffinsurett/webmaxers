@@ -22,8 +22,11 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { siteData } from "@/content/siteData";
-import siteLogo from "@/assets/transparent-word-logo.png";
-import defaultOGImage from "@/assets/transparent-word-logo.png";
+// Webmaxxers-branded lockup (mark + wordmark on the dark brand background),
+// captured from the site's own footer lockup so it stays in sync with the
+// rendered brand. Replaces the inherited Griffin's Web Services artwork.
+import siteLogo from "@/assets/Logo.jpg";
+import defaultOGImage from "@/assets/Logo.jpg";
 import { getImageUrl } from "@/utils/images";
 import type { ImageInput, SEOData } from "@/content/schema";
 
@@ -117,8 +120,8 @@ const structuredData = {
     "logo": {
       "@type": "ImageObject",
       "url": makeAbsolute(siteLogo.src),
-      "width": 60,
-      "height": 60
+      "width": siteLogo.width,
+      "height": siteLogo.height
     }
   },
   "author": {

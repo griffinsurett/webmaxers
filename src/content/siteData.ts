@@ -3,7 +3,15 @@ export const SITE_DOMAIN = "webmaxxers.com";
 export const SITE_URL = `https://${SITE_DOMAIN}`;
 
 export const siteData = {
-  title: "Webm@xxers",
+  // Plain-text brand name — used everywhere the name is READ rather than
+  // displayed: SEO/meta, schema.org, image alt text, legal copy, share titles
+  // and the chatbot prompts. Keep it free of stylization.
+  title: "Webmaxxers",
+  // Visual wordmark, rendered only by <TextLogoStatic>. The @ is emitted as its
+  // own span there so it can be optically sized down — the glyph is drawn with
+  // a ring that overshoots the surrounding lowercase letters, so at a matched
+  // font-size it reads noticeably larger than they do.
+  wordmark: "Webm@xxers",
   legalName: "Griffin’s Web Services LLC",
   // Shown in the footer. Kept out of `legalName` because that value is
   // interpolated mid-sentence in the legal pages, the schema.org publisher, and
