@@ -1,0 +1,184 @@
+---
+// src/layouts/sections/HomeTop.astro
+/**
+ * HomeTop — the homepage's entire opening region, self-contained:
+ * backdrop → 3D mark → hero copy → about/testimonials.
+ *
+ * Goes in CurtainReveal's `top` slot. index.astro renders <HomeTop /> and
+ * nothing else for this stretch of the page — every layer, every prop and all
+ * the layering rules live HERE, not spread across the page file.
+ *
+ * ── Why the region owns itself ─────────────────────────────────────────────
+ * These layers used to be assembled in index.astro as loose siblings: a fixed
+ * backdrop, a fixed 3D mark, the hero, and — further down, in a different
+ * subtree — the About section. Nothing bounded them, so each layer had to work
+ * out on its own WHEN to stop. The backdrop watched an element inside About
+ * with an IntersectionObserver; the mark scrubbed against a different one.
+ * Every guess was a separate thing to mistime, and the backdrop's was wrong: it
+ * fired when the About photo's top edge reached the viewport top, well before
+ * that photo had grown, so the stars vanished and left plain background behind
+ * a still-small photo.
+ *
+ * With the whole region in one component the guessing is gone, not corrected:
+ *
+ *   • THE REGION'S BOX IS THE RANGE. The pinned layers are `position: sticky`
+ *     within it, so they hold while it is on screen and release at its edges.
+ *     No selector, no observer, no timing to get wrong.
+ *   • THE CURTAIN LIFTS EVERYTHING AT ONCE. The layers are inside the panel the
+ *     curtain animates, so they are covered by exactly the motion that covers
+ *     the hero copy and About. Nothing to keep in step.
+ *   • CONFINEMENT IS LOCAL. Clipping, z-index and stacking are decided here, in
+ *     one file, instead of being negotiated between page-level siblings.
+ *
+ * ── Layering ───────────────────────────────────────────────────────────────
+ * Plain children in document order, no wrapper divs and no named slots. That
+ * matters: an earlier version wrapped each layer in its own positioned box, and
+ * the About photo — which expands to full-bleed from deep inside the content
+ * subtree — could then never paint over the backdrop, because its z-index only
+ * competed with its own siblings rather than with a wrapper two levels up. The
+ * star field showed straight through the full-bleed photo. As plain children,
+ * ordinary stacking applies: the photo covers the backdrop because it simply
+ * comes later.
+ *
+ * The two background layers carry `.home-top__pinned`, which is the only thing
+ * this component adds on top of document order.
+ */
+import HeroBackdrop from "@/components/HeroBackdrop/HeroBackdrop.astro";
+import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
+import FrontPageHero from "@/layouts/heroes/FrontPageHeroWebmaxers.astro";
+import AboutSection from "@/components/AboutSection/AboutSection.astro";
+import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
+import { Image } from "astro:assets";
+import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
+import { contactCtaData, siteData } from "@/content/siteData";
+
+interface Props {
+  /** Extra classes for the region root. */
+  class?: string;
+  /** Anchor the hero's scroll-down button targets. */
+  scrollTarget?: string;
+}
+const { class: className = "", scrollTarget = "#work" } = Astro.props;
+
+const heroDescription =
+  "Websites in the age of AI. Built for speed, trust, and growth.";
+---
+
+<div class:list={["home-top", className]}>
+  {/* BACKDROP — dark: star field; light: the rock plateau the mark sits on. */}
+  <HeroBackdrop class="home-top__pinned" />
+
+  {/* The 3D mark. Scrubs its shatter against the About sticky section, which is
+      a descendant of this same region — so the range it measures and the region
+      it lives in can never drift apart. */}
+  <HeroLogo3D
+    class="home-top__pinned light:opacity-40 dark:invert dark:opacity-30"
+    breakSelector="#about .about-sticky-section"
+  >
+    {/* Poster: a render of the 3D logo at progress 0 on a SQUARE canvas with the
+        same perspective camera. The live canvas frames the logo by VERTICAL fov,
+        so we size the poster by height and centre it — matching the live logo
+        exactly for a seamless swap. */}
+    <Image
+      src={heroLogo3dPoster}
+      alt=""
+      width={1000}
+      loading="eager"
+      fetchpriority="high"
+      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2/5 md:h-full w-auto"
+    />
+  </HeroLogo3D>
+
+  <FrontPageHero
+    headline="Launch a website"
+    headlineLine2="that actually works."
+    ctaText={contactCtaData.text}
+    ctaLink={contactCtaData.link}
+    bodyText={heroDescription}
+    scrollTarget={scrollTarget}
+  />
+
+  {/* ABOUT — animated statement reveal → rolling logo divider → a single image
+      that expands to a full-bleed background with a marquee scrolling over it.
+      The testimonials carousel is revealed over that image via `expand-content`. */}
+  <AboutSection
+    id="about"
+    statement={`${siteData.title} builds fast, trustworthy websites that help local businesses get found, look credible, and win more work.`}
+    leftText="We design for clarity first, build it right the first time, and keep it fast long after launch."
+    rightText="Our goal is simple: a website that makes your business easier to trust, easier to find, and easier to contact."
+    ctaText="See What We Do"
+    ctaLink="/capabilities"
+    showStats
+  >
+    <div slot="expand-content" class="w-full">
+      <TestimonialCarousel id="testimonials-home" />
+    </div>
+  </AboutSection>
+</div>
+
+<style>
+  .home-top {
+    position: relative;
+    /* CLIP is what confines the star field to this region. The pinned layers
+       below are viewport-tall and sticky, so without clipping the last one
+       keeps painting for a full screen AFTER the region's content ends —
+       straight over the Projects filmstrip the curtain has just revealed. That
+       was the star field appearing over Projects, and no amount of adjusting
+       the sticky range fixed it, because the layer is *supposed* to stay pinned
+       right up to the region's last visible moment. Clipping lets it do exactly
+       that and stop dead at the boundary. */
+    overflow: clip;
+  }
+
+  /* The pinned background layers — the star field / rock plateau, and the 3D
+     mark. They hold to the viewport while the hero copy and About scroll over
+     them, and stop at the region's edges.
+
+     Sticky rather than fixed: fixed positions against the viewport and would
+     escape this container, which is the whole point of having one.
+
+     `margin-bottom: -100svh` takes the layer's own height back out of the flow,
+     so two viewport-tall layers do not add two viewports of empty space to the
+     region. The layers stack on the same screen instead of running end to end. */
+  :global(.home-top__pinned) {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    margin-bottom: -100svh;
+    pointer-events: none;
+  }
+
+  /* The About photo expands to full-bleed with the testimonials over it, and
+     from that moment IT is the background. It has to paint over the star field
+     rather than the field showing through or below it.
+
+     `isolation: isolate` makes the About subtree its own stacking context, so
+     the expanding photo composites above the pinned layers as one unit instead
+     of its inner z-indexes competing with them individually. Without it the
+     photo's own `z-index: 0` (on .about-expand-pin) only ranks against its
+     siblings inside About, and the star field — a sibling of About, not of the
+     photo — keeps winning. */
+  .home-top :global(#about) {
+    position: relative;
+    isolation: isolate;
+    z-index: 1;
+  }
+
+  /* Reduced motion: the curtain is inert and the page is plain flow, so the
+     layers must not pin either — they would hold over content that is no longer
+     being animated away. Gated the same way CurtainReveal gates itself (OS
+     query AND the site's own a11y attribute) so the two can never disagree
+     about whether the region is animating. */
+  @media (prefers-reduced-motion: reduce) {
+    :global(.home-top__pinned) {
+      position: absolute;
+      inset: 0 0 auto 0;
+      margin-bottom: 0;
+    }
+  }
+  :global([data-a11y-motion="reduced"] .home-top__pinned) {
+    position: absolute;
+    inset: 0 0 auto 0;
+    margin-bottom: 0;
+  }
+</style>

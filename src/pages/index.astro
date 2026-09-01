@@ -5,12 +5,6 @@ import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro"
 import { query, sortByOrder, sortByDate, byTag } from "@/utils/query";
 import { contactCtaData, siteData } from "@/content/siteData";
 import { roots, related } from "@/utils/query/snippets";
-// Front-page hero ported from the original Webmaxxers site. The previous
-// hero lives at @/layouts/heroes/FrontPageHero.astro if it's ever needed again.
-import FrontPageHero from "@/layouts/heroes/FrontPageHeroWebmaxers.astro";
-import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
-import { Image } from "astro:assets";
-import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
 import HomeProblemSolutionIntro from "@/layouts/sections/HomeProblemSolutionIntro.astro";
 import HomeSolutionBridge from "@/layouts/sections/HomeSolutionBridge.astro";
 // TEMPORARILY DISABLED — see the commented render in the body.
@@ -18,108 +12,27 @@ import HomeSolutionBridge from "@/layouts/sections/HomeSolutionBridge.astro";
 import HomeFounderCtaSection from "@/layouts/sections/HomeFounderCtaSection.astro";
 // TrustPanel removed from the homepage — see the commented render below.
 // import TrustPanel from "@/layouts/sections/TrustPanel.astro";
-import AboutSection from "@/components/AboutSection/AboutSection.astro";
 import CurtainReveal from "@/layouts/sections/CurtainReveal.astro";
-import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
+import HomeTop from "@/layouts/sections/HomeTop.astro";
 import { animationProps } from "@/integrations/scroll-animations/props";
 
-const heroHeading = {
-  before: "Launch a Website That Actually Works.",
-  text: "Fast. Clear. Built to Grow.",
-  after: "",
-};
-
-const heroDescription =
-  "Websites in the age of AI. Built for speed, trust, and growth.";
 ---
 
 <SiteLayout
   title="Fast, Secure Websites Built to Grow Your Business"
   description={siteData.description}
 >
-  {/* HERO. The 3D logo scrubs its shatter against #about (the About section,
-      which contains the testimonials in its expand-content slot), so the break
-      runs hero → about → testimonials and the logo hides once past it —
-      matching the original Webmaxxers site. The projects filmstrip that follows
-      then covers it rather than the logo persisting full-page. */}
-  <div class="relative">
-    <HeroLogo3D
-      class="fixed inset-0 -z-10 opacity-40 dark:invert"
-      breakSelector="#about .about-sticky-section"
-    >
-      {/* Poster: a render of the 3D logo at progress 0 on a SQUARE canvas with
-          the same perspective camera. The live canvas frames the logo by
-          VERTICAL fov, so we size the poster by height and centre it — matching
-          the live logo exactly for a seamless swap. */}
-      <Image
-        src={heroLogo3dPoster}
-        alt=""
-        width={1000}
-        loading="eager"
-        fetchpriority="high"
-        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2/5 md:h-full w-auto"
-      />
-    </HeroLogo3D>
-
-    <FrontPageHero
-      headline="Launch a website"
-      headlineLine2="that actually works."
-      ctaText={contactCtaData.text}
-      ctaLink={contactCtaData.link}
-      bodyText={heroDescription}
-      scrollTarget="#under-hero"
-    />
-  </div>
-
-  <div id="under-hero" class="pt-24 md:pt-32 lg:pt-40">
-    <!-- <div
-      class="block lg:min-h-screen inner-section"
-      {...animationProps("fade-in-up", { once: false, threshold: 0.2 })} -->
-    
-      {/* OFFER — the primary selling section: what we actually do and why it's
-          more than "a website". Replaces the 3 featured-capability cards, which
-          didn't carry enough of the pitch this high on the page.
-          TEMPORARILY DISABLED — re-enable by uncommenting the render below. */}
-      {/* <HomeOfferSection /> */}
-      <!-- <ContentRenderer
-        query={byTag("projects", "screen").orderBy(sortByOrder())}
-        variant="PortfolioScreenVariant"
-        clientLoadPlaceholder={true}
-      /> -->
-    <!-- </div> -->
-
-    {/* ABOUT — animated statement reveal → rolling logo divider → single image
-        that expands to a full-bleed background with a marquee scrolling over it.
-        The testimonials carousel is revealed over the full-bleed image via the
-        `expand-content` slot. Followed by the PROJECTS filmstrip. */}
-    {/* The ABOUT/testimonials block hands off to the PROJECTS filmstrip through
-        a curtain: about pins at its lowest point, then lifts to reveal the
-        filmstrip pinned at its highest. Neither section's height is forced. */}
-    {/* opaqueTop={false}: the curtain's top panel normally paints an opaque
-        --color-bg backing, which would sit above the fixed 3D logo and hide it
-        through the About/testimonials stretch of its break range. */}
-    <CurtainReveal opaqueTop={false}>
-      <AboutSection
-        slot="top"
-        id="about"
-        statement={`${siteData.title} builds fast, trustworthy websites that help local businesses get found, look credible, and win more work.`}
-        leftText="We design for clarity first, build it right the first time, and keep it fast long after launch."
-        rightText="Our goal is simple: a website that makes your business easier to trust, easier to find, and easier to contact."
-        ctaText="See What We Do"
-        ctaLink="/capabilities"
-        showStats
-      >
-        <div slot="expand-content" class="w-full">
-          <TestimonialCarousel id="testimonials-home" />
-        </div>
-      </AboutSection>
+    {/* The opening stretch of the page — backdrop, 3D mark, hero copy and
+        About/testimonials — is ONE component (HomeTop). It is the curtain's top
+        panel, so the curtain lifts every layer of it together to reveal the
+        work below. Everything that region needs lives in HomeTop, not here. */}
+    <CurtainReveal>
+      <HomeTop slot="top" scrollTarget="#work" />
 
       {/* PROJECTS + BENEFITS share one opaque `bg-gradient` wrapper so the
           gradient runs across both as a single surface rather than restarting
-          per section. Neither variant paints its own background. The opacity
-          also matters: this backing is what covers the fixed 3D hero logo once
-          the curtain lifts. */}
-      <div slot="bottom" class="bg-gradient">
+          per section. Neither variant paints its own background. */}
+      <div slot="bottom" id="work" class="bg-gradient">
         <ContentRenderer
           query={byTag("projects", "featured").orderBy(sortByOrder())}
           variant="FilmstripVariant"
@@ -170,5 +83,5 @@ const heroDescription =
     {/* FOUNDER CTA — closing pitch before the footer: who's behind the work,
         over a full-bleed photo. */}
     <HomeFounderCtaSection />
-  </div>
+  <!-- </div> -->
 </SiteLayout>
