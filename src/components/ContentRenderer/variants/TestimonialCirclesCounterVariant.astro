@@ -84,11 +84,17 @@ const resolveImage = (face: any) => {
   </div>
 
   <div class="flex flex-col items-start">
-    <span
-      class={`${counterClassName} capitalize`}
-      role="heading"
-      aria-level="3"
-    >
+    {/* NOT a heading. This is a stat figure — a number paired with the label
+        below it — and the whole block is already a link with its own accessible
+        name, so a heading role adds no navigational value.
+
+        It previously carried role="heading" aria-level="3", which broke the
+        page's heading order: in the hero it follows the <h1> with no <h2>
+        between them, so assistive tech saw h1 → h3 (Lighthouse: "Heading
+        elements are not in a sequentially-descending order"). The comparable
+        HeroStatsVariant/StatBlock markup uses no heading role either, so this
+        was the outlier. */}
+    <span class={`${counterClassName} capitalize`}>
       <Counter
         prefix={counterPrefix}
         start={counterStart}
