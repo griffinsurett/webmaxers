@@ -4,6 +4,28 @@ This directory contains custom Astro client directives for fine-grained hydratio
 
 ## Available Directives
 
+### `client:superIdle`
+
+For the heaviest, least urgent islands. Hydrates on whichever comes first:
+the browser going idle **plus** a further delay (default 4s), or the visitor's
+first interaction.
+
+```astro
+<Heavy client:superIdle />
+<Heavy client:superIdle={{ delay: 6000 }} />
+<Heavy client:superIdle={{ interruptible: false }} />
+```
+
+`client:idle` alone fires as soon as the main thread frees up, which is still
+during the page's first moments — too early for something costing hundreds of
+KB. The extra delay pushes it into genuinely dead time, while an early
+interaction short-circuits the wait so an engaged visitor never waits out a
+timer they have already outrun.
+
+Versus `client:firstInteraction`: that one **never** loads for a visitor who
+does not interact. Use `superIdle` when the island should be ready in advance
+and the bytes are affordable on an idle connection.
+
 ### `client:firstInteraction`
 
 Loads a component on the **first user interaction** of any kind. This is more aggressive than `client:idle` and less specific than individual interaction directives.

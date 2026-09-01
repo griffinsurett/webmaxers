@@ -36,6 +36,15 @@ type ClientFirstInteractionDirectiveValue =
       includeKeys?: boolean;
     };
 
+type ClientSuperIdleDirectiveValue =
+  | boolean
+  | {
+      /** Milliseconds to wait AFTER the browser reports idle. Default 4000. */
+      delay?: number;
+      /** Let an early interaction short-circuit the wait. Default true. */
+      interruptible?: boolean;
+    };
+
 declare global {
   namespace Astro {
     interface ClientDirectives {
@@ -43,6 +52,7 @@ declare global {
       'client:scroll'?: ClientScrollDirectiveValue;
       'client:hover'?: ClientHoverDirectiveValue;
       'client:firstInteraction'?: ClientFirstInteractionDirectiveValue;
+      'client:superIdle'?: ClientSuperIdleDirectiveValue;
     }
   }
 }

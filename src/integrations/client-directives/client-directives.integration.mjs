@@ -20,6 +20,10 @@ const customClientDirectives = [
     name: 'firstInteraction',
     entrypoint: resolve(__dirname, 'firstInteraction.ts'),
   },
+  {
+    name: 'superIdle',
+    entrypoint: resolve(__dirname, 'superIdle.ts'),
+  },
 ];
 
 export default function clientDirectivesIntegration() {

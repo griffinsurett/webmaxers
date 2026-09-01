@@ -7,11 +7,25 @@
  * is a NET NEGATIVE on phones/tablets (cost + jank > payoff), so below `xl`
  * NOTHING renders — no 3D, and no static poster either (it adds no value on
  * mobile and only competes for attention). HydrateResponsive keeps the desktop
- * slot display:none below xl, so the island's client:visible
- * IntersectionObserver never fires → no Three.js bundle runs. With no `mobile`
- * slot, the component renders empty below xl. At/above xl the island hydrates
- * `client:visible` (lazy on scroll), shows the poster immediately, then swaps to
- * the live 3D canvas.
+ * slot display:none below xl, so the island's hydration trigger never fires →
+ * no Three.js bundle runs. With no `mobile` slot, the component renders empty
+ * below xl.
+ *
+ * ── Why client:superIdle, not client:visible ───────────────────────────────
+ * This is the heaviest thing on the page by a wide margin: ~715 KB of three.js
+ * plus GLTFLoader plus a 1.8 MB GLB. Under `client:visible` all of that was
+ * fetched on EVERY page load, because the hero is in the initial viewport — the
+ * IntersectionObserver fires immediately, so "lazy on scroll" bought nothing
+ * here and the cost landed squarely on first paint.
+ *
+ * `client:superIdle` waits for the browser to go idle and then a further 4s
+ * before loading, so the 3D lands in genuinely dead time well clear of first
+ * paint — but an early scroll/click short-circuits that wait, so a visitor who
+ * starts scrolling immediately does not sit staring at the poster.
+ *
+ * The poster is server-rendered inside the island (see the <slot />), so it is
+ * on screen from first paint regardless of when hydration happens, and the
+ * canvas crossfades in over it when the scene is ready.
  *
  * Positioning is yours via `class`. The break scrubs across `breakSelector`.
  */
@@ -30,8 +44,9 @@ interface Props {
 const { class: className = "", contained, hideOnLeave, breakSelector } = Astro.props;
 ---
 
-{/* xl+ : the hydrated 3D island (lazy via client:visible). Below xl: nothing —
-    no mobile slot, so neither the island nor a poster renders. */}
+{/* xl+ : the 3D island, hydrated on superIdle so three.js + the GLB stay
+    off the critical path. Below xl: nothing — no mobile slot, so neither
+    the island nor a poster renders. */}
 <HydrateResponsive min="1280px">
   <HeroLogo3DIsland
     slot="desktop"
@@ -39,7 +54,7 @@ const { class: className = "", contained, hideOnLeave, breakSelector } = Astro.p
     contained={contained}
     hideOnLeave={hideOnLeave}
     breakSelector={breakSelector}
-    client:visible
+    client:superIdle
   >
     <slot />
   </HeroLogo3DIsland>
