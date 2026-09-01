@@ -292,7 +292,7 @@ const hasExpandSlot = Astro.slots.has("expand-content");
             <p class="about-flow-text text-base font-normal leading-relaxed text-text">
               {rightText}
             </p>
-            <Button variant="underline" href={ctaLink} client:load>
+            <Button variant="underline" href={ctaLink}>
               {ctaText}
             </Button>
           </div>
@@ -779,10 +779,25 @@ const hasExpandSlot = Astro.slots.has("expand-content");
 </style>
 
 <script>
-  import gsap from "gsap";
-  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  // GSAP + ScrollTrigger are ~114 KB, and this section sits well below the fold
+  // — on mobile it is several screens down. Statically importing them put that
+  // whole cost on page load for animation the visitor cannot see yet, and it
+  // showed up as one of the page's longest main-thread tasks.
+  //
+  // So the libraries are imported DYNAMICALLY, and only once the section is
+  // approaching the viewport. `rootMargin` gives the import time to land before
+  // the section is actually on screen, so the reveal is never late.
+  //
+  // `readMotionPreference` is checked BEFORE the import: under reduced motion
+  // the whole scroll-driven reveal is skipped, so there is no reason to fetch a
+  // 114 KB animation library at all — the statement is simply shown in full.
   import { readMotionPreference } from "@/hooks/useMotionPreference";
-  gsap.registerPlugin(ScrollTrigger);
+
+  type Gsap = typeof import("gsap")["default"];
+  type ScrollTriggerType = typeof import("gsap/ScrollTrigger")["ScrollTrigger"];
+
+  let gsap: Gsap;
+  let ScrollTrigger: ScrollTriggerType;
 
   function init() {
     const sections = document.querySelectorAll<HTMLElement>("[data-about-sticky='true']");
@@ -1067,6 +1082,61 @@ const hasExpandSlot = Astro.slots.has("expand-content");
     });
   }
 
-  init();
-  document.addEventListener("astro:page-load", init);
+  /** Reveal the statement with no animation — the reduced-motion path. */
+  function showStatic() {
+    document
+      .querySelectorAll<HTMLElement>("[data-about-word-progress]")
+      .forEach((w) => w.style.setProperty("--word-progress", "1"));
+    document
+      .querySelectorAll<HTMLElement>("[data-about-expand]")
+      .forEach((r) => r.classList.add("is-reduced"));
+  }
+
+  let started = false;
+
+  /** Load GSAP, then run the real init. Idempotent. */
+  async function start() {
+    if (started) return;
+    started = true;
+    const [{ default: g }, { ScrollTrigger: st }] = await Promise.all([
+      import("gsap"),
+      import("gsap/ScrollTrigger"),
+    ]);
+    gsap = g;
+    ScrollTrigger = st;
+    gsap.registerPlugin(ScrollTrigger);
+    init();
+  }
+
+  function boot() {
+    // Reduced motion: never fetch the animation libraries.
+    if (readMotionPreference()) {
+      showStatic();
+      return;
+    }
+
+    const targets = document.querySelectorAll<HTMLElement>(
+      "[data-about-sticky='true'], [data-about-expand]",
+    );
+    if (!targets.length) return;
+
+    // Start loading a viewport early so the libraries are ready before the
+    // section is actually in view.
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          start();
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    targets.forEach((t) => io.observe(t));
+  }
+
+  boot();
+  document.addEventListener("astro:page-load", () => {
+    started = false;
+    boot();
+  });
 </script>

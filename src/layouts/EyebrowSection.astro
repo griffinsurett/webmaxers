@@ -54,7 +54,7 @@ const hasButton = Boolean(buttonText && buttonLink);
     <slot />
     {hasButton && (
       <div class:list={[center ? "eyebrow-cta" : "flex justify-end"]}>
-        <Button variant="underline" href={buttonLink} client:load>
+        <Button variant="underline" href={buttonLink}>
           {buttonText}
         </Button>
       </div>
