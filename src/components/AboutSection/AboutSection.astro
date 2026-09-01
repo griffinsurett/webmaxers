@@ -1120,8 +1120,23 @@ const hasExpandSlot = Astro.slots.has("expand-content");
     );
     if (!targets.length) return;
 
-    // Start loading a viewport early so the libraries are ready before the
-    // section is actually in view.
+    // NO rootMargin. The observer fires when the section's top edge actually
+    // reaches the bottom of the viewport, and not a pixel before.
+    //
+    // A lead-in margin is the obvious instinct here and it was wrong twice.
+    // This section starts a little over one viewport down the page, so ANY
+    // margin of 25% or more puts it inside the observer's box at page load —
+    // the callback fires immediately and GSAP is fetched on load, which is the
+    // exact behaviour the lazy load exists to prevent. Measured on a 915px
+    // viewport, with the section top at 1085px: 25%/50%/75%/100% all require
+    // 0px of scrolling; only 0% requires a real scroll (~170px).
+    //
+    // Firing at the fold is still early enough. The reveal is scroll-driven, so
+    // nothing needs to have happened until the section's content is on screen,
+    // and by then the ~50 KB of chunks have a full viewport of scrolling to
+    // arrive in. If a slow connection ever makes the first few words of the
+    // reveal late, raise this to a SMALL value (10-15%) rather than a large one
+    // — and re-measure that the section is still outside the box at load.
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -1129,7 +1144,6 @@ const hasExpandSlot = Astro.slots.has("expand-content");
           start();
         }
       },
-      { rootMargin: "100% 0px" },
     );
     targets.forEach((t) => io.observe(t));
   }
