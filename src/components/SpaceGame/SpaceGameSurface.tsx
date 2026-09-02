@@ -25,6 +25,7 @@
  * has leaked; fix the boundary instead (HANDOFF §1).
  */
 import { useEffect, useRef, useState } from "react";
+import { useRocketLoader } from "./useRocketLoader";
 // Types come from a standalone module, NOT from "./game" — that module imports
 // Phaser and CSS, and pulling it into the SSR graph breaks this route's
 // prerender. See types.ts.
@@ -37,6 +38,12 @@ export default function SpaceGameSurface() {
   const handleRef = useRef<GameHandle | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [result, setResult] = useState<GameResult | null>(null);
+
+  // The blastoff loader is static markup in game.astro so it paints on the
+  // first frame; this only takes it away once the engine is up. It owns the
+  // race between the flight and the download (PORTING.md §4.3).
+  const [engineReady, setEngineReady] = useState(false);
+  useRocketLoader(engineReady);
 
   useEffect(() => {
     // Guards against React 18 StrictMode's double-invoked effects in dev, which
@@ -59,6 +66,7 @@ export default function SpaceGameSurface() {
           return;
         }
         handleRef.current = handle;
+        setEngineReady(true);
         setStatus("playing");
       } catch (err) {
         console.error("[space-game] failed to start", err);
@@ -82,14 +90,11 @@ export default function SpaceGameSurface() {
           the viewport. */}
       <div ref={mountRef} className="h-dvh w-full" />
 
-      {status === "loading" && (
-        <p
-          className="pointer-events-none fixed inset-0 grid place-items-center text-text/70"
-          role="status"
-        >
-          Loading…
-        </p>
-      )}
+      {/* No loader markup here on purpose — see useRocketLoader. It sits over
+          the canvas rather than replacing it, so Phaser always has a real,
+          correctly-sized element to measure: the world's height is derived
+          from that box (config.ts), and booting into a hidden or zero-size div
+          would hand it the wrong shape. */}
 
       {status === "error" && (
         <div className="fixed inset-0 grid place-items-center p-6 text-center">

@@ -20,6 +20,7 @@
  */
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SpaceGameSurface from "@/components/SpaceGame/SpaceGameSurface";
+import "@/components/SpaceGame/rocket-loader.css";
 import { siteData } from "@/content/siteData";
 ---
 
@@ -76,6 +77,56 @@ import { siteData } from "@/content/siteData";
       border-radius: 0;
     }
   </style>
+
+  {/*
+    ── The loader is STATIC MARKUP, not part of the island ──────────────────
+    The rocket is rendered here, in Astro, so it is in the prerendered HTML and
+    paints on the first frame. It deliberately does NOT live inside the React
+    island: that island is `client:only`, so React has to download and hydrate
+    before it can render anything at all — measured on a throttled connection,
+    the loader never appeared, and the slower the network the longer the black
+    screen before the thing whose whole job is covering the wait showed up.
+
+    Static markup inverts that: the worse the connection, the more useful the
+    loader is, which is the right way round. The island removes it once both
+    clocks have landed (see SpaceGameSurface), by which point React is
+    definitionally present.
+  */}
+  <div id="rocket-loader" class="rocket-loader" role="status" aria-live="polite" aria-label="Loading the game">
+    <div class="rocket-loader__track">
+      <div class="rocket-loader__rocket">
+        <svg class="rocket-loader__svg" width="56" height="96" viewBox="0 0 56 96" fill="none" aria-hidden="true">
+          <path d="M28 2c9 10 14 23 14 37v26H14V39C14 25 19 12 28 2z" fill="currentColor" />
+          <path d="M14 45 4 66v10l10-8V45z" fill="currentColor" opacity="0.75" />
+          <path d="M42 45l10 21v10l-10-8V45z" fill="currentColor" opacity="0.75" />
+          <circle cx="28" cy="34" r="7" fill="#e0e7ff" />
+          <circle cx="28" cy="34" r="4" fill="#0b1020" opacity="0.55" />
+          <path d="M19 65h18v6H19z" fill="currentColor" opacity="0.6" />
+        </svg>
+        <span class="rocket-loader__flame" aria-hidden="true"></span>
+      </div>
+    </div>
+    <p class="rocket-loader__caption" data-rocket-caption>Preparing for launch…</p>
+  </div>
+
+  {/*
+    Reduced motion, decided before paint for the same reason the theme is.
+    `readMotionPreference()` is a React hook module, so its logic is inlined
+    here — the three attributes it checks plus the OS query. Keep in sync with
+    src/hooks/useMotionPreference.ts.
+  */}
+  <script is:inline>
+    (function () {
+      var d = document.documentElement;
+      var reduced =
+        (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) ||
+        d.getAttribute("data-a11y-motion") === "reduced" ||
+        d.getAttribute("data-a11y-animations") === "true" ||
+        d.getAttribute("data-a11y-images") === "hide";
+      var el = document.getElementById("rocket-loader");
+      if (el) el.setAttribute("data-reduced", reduced ? "true" : "false");
+    })();
+  </script>
 
   {/*
     `client:only="react"` rather than client:load.

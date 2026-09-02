@@ -1,0 +1,204 @@
+/* src/components/SpaceGame/rocket-loader.css
+ *
+ * The blastoff loader's styles. Kept beside the component rather than in
+ * game.css, because game.css is a VERBATIM vendored copy of the standalone
+ * project's stylesheet and must stay re-copyable (PORTING.md §9). The loader is
+ * host-side only — the standalone build has no such thing.
+ *
+ * Everything here animates `transform` and `opacity` only. Animating `top` or
+ * `height` would trigger layout on every frame, which is the class of mistake
+ * that caused this site's hero jank before (PORTING.md §4.4).
+ */
+
+.rocket-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100001; /* above the site header's z-[100000] */
+  display: grid;
+  place-items: center;
+  background: var(--color-bg, #080808);
+  /* The loader is decorative chrome over a black canvas; fading it out is the
+     handoff to the title screen. */
+  animation: rocket-loader-in 200ms ease-out both;
+}
+
+/* The track is the full height the rocket travels. Giving it its own element
+   keeps the rocket's transform a simple translate with nothing else in it. */
+.rocket-loader__track {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rocket-loader__rocket {
+  position: absolute;
+  left: 50%;
+  /* Parked just below the bottom edge; the animation carries it up and off. */
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* `translate(-50%)` centres it; the keyframes add the vertical travel.
+     Starting from a compound transform in BOTH the rule and the keyframes is
+     what stops the rocket jumping sideways on the first frame.
+
+     The vertical term is in `vh`, NOT `%`. A percentage on translateY resolves
+     against the ELEMENT's own height (~130px here), so `-120%` moved it barely
+     past its own body and parked it mid-screen — measured, it stopped at
+     y=709 on a 900px viewport. `vh` resolves against the viewport, which is
+     the distance actually being described: bottom of the screen to the top. */
+  transform: translate(-50%, 20vh);
+  /* A slow, steady climb. `ease-in` (not ease-out) is what makes it read as a
+     LAUNCH: a rocket leaves the pad slowly and gathers speed, so easing the
+     other way — fast off the mark, drifting to a stop — looks like it is
+     falling upward. The long duration is deliberate; this is the loader, and
+     a rocket that clears the screen in a blink covers nothing. */
+  animation: rocket-climb var(--rocket-flight, 5200ms)
+    cubic-bezier(0.5, 0, 0.85, 0.35) forwards;
+  will-change: transform;
+}
+
+/* The exhaust. It follows the SVG in source order so the grid stacks it
+   underneath, and the negative margin tucks it up into the nozzle — the SVG's
+   viewBox is 96 tall but the body ends around y=76, so without this the flame
+   floats detached below the rocket. */
+.rocket-loader__flame {
+  width: 16px;
+  height: 46px;
+  margin-top: -26px;
+  /* Teardrop: round at the nozzle, drawn to a point at the tail. */
+  border-radius: 45% 45% 50% 50% / 25% 25% 75% 75%;
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0%,
+    #f8e08a 18%,
+    #f8b84a 42%,
+    color-mix(in srgb, var(--color-accent, #5e76f6) 60%, transparent) 72%,
+    transparent 100%
+  );
+  filter: blur(1.5px);
+  transform-origin: 50% 0%;
+  animation: rocket-flicker 90ms steps(2, end) infinite;
+}
+
+.rocket-loader__rocket::after {
+  /* Ion trail — a long soft streak fading out behind the flame, so the rocket
+     reads as travelling rather than hovering. Purely decorative. */
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 6px;
+  height: 42vh;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-accent, #5e76f6) 45%, transparent),
+    transparent 85%
+  );
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.rocket-loader[data-reduced="true"] .rocket-loader__rocket::after {
+  display: none;
+}
+
+.rocket-loader__svg {
+  color: var(--color-accent, #5e76f6);
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--color-accent, #5e76f6) 45%, transparent));
+}
+
+.rocket-loader__caption {
+  position: absolute;
+  bottom: clamp(2rem, 8vh, 5rem);
+  margin: 0;
+  padding: 0 1.5rem;
+  text-align: center;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text, #e4e4e7);
+  opacity: 0.7;
+}
+
+@keyframes rocket-loader-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Bottom of the screen to the top. `120%` → `-120%` guarantees the rocket
+   starts and ends fully off-screen at any viewport height. */
+@keyframes rocket-climb {
+  /* 20vh below the bottom edge → 20vh above the top edge, so the rocket enters
+     and leaves fully off-screen at any viewport height. */
+  from { transform: translate(-50%, 20vh); }
+  to   { transform: translate(-50%, -120vh); }
+}
+
+@keyframes rocket-flicker {
+  0%   { transform: scaleY(1) scaleX(1);       opacity: 1; }
+  100% { transform: scaleY(0.72) scaleX(1.15); opacity: 0.82; }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────────
+ * A rocket streaking across the viewport is precisely what this preference
+ * exists to prevent, so the flight is skipped: the rocket sits still, centred,
+ * and the caption carries the message on its own. The component ALSO skips the
+ * timer and completes immediately, so this is belt and braces — it covers the
+ * case where the OS setting changes after mount.
+ *
+ * Both the attribute (set from readMotionPreference(), which honours the site's
+ * own a11y toggles) and the media query are handled. */
+.rocket-loader[data-reduced="true"] .rocket-loader__rocket,
+.rocket-loader[data-reduced="true"] .rocket-loader__flame {
+  animation: none;
+}
+.rocket-loader[data-reduced="true"] .rocket-loader__rocket {
+  bottom: 50%;
+  transform: translate(-50%, 50%);
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .rocket-loader,
+  .rocket-loader__rocket,
+  .rocket-loader__flame {
+    animation: none;
+  }
+  .rocket-loader__rocket {
+    bottom: 50%;
+    transform: translate(-50%, 50%);
+  }
+}
+
+
+/* ── Handing over to the game ───────────────────────────────────────────────
+ * `is-leaving` is added once BOTH the flight and the download have finished;
+ * the element is removed after the fade. Transitioning opacity (not display)
+ * is what makes the handover read as a cut to the title screen rather than a
+ * flicker. */
+.rocket-loader {
+  transition: opacity 420ms ease-out;
+}
+
+.rocket-loader.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Animation won the race ─────────────────────────────────────────────────
+ * The rocket has reached the top but the engine is still downloading. Park it
+ * just off the top edge and keep the exhaust alive, so the screen is clearly
+ * still working rather than frozen. `forwards` on the climb already holds the
+ * end transform; this only stops the climb animation from being restartable
+ * and keeps the flame flickering. */
+.rocket-loader.is-waiting .rocket-loader__rocket {
+  animation-play-state: paused;
+}
+
+.rocket-loader.is-waiting .rocket-loader__caption {
+  opacity: 0.85;
+}
