@@ -37,12 +37,18 @@ export class GameOverScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(p.int.bg);
     this.stars = createStarfield(this);
 
+    // The win headline is the longer of the two, so it gets the smaller size —
+    // at 72px "YOU SAVED THE EARTH" overruns a portrait frame. Sized per
+    // headline rather than shrunk globally, so the loss screen keeps its
+    // weight.
+    const headline = data.won ? "YOU SAVED THE EARTH" : "GAME OVER";
     this.add
-      .text(cx, uiRow(this, height * 0.28), data.won ? "EARTH IS SAFE" : "GAME OVER", {
+      .text(cx, uiRow(this, height * 0.28), headline, {
         fontFamily: "system-ui, sans-serif",
-        fontSize: "72px",
+        fontSize: data.won ? "58px" : "72px",
         fontStyle: "bold",
         color: data.won ? p.css.player : p.css.heading,
+        align: "center",
       })
       .setOrigin(0.5);
 

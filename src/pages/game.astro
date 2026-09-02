@@ -57,11 +57,15 @@ import { siteData } from "@/content/siteData";
   </script>
 
   <style is:global>
-    /* The game owns the viewport. No page scroll, no rubber-banding on iOS. */
+    /* The game owns the FIRST screenful; the discount terms sit one scroll
+       below it. Vertical scrolling therefore has to stay available — an
+       earlier version set `overflow: hidden` here, which made the terms
+       unreachable. Horizontal scroll is still pinned, and `overscroll-behavior`
+       stops iOS rubber-banding the page while dragging on the canvas. */
     body.space-game-page {
       margin: 0;
-      overflow: hidden;
-      overscroll-behavior: none;
+      overflow-x: hidden;
+      overscroll-behavior-y: contain;
       background: var(--color-bg);
     }
 
@@ -93,6 +97,9 @@ import { siteData } from "@/content/siteData";
     definitionally present.
   */}
   <div id="rocket-loader" class="rocket-loader" role="status" aria-live="polite" aria-label="Loading the game">
+    {/* Starfield behind the rocket. Pure CSS, because Phaser — and therefore
+        the game's own starfield — does not exist yet at loader time. */}
+    <div class="rocket-loader__stars" aria-hidden="true"></div>
     <div class="rocket-loader__track">
       <div class="rocket-loader__rocket">
         <svg class="rocket-loader__svg" width="56" height="96" viewBox="0 0 56 96" fill="none" aria-hidden="true">

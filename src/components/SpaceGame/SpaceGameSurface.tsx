@@ -26,6 +26,9 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useRocketLoader } from "./useRocketLoader";
+import DiscountClaim, { DiscountTerms } from "./DiscountClaim";
+import { DISCOUNT_LABEL } from "./discount";
+import "./discount-claim.css";
 // Types come from a standalone module, NOT from "./game" — that module imports
 // Phaser and CSS, and pulling it into the SSR graph breaks this route's
 // prerender. See types.ts.
@@ -45,6 +48,49 @@ export default function SpaceGameSurface() {
   const [engineReady, setEngineReady] = useState(false);
   useRocketLoader(engineReady);
 
+  /**
+   * While the reward overlay is up, pin the page. It is a fixed full-viewport
+   * layer, so a page scrolled down to the terms showed those terms drifting
+   * behind the panel — two copies of the same list on screen at once. Locking
+   * scroll and returning to the top puts the overlay against the game's own
+   * starfield, which is what it is designed to sit on.
+   */
+  useEffect(() => {
+    if (!result || claimedOnce) return;
+    const { body } = document;
+    const prev = body.style.overflow;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.overflow = prev;
+    };
+  }, [result, claimedOnce]);
+
+  /**
+   * True once the visitor has claimed. `onWin` fires per winning run, so
+   * without this a second win would offer a second discount — which the terms
+   * explicitly say does not happen. Session-scoped only: this is a marketing
+   * toy, and the real guard is that a person reviews the lead before honouring
+   * anything (PORTING.md §6.2).
+   */
+  const [claimedOnce, setClaimedOnce] = useState(false);
+
+  /**
+   * Dismiss the reward and hand control back to the game, which is already
+   * sitting on its own GameOver screen waiting for a keypress. Deliberately NOT
+   * a page reload: that would re-download the engine and replay the rocket.
+   *
+   * `claimed` distinguishes the two ways this is reached. The button only
+   * exists on the thank-you screen, so it is always true today — but passing it
+   * explicitly means someone who dismisses the overlay WITHOUT submitting is
+   * not silently marked as having claimed, which would lock them out of a
+   * discount they never received.
+   */
+  const playAgain = (claimed: boolean) => {
+    if (claimed) setClaimedOnce(true);
+    setResult(null);
+  };
+
   useEffect(() => {
     // Guards against React 18 StrictMode's double-invoked effects in dev, which
     // would otherwise mount two Phaser instances and stack two canvases.
@@ -57,6 +103,9 @@ export default function SpaceGameSurface() {
         const { mountGame } = await import("./game");
         if (cancelled) return;
         const handle = await mountGame(el, {
+          // Tells the game's title screen what the player is competing for. It
+          // still knows nothing about discounts, terms or forms.
+          rewardLabel: DISCOUNT_LABEL,
           onWin: (r) => setResult(r),
         });
         // The import may have resolved after unmount; tear down immediately
@@ -107,25 +156,23 @@ export default function SpaceGameSurface() {
         </div>
       )}
 
-      {/* Placeholder for the discount claim. The reward mechanic attaches here
-          and nowhere else — the game itself must never learn about the form
-          (PORTING.md §6.1). Note onWin fires once per WINNING RUN, so this must
-          become idempotent before it issues anything real. */}
-      {result && (
-        <div
-          className="fixed bottom-6 left-1/2 w-[min(92vw,28rem)] -translate-x-1/2 rounded-2xl border border-accent/40 bg-bg2 p-6 text-center"
-          role="status"
-        >
-          <h2 className="text-heading text-2xl font-bold">You won!</h2>
-          <p className="text-text/80 mt-2">
-            Final score {result.score.toLocaleString()} with{" "}
-            {result.timeLeft.toFixed(1)}s to spare.
-          </p>
-          <p className="text-text/60 mt-4 text-sm">
-            Discount claim form coming soon.
-          </p>
-        </div>
+      {/* What the prize actually is, readable BEFORE playing rather than only
+          after winning. Sits below the canvas — the game owns the first
+          screenful, this is one scroll down. */}
+      <DiscountTerms />
+
+      {/* The win reward. Arrives only through `onWin`, the single hook the
+          game boundary exposes — nothing under game/ knows this exists
+          (PORTING.md §6.1).
+
+          onWin fires once per WINNING RUN, not once per session, so a player
+          who wins three times fires it three times. `claimedOnce` is what
+          makes that idempotent: after the first claim the reward does not
+          reappear, which is also what the terms promise. */}
+      {result && !claimedOnce && (
+        <DiscountClaim result={result} onPlayAgain={playAgain} />
       )}
+
     </>
   );
 }

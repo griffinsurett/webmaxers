@@ -78,6 +78,15 @@ export class TitleScene extends Phaser.Scene {
     const cx = width / 2;
     const touch = isTouch();
 
+    // What the player is competing for. The host passes this in (see
+    // MountOptions.rewardLabel); standalone it falls back to the generic word.
+    const opts = this.registry.get("opts") as
+      | { rewardLabel?: string }
+      | undefined;
+    const reward = opts?.rewardLabel
+      ? `A ${opts.rewardLabel} DISCOUNT`
+      : "A DISCOUNT";
+
     // ── Vertical centring ─────────────────────────────────────────────────
     // The layout used hardcoded height fractions (0.2 → 0.93), which was
     // bottom-heavy: dead space above the eyebrow and the hint line clipped off
@@ -148,7 +157,7 @@ export class TitleScene extends Phaser.Scene {
       .text(
         cx,
         row(3),
-        `${SCORING.winTarget} POINTS IN ${SCORING.timeLimit}s TO WIN A DISCOUNT`,
+        `${SCORING.winTarget} POINTS IN ${SCORING.timeLimit}s TO PLAY FOR ${reward}`,
         {
           fontFamily: "system-ui, sans-serif",
           fontSize: "16px",

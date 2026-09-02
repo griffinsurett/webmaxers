@@ -341,6 +341,11 @@ Privacy Policy, Terms of Service, and Cookie Policy
   icon: fa6-solid:circle-info
   openInNewTab: false
   menu: main-menu, footer-menu
+- Play for a Discount: Beat Saucer Defender and claim a discount on your website project
+  url: /game
+  icon: fa6-solid:gamepad
+  openInNewTab: false
+  menu: main-menu, footer-menu
 - Contact Us: Contact page link
   url: /contact-us
   icon: fa6-solid:envelope

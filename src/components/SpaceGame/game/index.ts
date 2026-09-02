@@ -26,6 +26,17 @@ export interface MountOptions {
   /** Called once when the player wins. The reward hook goes here — later. */
   onWin?: (result: GameResult) => void;
   /**
+   * What the player is competing FOR, e.g. "15% OFF". Shown on the title
+   * screen and the win screen.
+   *
+   * Passed in rather than hard-coded because the reward is the HOST's business:
+   * the game knows there is a prize and what to call it, and nothing about
+   * discounts, terms or forms. Omit it and the screens fall back to the
+   * generic "A DISCOUNT" / "a discount" wording, which is what the standalone
+   * build shows.
+   */
+  rewardLabel?: string;
+  /**
    * Start muted. Default FALSE — the game is an opt-in experience the visitor
    * clicked into, so sound is part of it. The host can still pass `muted: true`
    * if it is ever embedded somewhere that must stay silent.

@@ -1,0 +1,211 @@
+/* src/components/SpaceGame/discount-claim.css
+ *
+ * The win-reward overlay. Host-side only — kept out of game.css, which is a
+ * verbatim vendored copy of the standalone stylesheet (PORTING.md §9).
+ *
+ * It covers the whole viewport rather than floating as a card over the game's
+ * GameOver screen. The card version was tried and read badly: it sat on top of
+ * the game's own "PRESS SPACE TO FLY AGAIN" prompt, so two competing calls to
+ * action were on screen at once and the game kept accepting keystrokes behind
+ * it. Winning ends the run — the reward should own the screen.
+ */
+
+.discount-claim {
+  position: fixed;
+  inset: 0;
+  z-index: 100002; /* above the rocket loader (100001) and the header */
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The game's own starfield is still rendering behind this — winning does not
+     tear the canvas down — so the scrim is deliberately light: enough contrast
+     for the text, but the stars stay clearly visible and the reward reads as
+     part of the game rather than a page that replaced it.
+     At 92% opacity the field was invisible and this looked like a flat black
+     page. The blur is dropped for the same reason: it smeared the stars into
+     a grey wash. Legibility comes from the panel behind the text instead. */
+  background: color-mix(in srgb, var(--color-bg, #080808) 55%, transparent);
+  animation: discount-claim-in 260ms ease-out both;
+}
+
+.discount-claim__panel {
+  width: min(100%, 34rem);
+  display: grid;
+  gap: 1.5rem;
+  /* Its own surface, because the scrim behind is now light enough to see the
+     starfield through — text directly on a moving starfield is unreadable. */
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--color-heading, #fafafa) 12%, transparent);
+  background: color-mix(in srgb, var(--color-bg, #080808) 88%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.discount-claim__head {
+  display: grid;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.discount-claim__eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent, #5e76f6);
+}
+
+.discount-claim__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-heading, #fafafa);
+}
+
+.discount-claim__lead {
+  margin: 0;
+  color: var(--color-text, #e4e4e7);
+  opacity: 0.8;
+}
+
+/* ── Terms ─────────────────────────────────────────────────────────────── */
+
+.discount-claim__terms {
+  border: 1px solid color-mix(in srgb, var(--color-accent, #5e76f6) 35%, transparent);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: color-mix(in srgb, var(--color-bg2, #030303) 70%, transparent);
+}
+
+.discount-claim__termsTitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-heading, #fafafa);
+}
+
+.discount-claim__terms ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.6rem;
+  color: var(--color-text, #e4e4e7);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.discount-claim__terms li::marker {
+  color: var(--color-accent, #5e76f6);
+}
+
+/* ── Actions ───────────────────────────────────────────────────────────── */
+
+.discount-claim__actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 30rem) {
+  .discount-claim__actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.discount-claim__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Comfortably above the ~44px minimum tap target. */
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 150ms ease, background-color 150ms ease;
+}
+
+.discount-claim__btn:focus-visible {
+  outline: 2px solid var(--color-accent, #5e76f6);
+  outline-offset: 3px;
+}
+
+.discount-claim__btn--primary {
+  background: var(--color-accent, #5e76f6);
+  border: 1px solid var(--color-accent, #5e76f6);
+  color: #fff;
+}
+
+.discount-claim__btn--ghost {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--color-heading, #fafafa) 30%, transparent);
+  color: var(--color-heading, #fafafa);
+}
+
+.discount-claim__btn:hover {
+  opacity: 0.88;
+}
+
+.discount-claim__fineprint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--color-text, #e4e4e7);
+  opacity: 0.6;
+}
+
+@keyframes discount-claim-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discount-claim { animation: none; }
+}
+
+/* ── Pre-game terms ─────────────────────────────────────────────────────────
+ * Shown on the /game page beneath the canvas. A player should be able to find
+ * out what the prize actually is before spending 90 seconds chasing it, and
+ * the win screen is too late for that. Below the fold on purpose: the game
+ * owns the first screenful. */
+.discount-terms {
+  width: min(100%, 42rem);
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 3.5rem) 1.5rem clamp(3rem, 8vw, 5rem);
+  color: var(--color-text, #e4e4e7);
+}
+
+.discount-terms__title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+  font-weight: 700;
+  color: var(--color-heading, #fafafa);
+}
+
+.discount-terms__lead {
+  margin: 0 0 1.25rem;
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.discount-terms__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  opacity: 0.85;
+}
+
+.discount-terms__list li::marker {
+  color: var(--color-accent, #5e76f6);
+}
