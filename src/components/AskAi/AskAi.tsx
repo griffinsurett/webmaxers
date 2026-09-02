@@ -5,6 +5,7 @@
 // knowledge base). Submitting a question / clicking a chip sends it.
 import { useEffect, useRef, useState } from "react";
 import Modal from "@/components/Modal";
+import { renderMarkdown } from "./renderMarkdown";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -360,13 +361,23 @@ export default function AskAi({
                 >
                   <div
                     className={[
-                      "max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      // Only the user's own text keeps literal line breaks. The
+                      // assistant's reply is Markdown and gets real blocks, so
+                      // `whitespace-pre-line` there would double the spacing.
                       m.role === "user"
-                        ? "bg-primary text-white"
+                        ? "whitespace-pre-line bg-primary text-white"
                         : "bg-bg text-text",
                     ].join(" ")}
                   >
-                    {m.content}
+                    {/* Assistant replies are Markdown — links, bold and lists.
+                        Rendered to React elements, never to an HTML string, so
+                        anything the model emits is escaped as text. User
+                        messages stay literal: their input must never be
+                        interpreted. */}
+                    {m.role === "assistant"
+                      ? renderMarkdown(m.content)
+                      : m.content}
                   </div>
                 </div>
               ))}
