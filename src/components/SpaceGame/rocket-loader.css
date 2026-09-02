@@ -39,45 +39,41 @@
   position: absolute;
   inset: -50% 0;
   pointer-events: none;
+  /* Each radial-gradient paints ONE dot per tile, so density comes from the
+     TILE SIZE, not from the number of gradients: a small tile repeated across
+     the viewport yields many stars from a few declarations. An earlier version
+     tiled at 100% x 50% — one tile per screen — and produced about five visible
+     stars on a 1440x900 viewport. */
   background-image:
-    /* far — small, dim, slow */
-    radial-gradient(1px 1px at 12% 8%, rgba(255,255,255,0.55) 50%, transparent 50%),
-    radial-gradient(1px 1px at 68% 14%, rgba(255,255,255,0.45) 50%, transparent 50%),
-    radial-gradient(1px 1px at 31% 27%, rgba(255,255,255,0.5) 50%, transparent 50%),
-    radial-gradient(1px 1px at 84% 33%, rgba(255,255,255,0.4) 50%, transparent 50%),
-    radial-gradient(1px 1px at 45% 44%, rgba(255,255,255,0.5) 50%, transparent 50%),
-    radial-gradient(1px 1px at 7% 56%, rgba(255,255,255,0.42) 50%, transparent 50%),
-    radial-gradient(1px 1px at 92% 61%, rgba(255,255,255,0.5) 50%, transparent 50%),
-    radial-gradient(1px 1px at 55% 73%, rgba(255,255,255,0.45) 50%, transparent 50%),
-    radial-gradient(1px 1px at 23% 82%, rgba(255,255,255,0.52) 50%, transparent 50%),
-    radial-gradient(1px 1px at 76% 91%, rgba(255,255,255,0.44) 50%, transparent 50%);
-  background-size: 100% 50%;
+    radial-gradient(1px 1px at 18px 22px, rgba(255,255,255,0.75) 50%, transparent 50%),
+    radial-gradient(1px 1px at 92px 58px, rgba(255,255,255,0.55) 50%, transparent 50%),
+    radial-gradient(1px 1px at 47px 104px, rgba(255,255,255,0.65) 50%, transparent 50%),
+    radial-gradient(1px 1px at 133px 131px, rgba(255,255,255,0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 71px 165px, rgba(255,255,255,0.7) 50%, transparent 50%);
+  background-size: 160px 190px;
   background-repeat: repeat;
   animation: rocket-stars 9s linear infinite;
 }
 
-/* Nearer layer: bigger, brighter, faster — the parallax. */
+/* Nearer layer: bigger, brighter, sparser, and faster — the parallax. */
 .rocket-loader__stars::after {
   content: "";
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(2px 2px at 19% 19%, rgba(255,255,255,0.9) 50%, transparent 50%),
-    radial-gradient(2px 2px at 61% 38%, rgba(255,255,255,0.8) 50%, transparent 50%),
-    radial-gradient(2px 2px at 38% 66%, rgba(255,255,255,0.85) 50%, transparent 50%),
-    radial-gradient(2px 2px at 88% 78%, rgba(255,255,255,0.75) 50%, transparent 50%),
-    radial-gradient(2px 2px at 5% 93%, rgba(255,255,255,0.8) 50%, transparent 50%);
-  background-size: 100% 50%;
+    radial-gradient(2px 2px at 54px 40px, rgba(255,255,255,0.95) 50%, transparent 50%),
+    radial-gradient(2px 2px at 186px 122px, rgba(255,255,255,0.85) 50%, transparent 50%),
+    radial-gradient(2px 2px at 110px 220px, rgba(255,255,255,0.9) 50%, transparent 50%);
+  background-size: 260px 300px;
   background-repeat: repeat;
   animation: rocket-stars 5.5s linear infinite;
 }
 
-/* Downward drift sells upward travel. One tile height, so the loop is
-   seamless — `background-size` is 50%, and `inset: -50% 0` gives the overscan
-   the translate needs. */
+/* Downward drift sells upward travel. Travels exactly ONE tile height so the
+   loop is seamless; `inset: -50% 0` provides the overscan. */
 @keyframes rocket-stars {
   from { transform: translateY(0); }
-  to   { transform: translateY(25%); }
+  to   { transform: translateY(190px); }
 }
 
 .rocket-loader[data-reduced="true"] .rocket-loader__stars,

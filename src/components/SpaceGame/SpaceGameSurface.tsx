@@ -49,24 +49,6 @@ export default function SpaceGameSurface() {
   useRocketLoader(engineReady);
 
   /**
-   * While the reward overlay is up, pin the page. It is a fixed full-viewport
-   * layer, so a page scrolled down to the terms showed those terms drifting
-   * behind the panel — two copies of the same list on screen at once. Locking
-   * scroll and returning to the top puts the overlay against the game's own
-   * starfield, which is what it is designed to sit on.
-   */
-  useEffect(() => {
-    if (!result || claimedOnce) return;
-    const { body } = document;
-    const prev = body.style.overflow;
-    window.scrollTo({ top: 0, behavior: "auto" });
-    body.style.overflow = "hidden";
-    return () => {
-      body.style.overflow = prev;
-    };
-  }, [result, claimedOnce]);
-
-  /**
    * True once the visitor has claimed. `onWin` fires per winning run, so
    * without this a second win would offer a second discount — which the terms
    * explicitly say does not happen. Session-scoped only: this is a marketing
@@ -74,6 +56,27 @@ export default function SpaceGameSurface() {
    * anything (PORTING.md §6.2).
    */
   const [claimedOnce, setClaimedOnce] = useState(false);
+
+  /**
+   * While the reward overlay is up, pin the page. It is a fixed full-viewport
+   * layer, so a page scrolled down to the terms showed those terms drifting
+   * behind the panel — two copies of the same list on screen at once. Locking
+   * scroll and returning to the top puts the overlay against the game's own
+   * starfield, which is what it is designed to sit on.
+   */
+  const rewardOpen = Boolean(result) && !claimedOnce;
+
+  useEffect(() => {
+    if (!rewardOpen) return;
+    const { body } = document;
+    const prev = body.style.overflow;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.overflow = prev;
+    };
+  }, [rewardOpen]);
+
 
   /**
    * Dismiss the reward and hand control back to the game, which is already
@@ -158,8 +161,14 @@ export default function SpaceGameSurface() {
 
       {/* What the prize actually is, readable BEFORE playing rather than only
           after winning. Sits below the canvas — the game owns the first
-          screenful, this is one scroll down. */}
-      <DiscountTerms />
+          screenful, this is one scroll down.
+
+          Hidden while the reward overlay is open. The overlay is translucent so
+          the starfield shows through it, which also meant these terms showed
+          through — the same four bullets twice on one screen. Scroll-locking
+          alone did not fix that: the section is still painted below the fold
+          behind a fixed layer. */}
+      {!rewardOpen && <DiscountTerms />}
 
       {/* The win reward. Arrives only through `onWin`, the single hook the
           game boundary exposes — nothing under game/ knows this exists
@@ -169,7 +178,7 @@ export default function SpaceGameSurface() {
           who wins three times fires it three times. `claimedOnce` is what
           makes that idempotent: after the first claim the reward does not
           reappear, which is also what the terms promise. */}
-      {result && !claimedOnce && (
+      {rewardOpen && result && (
         <DiscountClaim result={result} onPlayAgain={playAgain} />
       )}
 
