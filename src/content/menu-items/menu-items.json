@@ -28,6 +28,19 @@
     ]
   },
   {
+    "id": "play-for-a-discount",
+    "title": "Play for a Discount",
+    "description": "Beat Saucer Defender and claim a discount on your website project",
+    "url": "/game",
+    "icon": "fa6-solid:gamepad",
+    "order": 4,
+    "openInNewTab": false,
+    "menu": [
+      "main-menu",
+      "footer-menu"
+    ]
+  },
+  {
     "id": "contact-us",
     "title": "Contact Us",
     "description": "Contact page link",

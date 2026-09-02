@@ -1,0 +1,260 @@
+/* src/components/SpaceGame/game.css — PORTED COPY
+ *
+ * The game's ONLY stylesheet, copied verbatim from the standalone project
+ * (applications/space-game/src/styles/game.css) except for this header and the
+ * scoping of the token block below. Re-copy it when the game updates; see
+ * PORTING.md §9.
+ *
+ * ── What changed on the way in ─────────────────────────────────────────────
+ * Standalone, the tokens below were declared on `:root` and were the source of
+ * truth. In the host they must NOT be, or the game would pin its own palette
+ * and stop following the site's accent picker.
+ *
+ * The port spec said to simply delete the block and let the host's `:root` win.
+ * That turned out to be wrong in one detail: the host declares these tokens in
+ * a Tailwind v4 `@theme { }` block (global.css:20-56), and its real `:root`
+ * holds only header-height vars. `@theme` values still resolve through
+ * `getComputedStyle` on any element, so `palette.ts` reads them correctly — but
+ * deleting the block outright would leave the game with NO values at all if it
+ * is ever rendered somewhere global.css is not loaded.
+ *
+ * So the block is kept as a scoped FALLBACK on `.space-game` instead. Because
+ * these are custom properties, the host's `@theme` declarations on :root are
+ * inherited by .space-game and the fallbacks only apply where the host has not
+ * defined the name — which is exactly the `--game-*` tokens the game owns.
+ *
+ * Do not move these back to `:root`: that would override the host site-wide.
+ */
+
+.space-game {
+  /* ── Primitives (webmaxxers global.css) ── */
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-600: #52525b;
+  --color-zinc-900: #18181b;
+
+  --color-primary-dark: #080808;
+  --color-secondary-dark: #030303;
+  --color-tertiary-dark: var(--color-zinc-900);
+  --color-primary-light: var(--color-zinc-50);
+  --color-secondary-light: var(--color-zinc-100);
+  --color-tertiary-light: var(--color-zinc-200);
+
+  /* ── The accent is NOT redeclared here, deliberately ────────────────────
+     The host owns it: the accent picker sets an inline `--color-accent` on
+     <html> (useAccentColor.ts:18-20) and Tailwind's @theme declares the
+     default. Both INHERIT down to this element.
+
+     Declaring it here would win over the inherited value — a custom property
+     set on the element itself beats one inherited from an ancestor, whatever
+     the ancestor's specificity — and the craft would be frozen at the literal
+     while the rest of the site changed colour. Measured: setting the picker to
+     #e11d48 left the game reading #5e76f6.
+
+     `var(--color-accent, #5e76f6)` supplies the standalone fallback instead:
+     the fallback applies only when the property is genuinely not set, which is
+     the case this needs to cover. Never hard-code #5e76f6 in game code — read
+     the token (palette.ts). */
+
+  /* ── Semantic tokens ── */
+  --color-primary: var(--color-accent, #5e76f6);
+  --color-bg: var(--color-primary-dark);
+  --color-bg2: var(--color-secondary-dark);
+  --color-bg3: var(--color-tertiary-dark);
+  --color-heading: var(--color-primary-light);
+  --color-text: var(--color-zinc-200);
+
+  /* ── Game-only tokens ── */
+  /* The alien green. Deliberately NOT the brand accent: the saucers are the
+     antagonist and must read as foreign to the site's palette. */
+  --game-alien: #4ade80;
+  --game-alien-dim: #16a34a;
+  /* Player craft + its shots — brand accent, so the player reads as "us". */
+  --game-player: var(--color-accent, #5e76f6);
+  --game-shot: #e0e7ff;
+  --game-danger: #f87171;
+  --game-star: #ffffff;
+}
+
+/* The host is dark-first with an explicit [data-theme] attribute. The game is
+   ALWAYS dark — it is set in space — so it pins the dark values rather than
+   following the site theme. Only the accent follows. */
+[data-theme="light"] .space-game,
+.space-game[data-theme="light"] {
+  --color-bg: var(--color-primary-dark);
+  --color-bg2: var(--color-secondary-dark);
+  --color-heading: var(--color-primary-light);
+  --color-text: var(--color-zinc-200);
+  --color-primary: var(--color-accent, #5e76f6);
+}
+
+/* ── Standalone shell ───────────────────────────────────────────────────────
+ * Only applies in this project's own index.html. When ported, the host page
+ * provides the surrounding layout and these rules are dropped — which is why
+ * they are scoped to [data-standalone] rather than styling body directly. */
+[data-standalone] {
+  margin: 0;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ── The mount point ────────────────────────────────────────────────────────
+ * `.space-game` is the element handed to mountGame(). These rules travel with
+ * the game into the host, so they must not assume anything about the page. */
+.space-game {
+  position: relative;
+
+  /* ── Sizing: fill the viewport, not a fixed 1280px box ───────────────────
+   * This used to be `width: 100%; max-width: 1280px`, which left the game
+   * marooned in dead space on anything bigger than a small laptop — measured
+   * 44% of a 1920x1080 screen and 25% of a 2560x1440 one.
+   *
+   * Now it takes the largest 16:9 rectangle that fits the viewport. `min()`
+   * against both axes is what keeps the aspect ratio without letterboxing:
+   * the width can never exceed 16/9 of the available height, so the box is
+   * always exactly as large as the screen allows.
+   *
+   * There is deliberately NO `aspect-ratio` here. The world's height is derived
+   * from this box's real shape (config.ts), so the game adapts to whatever
+   * rectangle it is given — pinning 16:9 would letterbox every screen that is
+   * not exactly 16:9, which is most of them. The world stays 1280 units wide in
+   * every case, so a saucer still crosses the same horizontal distance and no
+   * balance number changes.
+   *
+   * The two caps are readability limits, not technical ones. Growing the box
+   * only makes the sprites bigger — past roughly these sizes the craft starts to
+   * feel oversized and the HUD corners drift uncomfortably far apart. They are
+   * independent so a tall screen is not capped by a width constant. */
+  --game-max-width: 1800px;
+  --game-max-height: 1000px;
+  width: min(100%, var(--game-max-width));
+  height: min(100dvh, var(--game-max-height));
+
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: var(--color-bg2);
+  /* The canvas is the game; nothing should be selectable or draggable. */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+/* ── Mobile portrait ────────────────────────────────────────────────────────
+ * A 16:9 box on a 390x844 phone is a 390x219 strip using 26% of the screen —
+ * unplayable, and it looks broken.
+ *
+ * Portrait therefore drops the fixed aspect ratio and fills the viewport
+ * instead. The game does NOT reflow to a portrait playfield: it is a horizontal
+ * shooter, so a tall thin field would break the design (saucers would cross in a
+ * fraction of the time). Phaser's Scale.FIT keeps the 1280x720 world and
+ * letterboxes it — but now inside a full-screen box, so the strip is as large as
+ * the width allows and is vertically centred rather than floating in dead space.
+ *
+ * `100dvh` not `100vh`: on mobile Safari `vh` includes the collapsing toolbar,
+ * so the canvas would be taller than the visible area and its bottom edge —
+ * where a touch player's thumbs go — would sit under browser chrome. */
+/* ── Mobile portrait ────────────────────────────────────────────────────────
+ * Fills the viewport, with NO fixed aspect ratio.
+ *
+ * This used to show a "rotate your device" prompt, because a 16:9 field
+ * letterboxes to a ~220px strip on a phone (measured: 390x219 at 390x844). That
+ * is fixed in the GAME now rather than in CSS: the world is always 1280 wide but
+ * its height is derived from this box's aspect ratio, so the playfield matches
+ * whatever shape it is given. See tuning.ts.
+ *
+ * `100dvh` not `100vh`: on mobile Safari `vh` includes the collapsing toolbar,
+ * so the canvas would be taller than the visible area and its bottom edge —
+ * where the HUD controls live — would sit under browser chrome. */
+/* ── Touch devices held upright: the rotated portrait layout ─────────────────
+ * Phones and tablets get the portrait layout — craft at the bottom, saucers
+ * descending — which is the layout the game is designed around on touch.
+ *
+ * `pointer: coarse` rather than viewport size, so a large tablet is treated as
+ * a handheld rather than as a small desktop. It is paired with an explicit
+ * `orientation: portrait` because the two cannot be separated here: this block
+ * rotates the canvas a quarter turn, which only produces a sensible playfield
+ * when the screen's long axis is vertical. A device held sideways falls through
+ * to the unrotated layout below — see the note there, which explains why that
+ * is a real constraint rather than a preference.
+ *
+ * `100dvh` not `100vh`: on mobile Safari `vh` includes the collapsing toolbar,
+ * so the canvas would be taller than the visible area and its bottom edge —
+ * where the HUD controls live — would sit under browser chrome. */
+.space-game[data-rotated="true"] {
+  width: 100%;
+  aspect-ratio: auto;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+/* ── The 90° rotation ────────────────────────────────────────────────────
+ * The game is a HORIZONTAL shooter: the player sits at the left and saucers
+ * approach from the right. Presented as-is on a phone that reads wrong and
+ * plays worse, so the canvas is rotated a quarter turn — the player then
+ * appears at the BOTTOM shooting UP, with saucers descending.
+ *
+ * Rotating the presentation rather than rewriting the game means every
+ * balance number, spawn rule and collision test carries over untouched. The
+ * alternative — teaching each entity about a second axis — would have
+ * invalidated all of it.
+ *
+ * The canvas is sized to the SWAPPED viewport dimensions and then rotated
+ * about its centre, so it lands exactly over the container.
+ *
+ * -90deg, not +90: the player sits at world-LEFT, and only a counter-clockwise
+ * turn maps world-left to screen-BOTTOM. Rotating the other way puts the craft
+ * at the top firing downward. */
+.space-game[data-rotated="true"] canvas {
+  /* Sized to the SWAPPED viewport: the canvas's own width covers the screen's
+     height and vice versa, so that after the -90 turn it lands exactly over
+     the container whichever way the device is held. */
+  width: 100dvh !important;
+  height: 100vw !important;
+  transform-origin: center center;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.space-game canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Touch devices held sideways keep the HORIZONTAL layout, because rotating the
+ * canvas there produces a 1280x2770 world — a field twice as tall as it is wide
+ * with the craft a speck in it. They still fill the screen edge to edge; only
+ * the quarter turn is skipped.
+ *
+ * Which layout a device gets is decided ONCE, at mount, and stamped as
+ * `data-rotated` (see config.ts). Turning the phone mid-run therefore changes
+ * nothing — that is deliberate, so a timed round cannot hand the player a
+ * different control scheme halfway through. */
+.space-game[data-rotated="false"] {
+  border-radius: 0;
+}
+
+@media (pointer: coarse) {
+  .space-game[data-rotated="false"] {
+    width: 100%;
+    height: 100dvh;
+    aspect-ratio: auto;
+  }
+}
+
+/* Phaser sizes the canvas itself; this stops a flash of unstyled box before it
+   has done so. */
+.space-game:not(:has(canvas))::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg2);
+}

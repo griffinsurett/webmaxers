@@ -10,6 +10,30 @@ export function manualChunks(id) {
     return 'scroll-observer';
   }
 
+  // Phaser — the space game engine, ~340 KB gzipped, which is larger than the
+  // entire homepage's JS. It MUST stay in its own chunk so it can never be
+  // merged into anything on the critical path: the /game route loads it via a
+  // dynamic import on an explicit click, and this rule is what keeps that
+  // promise honest. Placed before the React rule so nothing else can claim it.
+  // See applications/space-game/PORTING.md §4.2.
+  if (id.includes('node_modules/phaser')) {
+    return 'phaser';
+  }
+
+  // NOTE: do NOT add a manualChunks rule for components/SpaceGame/.
+  //
+  // It was tried and it backfired. Forcing the game's modules into a named
+  // chunk also pulled Vite's shared `__vitePreload` helper in with them, and
+  // because that helper is imported by EVERY island on the site, every page
+  // then loaded the game chunk — which statically imports phaser. Measured: the
+  // homepage fetched all 1.2 MB of phaser, the exact regression PORTING.md
+  // §4.2 exists to prevent, and it only showed in a production build.
+  //
+  // Left to itself, Rollup already splits the game correctly: the dynamic
+  // import() in SpaceGameSurface is the code-split point, and the phaser rule
+  // above keeps the engine isolated. Verify with the §4.2 check after touching
+  // any of this.
+
   // Core React runtime (kept small and shared)
   if (
     id.includes('node_modules/react') ||
