@@ -99,7 +99,7 @@ import { siteData } from "@/content/siteData";
   <div id="rocket-loader" class="rocket-loader" role="status" aria-live="polite" aria-label="Loading the game">
     {/* Starfield behind the rocket. Pure CSS, because Phaser — and therefore
         the game's own starfield — does not exist yet at loader time. */}
-    <div class="rocket-loader__stars" aria-hidden="true"></div>
+    <canvas class="rocket-loader__stars" aria-hidden="true"></canvas>
     <div class="rocket-loader__track">
       <div class="rocket-loader__rocket">
         <svg class="rocket-loader__svg" width="56" height="96" viewBox="0 0 56 96" fill="none" aria-hidden="true">
@@ -122,6 +122,102 @@ import { siteData } from "@/content/siteData";
     here — the three attributes it checks plus the OS query. Keep in sync with
     src/hooks/useMotionPreference.ts.
   */}
+  {/*
+    Paint the loader's starfield.
+
+    Inline and immediate: it has to be on screen before Phaser exists, which is
+    the whole reason the loader has its own field at all. Randomly-placed points
+    rather than a CSS pattern — layered tiled gradients were tried and repeat on
+    a visible grid, which reads as a lattice, not a sky.
+
+    Drift is delta-time scaled and each star WRAPS, so nothing accumulates
+    without bound however long the loader is up (the same invariant the game
+    itself follows — HANDOFF §4).
+  */}
+  <script is:inline>
+    (function () {
+      var canvas = document.querySelector(".rocket-loader__stars");
+      if (!canvas) return;
+      var ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      var reduced =
+        (window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches) ||
+        document.documentElement.getAttribute("data-a11y-motion") === "reduced" ||
+        document.documentElement.getAttribute("data-a11y-animations") === "true";
+
+      // Cap DPR at 2 — past that the cost climbs with no visible gain, the same
+      // clamp StarfieldCanvas uses elsewhere on the site.
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = 0, h = 0, stars = [];
+
+      function seed() {
+        w = canvas.clientWidth;
+        h = canvas.clientHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // Density scales with area so a phone is not as crowded as a desktop.
+        var count = Math.round((w * h) / 5200);
+        stars = [];
+        for (var i = 0; i < count; i++) {
+          var near = Math.random();
+          stars.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: near > 0.92 ? 1.6 : near > 0.7 ? 1.1 : 0.7,
+            a: 0.35 + Math.random() * 0.5,
+            // Nearer stars drift faster: parallax.
+            v: (near > 0.92 ? 26 : near > 0.7 ? 15 : 8)
+          });
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        for (var i = 0; i < stars.length; i++) {
+          var s = stars[i];
+          ctx.globalAlpha = s.a;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      seed();
+      draw();
+
+      if (!reduced) {
+        var last = performance.now();
+        var raf = function (now) {
+          var dt = Math.min((now - last) / 1000, 0.05); // clamp tab-switch jumps
+          last = now;
+          for (var i = 0; i < stars.length; i++) {
+            var s = stars[i];
+            // Stars fall so the rocket reads as climbing. Wrapping keeps every
+            // value bounded no matter how long this runs.
+            s.y += s.v * dt;
+            if (s.y > h + 2) { s.y = -2; s.x = Math.random() * w; }
+          }
+          draw();
+          if (document.querySelector(".rocket-loader__stars")) {
+            requestAnimationFrame(raf);
+          }
+        };
+        requestAnimationFrame(raf);
+      }
+
+      var t;
+      window.addEventListener("resize", function () {
+        clearTimeout(t);
+        t = setTimeout(function () { seed(); draw(); }, 150);
+      }, { passive: true });
+    })();
+  </script>
+
   <script is:inline>
     (function () {
       var d = document.documentElement;

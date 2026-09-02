@@ -27,69 +27,19 @@
  * showing yet — a flat black rectangle was the result, which made the first
  * screen of a space game look like a failed page load.
  *
- * Drawn in CSS instead: three layers of `radial-gradient` dots at different
- * sizes and opacities, which gives parallax depth for no JS and no images. The
- * layers drift at different speeds, so the rocket reads as climbing THROUGH
- * something rather than across a static backdrop.
- *
- * `background-repeat` tiles each layer, so the pattern covers any viewport, and
- * the animation only needs to travel one tile height before it loops
- * seamlessly. */
+ * Painted on a <canvas> by a tiny inline script in game.astro. CSS was tried
+ * first, with layered tiled `radial-gradient`s, and the tiling was the problem:
+ * every layer repeats on a fixed grid, so the result read as a visible lattice
+ * rather than a sky. Randomly-placed points need real randomness, and ~40 lines
+ * of canvas gives that with no library and no image request. */
 .rocket-loader__stars {
   position: absolute;
-  inset: -50% 0;
-  pointer-events: none;
-  /* Each radial-gradient paints ONE dot per tile, so density comes from the
-     TILE SIZE, not from the number of gradients: a small tile repeated across
-     the viewport yields many stars from a few declarations. An earlier version
-     tiled at 100% x 50% — one tile per screen — and produced about five visible
-     stars on a 1440x900 viewport. */
-  background-image:
-    radial-gradient(1px 1px at 18px 22px, rgba(255,255,255,0.75) 50%, transparent 50%),
-    radial-gradient(1px 1px at 92px 58px, rgba(255,255,255,0.55) 50%, transparent 50%),
-    radial-gradient(1px 1px at 47px 104px, rgba(255,255,255,0.65) 50%, transparent 50%),
-    radial-gradient(1px 1px at 133px 131px, rgba(255,255,255,0.5) 50%, transparent 50%),
-    radial-gradient(1px 1px at 71px 165px, rgba(255,255,255,0.7) 50%, transparent 50%);
-  background-size: 160px 190px;
-  background-repeat: repeat;
-  animation: rocket-stars 9s linear infinite;
-}
-
-/* Nearer layer: bigger, brighter, sparser, and faster — the parallax. */
-.rocket-loader__stars::after {
-  content: "";
-  position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(2px 2px at 54px 40px, rgba(255,255,255,0.95) 50%, transparent 50%),
-    radial-gradient(2px 2px at 186px 122px, rgba(255,255,255,0.85) 50%, transparent 50%),
-    radial-gradient(2px 2px at 110px 220px, rgba(255,255,255,0.9) 50%, transparent 50%);
-  background-size: 260px 300px;
-  background-repeat: repeat;
-  animation: rocket-stars 5.5s linear infinite;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
-/* Downward drift sells upward travel. Travels exactly ONE tile height so the
-   loop is seamless; `inset: -50% 0` provides the overscan. */
-@keyframes rocket-stars {
-  from { transform: translateY(0); }
-  to   { transform: translateY(190px); }
-}
-
-.rocket-loader[data-reduced="true"] .rocket-loader__stars,
-.rocket-loader[data-reduced="true"] .rocket-loader__stars::after {
-  animation: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rocket-loader__stars,
-  .rocket-loader__stars::after {
-    animation: none;
-  }
-}
-
-/* The track is the full height the rocket travels. Giving it its own element
-   keeps the rocket's transform a simple translate with nothing else in it. */
 .rocket-loader__track {
   position: absolute;
   inset: 0;
