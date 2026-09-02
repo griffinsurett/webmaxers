@@ -107,7 +107,12 @@ const heroDescription =
     leftText="We design for clarity first, build it right the first time, and keep it fast long after launch."
     rightText="Our goal is simple: a website that makes your business easier to trust, easier to find, and easier to contact."
     ctaText="See What We Do"
-    ctaLink="/capabilities"
+    {/* Scrolls to the "Why Choose Us?" benefits section further down this page
+        (`id="benefits"`, set in index.astro) rather than leaving for
+        /capabilities — the copy above promises "things like this", and the
+        answer is the next section, not another page. `scroll-smooth` on <html>
+        makes it glide. */}
+    ctaLink="#benefits"
     showStats
   >
     <div slot="expand-content" class="w-full">

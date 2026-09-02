@@ -84,4 +84,120 @@ import { animationProps } from "@/integrations/scroll-animations/props";
         over a full-bleed photo. */}
     <HomeFounderCtaSection />
   <!-- </div> -->
+
+  {/*
+    Same-page anchors below the scroll-driven sections.
+
+    A plain `href="#benefits"` lands about 900px short here, and the cause is
+    layout rather than the link: several sections above are pinned/sticky and
+    only resolve their real height as they are scrolled through, so the
+    browser's one-shot jump uses a position that is still growing. Measured —
+    #benefits sits at 12295 from the top of the document, and at 13195 once
+    everything above has settled.
+
+    So: scroll, wait for the position to stop moving, and correct. The loop
+    re-measures each frame and stops once the target has been stable for a few
+    frames or the budget runs out, which also covers images finishing decode.
+
+    Only intercepts in-page hashes; modified clicks and normal links are left
+    to the browser. Delegated, so it survives islands hydrating late.
+  */}
+  <script is:inline>
+    (function () {
+      var HEADER_GAP = 16;
+
+      function headerOffset() {
+        var v = getComputedStyle(document.documentElement)
+          .getPropertyValue("--site-header-height");
+        var n = parseFloat(v);
+        return (isNaN(n) ? 88 : n) + HEADER_GAP;
+      }
+
+      function settleTo(el) {
+        var offset = headerOffset();
+        var reduced =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        // Smooth-scroll to the current best guess, then WAIT for the page to
+        // stop moving before re-measuring.
+        //
+        // An earlier version re-issued scrollTo() every frame while the smooth
+        // scroll was still animating. Each call restarted the animation, the
+        // measured target never had a chance to settle, and the loop exited on
+        // a false "stable" reading — landing 900px short, on the section above.
+        //
+        // So the two phases are kept separate: animate, wait for scrollY to go
+        // quiet, re-measure, and correct if the target has moved. Repeat a few
+        // times, which is enough for the pinned sections above to resolve.
+        var passes = 0;
+        var MAX_PASSES = 6;
+
+        function go() {
+          var target = Math.max(
+            0,
+            Math.round(el.getBoundingClientRect().top + window.scrollY - offset)
+          );
+
+          window.scrollTo({
+            top: target,
+            behavior: reduced ? "auto" : "smooth",
+          });
+
+          // Poll until scrollY has been unchanged for a few frames.
+          var lastY = null;
+          var quiet = 0;
+          var deadline = performance.now() + 1600;
+
+          function waitQuiet() {
+            var y = Math.round(window.scrollY);
+            quiet = y === lastY ? quiet + 1 : 0;
+            lastY = y;
+
+            if (quiet < 5 && performance.now() < deadline) {
+              requestAnimationFrame(waitQuiet);
+              return;
+            }
+
+            // Where does the target sit NOW that everything has settled?
+            var drift = Math.round(
+              el.getBoundingClientRect().top - offset
+            );
+            passes++;
+            if (Math.abs(drift) > 2 && passes < MAX_PASSES) {
+              go();
+            }
+          }
+
+          requestAnimationFrame(waitQuiet);
+        }
+
+        go();
+      }
+
+      document.addEventListener("click", function (e) {
+        if (e.defaultPrevented || e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+        var a = e.target && e.target.closest && e.target.closest('a[href^="#"]');
+        if (!a) return;
+
+        var hash = a.getAttribute("href");
+        if (!hash || hash === "#") return;
+
+        var el = null;
+        try {
+          el = document.querySelector(hash);
+        } catch (_) {
+          return; // not a valid selector
+        }
+        if (!el) return;
+
+        e.preventDefault();
+        // Keep the URL honest without triggering the browser's own jump.
+        if (history.replaceState) history.replaceState(null, "", hash);
+        settleTo(el);
+      });
+    })();
+  </script>
 </SiteLayout>
