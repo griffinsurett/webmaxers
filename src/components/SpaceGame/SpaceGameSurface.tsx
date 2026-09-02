@@ -27,7 +27,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRocketLoader } from "./useRocketLoader";
 import DiscountClaim, { DiscountTerms } from "./DiscountClaim";
-import { DISCOUNT_LABEL } from "./discount";
+import {
+  CLAIM_STORAGE_KEY,
+  DISCOUNT_LABEL,
+  DISCOUNT_PERCENT,
+  isStoredClaim,
+  type StoredClaim,
+} from "./discount";
+import useLocalStorageState from "@/hooks/useLocalStorageState";
 import "./discount-claim.css";
 // Types come from a standalone module, NOT from "./game" — that module imports
 // Phaser and CSS, and pulling it into the SSR graph breaks this route's
@@ -49,13 +56,28 @@ export default function SpaceGameSurface() {
   useRocketLoader(engineReady);
 
   /**
-   * True once the visitor has claimed. `onWin` fires per winning run, so
-   * without this a second win would offer a second discount — which the terms
-   * explicitly say does not happen. Session-scoped only: this is a marketing
-   * toy, and the real guard is that a person reviews the lead before honouring
-   * anything (PORTING.md §6.2).
+   * The claim, remembered in localStorage.
+   *
+   * `onWin` fires per winning RUN, so a second win in the same session would
+   * otherwise offer a second discount — and the terms say plainly that it does
+   * not. Persisting means that also holds across refreshes and return visits,
+   * which is what a player who comes back to play again actually experiences.
+   *
+   * `null` means "not claimed". JSON mode with a shape guard, so a hand-edited
+   * or stale value is treated as absent rather than crashing the island.
+   *
+   * This is a convenience, NOT enforcement: localStorage is trivially cleared,
+   * and `onWin` is forgeable from devtools regardless. The real guard remains
+   * that a person reviews each lead before honouring it (PORTING.md §6.2).
    */
-  const [claimedOnce, setClaimedOnce] = useState(false);
+  const [claim, setClaim] = useLocalStorageState<StoredClaim | null>(
+    CLAIM_STORAGE_KEY,
+    null,
+    {
+      raw: false,
+      validate: (v): v is StoredClaim | null => v === null || isStoredClaim(v),
+    },
+  );
 
   /**
    * While the reward overlay is up, pin the page. It is a fixed full-viewport
@@ -64,7 +86,11 @@ export default function SpaceGameSurface() {
    * scroll and returning to the top puts the overlay against the game's own
    * starfield, which is what it is designed to sit on.
    */
-  const rewardOpen = Boolean(result) && !claimedOnce;
+  // The overlay is up whenever there is a result to show — claimed or not. It
+  // used to also require "not yet claimed", from when a claimed player got no
+  // overlay at all; now they get a confirmation, so the overlay owns the screen
+  // either way and the page behind it must stay pinned and hidden.
+  const rewardOpen = Boolean(result);
 
   useEffect(() => {
     if (!rewardOpen) return;
@@ -89,10 +115,15 @@ export default function SpaceGameSurface() {
    * not silently marked as having claimed, which would lock them out of a
    * discount they never received.
    */
-  const playAgain = (claimed: boolean) => {
-    if (claimed) setClaimedOnce(true);
-    setResult(null);
-  };
+  const playAgain = () => setResult(null);
+
+  /** Record the claim so it survives a refresh or a return visit. */
+  const onClaimed = (r: GameResult) =>
+    setClaim({
+      at: new Date().toISOString(),
+      score: r.score,
+      percent: DISCOUNT_PERCENT,
+    });
 
   useEffect(() => {
     // Guards against React 18 StrictMode's double-invoked effects in dev, which
@@ -174,12 +205,19 @@ export default function SpaceGameSurface() {
           game boundary exposes — nothing under game/ knows this exists
           (PORTING.md §6.1).
 
-          onWin fires once per WINNING RUN, not once per session, so a player
-          who wins three times fires it three times. `claimedOnce` is what
-          makes that idempotent: after the first claim the reward does not
-          reappear, which is also what the terms promise. */}
-      {rewardOpen && result && (
-        <DiscountClaim result={result} onPlayAgain={playAgain} />
+          Two cases, because `onWin` fires once per WINNING RUN rather than once
+          per session:
+            • not claimed yet  → the claim form
+            • already claimed  → a short confirmation, no second form. The
+              terms promise one discount per person, so offering the form again
+              would be contradicting ourselves on screen. */}
+      {result && (
+        <DiscountClaim
+          result={result}
+          alreadyClaimed={claim}
+          onClaimed={() => onClaimed(result)}
+          onPlayAgain={playAgain}
+        />
       )}
 
     </>

@@ -29,6 +29,7 @@ import {
   DISCOUNT_PERCENT,
   DISCOUNT_SUMMARY,
   DISCOUNT_TERMS,
+  type StoredClaim,
 } from "./discount";
 
 const FORMSPREE_ENDPOINT = import.meta.env.PUBLIC_FORMSPREE_WINNER_ID
@@ -55,11 +56,14 @@ const fields: FieldConfig[] = [
 export interface DiscountClaimProps {
   result: GameResult;
   /**
-   * Dismiss the reward and go back to the game. `claimed` says whether the
-   * form was actually submitted, so dismissing without claiming does not
-   * count against the one-discount-per-person rule.
+   * A previous claim from localStorage, or null. When set, the form is not
+   * offered again — the terms promise one discount per person.
    */
-  onPlayAgain: (claimed: boolean) => void;
+  alreadyClaimed: StoredClaim | null;
+  /** Called once the form submits successfully, so the claim can be recorded. */
+  onClaimed: () => void;
+  /** Dismiss the reward and go back to the game. */
+  onPlayAgain: () => void;
 }
 
 /**
@@ -86,13 +90,20 @@ export function DiscountTerms() {
   );
 }
 
-export default function DiscountClaim({ result, onPlayAgain }: DiscountClaimProps) {
+export default function DiscountClaim({
+  result,
+  alreadyClaimed,
+  onClaimed,
+  onPlayAgain,
+}: DiscountClaimProps) {
+  // Someone who claimed on an earlier visit lands straight on the confirmation.
   const [claimed, setClaimed] = useState(false);
+  const showThanks = claimed || alreadyClaimed !== null;
 
   return (
     <div className="discount-claim">
       <div className="discount-claim__panel">
-        {!claimed ? (
+        {!showThanks ? (
           <>
             <header className="discount-claim__head">
               <p className="discount-claim__eyebrow">You saved the Earth</p>
@@ -117,7 +128,10 @@ export default function DiscountClaim({ result, onPlayAgain }: DiscountClaimProp
               // overlay on a running game, and navigating away to a Formspree
               // thank-you page would tear the canvas down and lose the run.
               useNativeFormSubmission={false}
-              onSuccess={() => setClaimed(true)}
+              onSuccess={() => {
+                setClaimed(true);
+                onClaimed();
+              }}
               submitButton={{
                 text: `Claim my ${DISCOUNT_LABEL}`,
                 className: "w-full",
@@ -153,13 +167,27 @@ export default function DiscountClaim({ result, onPlayAgain }: DiscountClaimProp
         ) : (
           <>
             <header className="discount-claim__head">
-              <p className="discount-claim__eyebrow">Claim received</p>
+              <p className="discount-claim__eyebrow">
+                {claimed ? "Claim received" : "Already claimed"}
+              </p>
               <h2 className="discount-claim__title">
                 Your {DISCOUNT_LABEL} is locked in
               </h2>
+              {/* Different copy for the two ways of getting here. Telling
+                  someone who claimed last week to "check your inbox" points
+                  them at an email they have already had. */}
               <p className="discount-claim__lead">
-                Check your inbox — we have emailed you the details, and we will
-                be in touch shortly.
+                {claimed ? (
+                  <>
+                    Check your inbox — we have emailed you the details, and we
+                    will be in touch shortly.
+                  </>
+                ) : (
+                  <>
+                    You claimed this on {formatClaimDate(alreadyClaimed!.at)}.
+                    It is still yours — just mention it when we speak.
+                  </>
+                )}
               </p>
             </header>
 
@@ -181,7 +209,7 @@ export default function DiscountClaim({ result, onPlayAgain }: DiscountClaimProp
               <button
                 type="button"
                 className="discount-claim__btn discount-claim__btn--ghost"
-                onClick={() => onPlayAgain(true)}
+                onClick={onPlayAgain}
               >
                 Play again
               </button>
@@ -196,6 +224,19 @@ export default function DiscountClaim({ result, onPlayAgain }: DiscountClaimProp
       </div>
     </div>
   );
+}
+
+/** "3 September 2026" — locale-aware, with a plain fallback if Intl is odd. */
+function formatClaimDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return "an earlier visit";
+  }
 }
 
 /**

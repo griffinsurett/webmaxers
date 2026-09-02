@@ -35,3 +35,34 @@ export const DISCOUNT_TERMS: string[] = [
 export const DISCOUNT_SUMMARY =
   `${DISCOUNT_PERCENT}% off your website setup cost — one-time setup only, ` +
   `not maintenance or future purchases, and one per person.`;
+
+
+/**
+ * localStorage key recording that this browser has already claimed.
+ *
+ * Namespaced and versioned: bumping the suffix is how a future campaign
+ * re-opens the offer to people who claimed under the old one, without having to
+ * reach into anyone's storage.
+ */
+export const CLAIM_STORAGE_KEY = "webmaxxers:game-discount-claimed:v1";
+
+/** What we remember about a claim. Deliberately minimal — no contact details. */
+export interface StoredClaim {
+  /** ISO timestamp of the claim. */
+  at: string;
+  /** The winning score, so the confirmation can restate it. */
+  score: number;
+  /** The percentage claimed, in case the offer changes later. */
+  percent: number;
+}
+
+/** Shape guard for the stored value — anything else is treated as absent. */
+export function isStoredClaim(v: unknown): v is StoredClaim {
+  if (!v || typeof v !== "object") return false;
+  const c = v as Record<string, unknown>;
+  return (
+    typeof c.at === "string" &&
+    typeof c.score === "number" &&
+    typeof c.percent === "number"
+  );
+}
