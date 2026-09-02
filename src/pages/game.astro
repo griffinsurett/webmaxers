@@ -1,43 +1,48 @@
 ---
 // src/pages/game.astro
 /**
- * "Play for a discount" — the Saucer Defender route.
+ * "Play for a discount" — Saucer Defender, full screen.
+ *
+ * ── Why this uses BaseLayout and not SiteLayout ────────────────────────────
+ * Deliberately OUTSIDE the site chrome. The game is a fixed-size playfield with
+ * its own HUD in all four corners, and the site's furniture fought it: the
+ * fixed header (z-[100000]) sat over the score and clock, and the AskAi bar
+ * floated across the middle of the playfield. Neither is dismissible mid-run.
+ *
+ * So: BaseLayout directly (no Header, no Footer — those live in SiteLayout),
+ * and `noChat` to drop the AskAi bar. The consent banner is intentionally NOT
+ * suppressed: it is outside the noChat gate in BaseLayout because consent is a
+ * legal requirement, and it self-hides once answered.
  *
  * The game itself lives in `src/components/SpaceGame/` and is a vendored copy
- * of the standalone project at `applications/space-game`. Re-copy it to update;
- * see that project's PORTING.md §9. Nothing on this page imports deeper than
- * `SpaceGameSurface`, which in turn imports only `mountGame` (HANDOFF §1).
- *
- * Phaser is NOT in this page's bundle. `SpaceGameSurface` hydrates with
- * client:visible but only `import()`s the engine inside its PLAY handler, so
- * landing here costs nothing until the visitor presses the button.
+ * of the standalone project at `applications/space-game`. Re-copy to update;
+ * see that project's PORTING.md §9.
  */
-import SiteLayout from "@/layouts/SiteLayout.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
 import SpaceGameSurface from "@/components/SpaceGame/SpaceGameSurface";
 import { siteData } from "@/content/siteData";
 ---
 
-<SiteLayout
+<BaseLayout
   title={`Play for a Discount | ${siteData.title}`}
   description="Beat Saucer Defender — score 10,000 points in 90 seconds — and claim a discount on your website project."
+  noChat={true}
+  showSkipLink={false}
+  bodyClass="antialiased space-game-page"
+  mainClass="h-dvh w-full"
+  mainAriaLabel="Saucer Defender game"
 >
   {/*
     Force dark mode for this route.
 
-    The game is set in space and pins itself dark regardless (its own CSS holds
-    the dark values even under [data-theme="light"]), but the page AROUND it —
-    header, footer, this section — would still render light for a visitor who
-    has chosen light mode, which looks broken against a black canvas.
+    The game is set in space and pins itself dark regardless, but the page
+    around it would still render light for a visitor who has chosen light mode.
+    Per the product decision this also WRITES the choice, so the site stays dark
+    after visiting /game until the visitor changes it back.
 
-    Per the product decision, this also WRITES the choice to localStorage, so
-    the whole site stays dark after visiting /game until the visitor changes it
-    back themselves. That is deliberate, not a side effect: it keeps the game
-    and the site consistent on the way back out.
-
-    `is:inline` and placed here so it runs BEFORE paint — the same technique
-    Theme.astro uses to prevent FOUC. Writing localStorage first means
-    UseMode's own initialiser reads "dark" and agrees with the DOM, rather than
-    fighting it on hydration.
+    `is:inline` so it runs BEFORE paint — the same technique Theme.astro uses to
+    prevent FOUC. Writing localStorage first means UseMode's initialiser reads
+    "dark" and agrees with the DOM rather than fighting it on hydration.
   */}
   <script is:inline>
     (function () {
@@ -50,52 +55,36 @@ import { siteData } from "@/content/siteData";
     })();
   </script>
 
-  {/*
-    Fit the game between the header and the bottom of the viewport.
-
-    The ported game.css sizes the mount point `height: min(100dvh, 1000px)`,
-    which is correct standalone but one header too tall here — the canvas ran
-    under the fixed header and the cookie banner. The site already publishes
-    the header's measured height as `--site-header-height` (set by the inline
-    script in Header.astro), so subtract it rather than hard-coding a number
-    that would drift when the header resizes.
-
-    Scoped to this page and applied to the mount point from OUTSIDE the game,
-    so the vendored game.css stays a byte-for-byte copy of the standalone file
-    and re-copying it later cannot clobber this (PORTING.md §9).
-  */}
   <style is:global>
-    /* Clear the fixed header. The site publishes the measured height plus a
-       comfortable gap as --site-header-clearance; using it means the game
-       follows the header if it ever resizes. */
-    .space-game-host {
-      padding-top: var(--site-header-clearance, 7rem);
+    /* The game owns the viewport. No page scroll, no rubber-banding on iOS. */
+    body.space-game-page {
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: var(--color-bg);
     }
 
-    /* ...and size the canvas to whatever is left, so the HUD's bottom row
-       (sound, pause) stays on screen. */
-    .space-game-host .space-game {
-      height: min(
-        calc(100dvh - var(--site-header-clearance, 7rem) - 2rem),
-        1000px
-      );
+    /* Fill the screen exactly, overriding the ported game.css's standalone
+       caps (min(100dvh, 1000px) and a 1800px width cap, plus its rounded
+       corners) — those are readability limits for a windowed page, and this
+       page is not windowed. Applied from OUTSIDE the game so the vendored
+       game.css stays a verbatim copy (PORTING.md §9). */
+    .space-game-page .space-game {
+      width: 100%;
+      height: 100dvh;
+      max-width: none;
+      border-radius: 0;
     }
   </style>
 
-  <section class="section-container space-game-host grid place-items-center gap-8 pb-6">
-    {/*
-      `client:only="react"` rather than client:visible.
+  {/*
+    `client:only="react"` rather than client:load.
 
-      Phaser reads `window` at module scope, so ANY path that reaches it during
-      Astro's prerender fails the build with "window is not defined". The
-      component's own types are already split into types.ts to keep them out of
-      the SSR graph, but client:only is the belt-and-braces guarantee: this
-      island is never rendered on the server at all.
-
-      It costs nothing here. The island's initial state is a poster and a PLAY
-      button, and the SEO-relevant copy is the static markup above it, so there
-      is no meaningful content being withheld from the prerendered HTML.
-    */}
-    <SpaceGameSurface client:only="react" />
-  </section>
-</SiteLayout>
+    Phaser reads `window` at module scope, so any path that reaches it during
+    Astro's prerender fails the build with "window is not defined". The
+    component's types are already split into types.ts to keep them out of the
+    SSR graph; client:only is the guarantee that this island never renders on
+    the server at all.
+  */}
+  <SpaceGameSurface client:only="react" />
+</BaseLayout>
