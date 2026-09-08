@@ -20,9 +20,9 @@
  * The banner styles itself from the site theme (outer-card-style / card-bg-2 /
  * inner-card-color + the shared Button), so it already matches webmaxxers.
  */
-import CookieConsentBanner from "@/integrations/preferences/consent/ui/CookieConsentBanner";
 ---
 
 {/* First-visit consent banner. client:idle so it never blocks first paint;
     it self-hides for returning visitors who already have a consent cookie. */}
-<CookieConsentBanner client:idle />
+{/* Cookie banner + settings modal are rendered by Zest itself,
+    injected head-inline from astro.config.mjs. */}

@@ -1,93 +1,42 @@
 ---
 // src/integrations/analytics/GoogleTagManager.astro
 /**
- * Google Tag Manager with Consent Mode v2
+ * Google Tag Manager, gated by Zest.
  *
- * GDPR/CCPA Compliance:
- * - Sets denied defaults BEFORE any tracking occurs
- * - GTM script blocked until user grants analytics_storage consent
- * - Consent Mode v2 signals sent to Google for all consent changes
- * - Listens for consent changes and updates GTM in real-time
- * - No noscript tag (would bypass consent)
+ * GDPR/CCPA compliance:
+ * - Zest owns Consent Mode v2 (`consentModeGoogle: true` in astro.config.mjs).
+ *   It pushes the denied `default` before any tracker can run, then pushes
+ *   `update` on every consent change — so there is no hand-rolled gtag consent
+ *   block here and no mapping table to drift out of sync with the banner.
+ * - The GTM loader below stays inert until analytics consent is granted.
+ * - No <noscript> tag: it would bypass consent entirely.
  *
- * GTM ID should be set via PUBLIC_GTM_ID environment variable
+ * The loader tag needs BOTH attributes and neither is redundant:
+ *   - type="text/plain" stops the browser executing the inline script at parse
+ *     time. Zest's blocker runs after parse, so it cannot un-run a script that
+ *     has already executed.
+ *   - data-consent-category tells Zest which category gates the replay. The
+ *     attribute is `data-consent-category`, NOT `data-category` — the latter is
+ *     silently ignored, leaving the tag permanently inert.
+ *
+ * GTM ID comes from the PUBLIC_GTM_ID environment variable.
  */
 
-import {
-  ALWAYS_GRANTED,
-  CONSENT_TYPES,
-  CONSENT_VERSION,
-} from "@/integrations/preferences/consent/core/types";
-
 const GTM_ID = import.meta.env.PUBLIC_GTM_ID;
-
-// Serialised for the inline script below, which can't import modules. Derived
-// from the same constants the banner uses, so the defaults, the update payload
-// and the UI can never disagree about which types exist.
-const consentDefaults = Object.fromEntries(
-  CONSENT_TYPES.map((type) => [
-    type,
-    ALWAYS_GRANTED.includes(type) ? "granted" : "denied",
-  ]),
-);
 ---
 
 {GTM_ID && (
   <>
-    {/* Consent Mode v2 initialization - MUST run before GTM loads */}
-    <script
-      is:inline
-      define:vars={{
-        CONSENT_TYPES: [...CONSENT_TYPES],
-        CONSENT_DEFAULTS: consentDefaults,
-        CONSENT_VERSION,
-      }}
-    >
-      // Initialize dataLayer and gtag function
+    {/* dataLayer + gtag shim. Zest pushes consent signals through these. */}
+    <script is:inline>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-
-      // Set default consent state - ALL denied until user accepts
-      // This runs immediately, before any Google scripts load
-      gtag('consent', 'default', Object.assign({}, CONSENT_DEFAULTS, {
-        'wait_for_update': 500
-      }));
-
-      // Helper to update GTM consent based on cookie preferences.
-      // The stored categories ARE Consent Mode types, so this reads them
-      // straight across — no mapping table to fall out of sync with the banner.
-      function updateGoogleConsent() {
-        try {
-          var cookieMatch = document.cookie.match(/cookie-consent=([^;]+)/);
-          if (!cookieMatch) return;
-
-          var consent = JSON.parse(decodeURIComponent(cookieMatch[1]));
-          // Ignore a cookie written under an older shape; the banner will
-          // re-prompt and call this again with a current one.
-          if (!consent || consent.version !== CONSENT_VERSION) return;
-
-          var payload = {};
-          for (var i = 0; i < CONSENT_TYPES.length; i++) {
-            var type = CONSENT_TYPES[i];
-            payload[type] = consent[type] ? 'granted' : 'denied';
-          }
-          gtag('consent', 'update', payload);
-        } catch (e) {
-          // Cookie not found or invalid - defaults remain
-        }
-      }
-
-      // Check for existing consent on page load
-      updateGoogleConsent();
-
-      // Listen for consent changes (when user updates preferences)
-      window.addEventListener('consent-changed', updateGoogleConsent);
+      window.gtag = function gtag(){window.dataLayer.push(arguments);};
     </script>
 
-    {/* GTM script - blocked until analytics_storage consent is granted */}
+    {/* GTM loader — inert until Zest replays it on analytics consent */}
     <script
       type="text/plain"
-      data-consent="analytics_storage"
+      data-consent-category="analytics"
       id="gtm-loader"
       is:inline
       set:html={`
@@ -100,4 +49,3 @@ const consentDefaults = Object.fromEntries(
     />
   </>
 )}
-

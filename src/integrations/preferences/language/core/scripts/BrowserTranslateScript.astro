@@ -30,7 +30,6 @@ const {
 <script is:inline define:vars={{ enableNative, enableGoogle }}>
 (function() {
   var STORAGE_KEY = "user-language";
-  var CONSENT_COOKIE = "cookie-consent";
 
   // Configuration from props
   var CONFIG = {
@@ -71,17 +70,11 @@ const {
     } catch (e) {}
   }
 
+  // Functional consent, read from Zest. Only the Google Translate fallback
+  // needs it; the native Translator API path is cookieless.
   function hasFunctionalConsent() {
     try {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].trim();
-        if (cookie.indexOf(CONSENT_COOKIE + '=') === 0) {
-          var value = decodeURIComponent(cookie.substring(CONSENT_COOKIE.length + 1));
-          var consent = JSON.parse(value);
-          return consent && consent.functionality_storage === true;
-        }
-      }
+      return window.Zest && window.Zest.hasConsent("functional") === true;
     } catch (e) {}
     return false;
   }
@@ -663,7 +656,7 @@ const {
 
   window.hasFunctionalConsent = hasFunctionalConsent;
 
-  window.addEventListener("consent-changed", function() {
+  window.addEventListener("zest:change", function() {
     if (!hasFunctionalConsent()) return;
     var preferred = getStoredLanguage();
     if (preferred === "en") return;

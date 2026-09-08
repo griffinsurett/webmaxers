@@ -30,14 +30,13 @@ const languageMappings = supportedLanguages.map((language) => ({
       }
     }
 
-    function parseConsent() {
-      const match = document.cookie.match(/(?:^|;)\s*cookie-consent=([^;]+)/);
-      if (!match) return null;
+    // Functional consent from Zest. Gates only the googtrans cookie write
+    // below — never the cookieless native Translator path.
+    function hasFunctionalConsentFromZest() {
       try {
-        return JSON.parse(decodeURIComponent(match[1]));
+        return window.Zest && window.Zest.hasConsent("functional") === true;
       } catch (error) {
-        console.warn("Unable to parse consent cookie", error);
-        return null;
+        return false;
       }
     }
 
@@ -86,8 +85,7 @@ const languageMappings = supportedLanguages.map((language) => ({
       return;
     }
 
-    const consent = parseConsent();
-    const hasFunctionalConsent = consent?.functional === true;
+    const hasFunctionalConsent = hasFunctionalConsentFromZest();
 
     if (hasFunctionalConsent) {
       setLanguageCookie(savedLang);

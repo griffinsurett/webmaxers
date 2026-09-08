@@ -8,7 +8,6 @@
  *
  * Includes:
  * - Google Tag Manager (with Consent Mode v2)
- * - Consent Script (marks consent existence)
  * - Accessibility Script (applies saved preferences before render)
  * - Language Detection Script (detects browser language)
  *
@@ -19,7 +18,6 @@
  */
 
 import GoogleTagManager from "@/integrations/analytics/GoogleTagManager.astro";
-import ConsentScript from "@/integrations/preferences/consent/core/scripts/ConsentScript.astro";
 import AccessibilityScript from "@/integrations/preferences/accessibility/core/scripts/AccessibilityScript.astro";
 import LanguageDetectionScript from "@/integrations/preferences/language/core/scripts/LanguageDetectionScript.astro";
 ---
@@ -28,7 +26,6 @@ import LanguageDetectionScript from "@/integrations/preferences/language/core/sc
 <GoogleTagManager />
 
 <!-- Consent: Mark existing consent for components -->
-<ConsentScript />
 
 <!-- Accessibility: Apply saved preferences before content renders (prevents FOUC) -->
 <AccessibilityScript />

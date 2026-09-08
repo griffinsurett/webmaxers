@@ -10,7 +10,7 @@
  */
 (function() {
   var STORAGE_KEY = "user-language";
-  var CONSENT_COOKIE = "cookie-consent";
+
 
   // Get configuration from loader
   var CONFIG = window.__translationConfig || {
@@ -51,17 +51,13 @@
     } catch (e) {}
   }
 
+  // Functional consent, read from the Zest global. This file is served raw
+  // from public/ and cannot import modules, so it reads window.Zest directly.
+  // Only the Google Translate fallback consults this — the native Translator
+  // API path below is cookieless and runs regardless of consent.
   function hasFunctionalConsent() {
     try {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].trim();
-        if (cookie.indexOf(CONSENT_COOKIE + '=') === 0) {
-          var value = decodeURIComponent(cookie.substring(CONSENT_COOKIE.length + 1));
-          var consent = JSON.parse(value);
-          return consent && consent.functional === true;
-        }
-      }
+      return window.Zest && window.Zest.hasConsent("functional") === true;
     } catch (e) {}
     return false;
   }
@@ -620,7 +616,7 @@
   window.hasFunctionalConsent = hasFunctionalConsent;
 
   // Listen for consent changes
-  window.addEventListener("consent-changed", function() {
+  window.addEventListener("zest:change", function() {
     if (!hasFunctionalConsent()) return;
     var preferred = getStoredLanguage();
     if (preferred === "en") return;

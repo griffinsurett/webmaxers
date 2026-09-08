@@ -29,19 +29,13 @@ import {
   defaultLanguage,
   type Language,
 } from "../utils/languages";
-import { requestCookiePreferencesModal } from "@/integrations/preferences/consent/core/utils/events";
 
-// Quick sync check via cookie (no hook dependency)
+
+// Functional consent, read from Zest. Only the Google Translate fallback needs
+// it — the native Translator API path is cookieless and never consulted here.
 function hasFunctionalConsentFast(): boolean {
-  if (typeof document === "undefined") return false;
-  const match = document.cookie.match(/cookie-consent=([^;]*)/);
-  if (!match) return false;
-  try {
-    const consent = JSON.parse(decodeURIComponent(match[1]));
-    return consent?.functional === true;
-  } catch {
-    return false;
-  }
+  if (typeof window === "undefined") return false;
+  return (window as any).Zest?.hasConsent?.("functional") === true;
 }
 
 function hasNativeTranslation(): boolean {
@@ -111,8 +105,8 @@ export function useLanguageSwitcher(): UseLanguageSwitcherReturn {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handleConsentChange = () => setHasFunctionalConsent(hasFunctionalConsentFast());
-    window.addEventListener("consent-changed", handleConsentChange);
-    return () => window.removeEventListener("consent-changed", handleConsentChange);
+    window.addEventListener("zest:change", handleConsentChange);
+    return () => window.removeEventListener("zest:change", handleConsentChange);
   }, []);
 
   const currentLanguage = getLanguageByCode(languageCode) || defaultLanguage;
@@ -166,7 +160,7 @@ export function useLanguageSwitcher(): UseLanguageSwitcherReturn {
   }, []);
 
   const openConsentModal = useCallback(() => {
-    requestCookiePreferencesModal();
+    (window as any).Zest?.showSettings?.();
   }, []);
 
   const resetLanguage = useCallback(() => {

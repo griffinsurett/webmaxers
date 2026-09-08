@@ -16,11 +16,15 @@
     Promise.all([
       import("@/utils/cookies"),
       import("@/utils/storage"),
-      import("@/integrations/preferences/consent/core/utils/consent")
-    ]).then(([cookies, storage, consent]) => {
+    ]).then(([cookies, storage]) => {
       const { setCookie, clearCookie } = cookies;
       const { getStorageItem, setStorageItem } = storage;
-      const { hasConsentFor } = consent;
+
+      // This whole script IS the Google Translate fallback, which sets the
+      // googtrans cookie — so every gate here is a functional-consent gate,
+      // read from Zest. The cookieless native path never reaches this file.
+      const hasConsentFor = (category: string): boolean =>
+        (window as any).Zest?.hasConsent?.(category) === true;
 
       const GOOGLE_SCRIPT_ID = "google-translate-sdk";
 
@@ -134,7 +138,7 @@
         ensureTranslateScript();
       }
 
-      window.addEventListener("consent-changed", () => {
+      window.addEventListener("zest:change", () => {
         if (!hasConsentFor("functional")) return;
         const preferred = normalizeLanguage(getStorageItem(STORAGE_KEY));
         if (preferred === "en") return;

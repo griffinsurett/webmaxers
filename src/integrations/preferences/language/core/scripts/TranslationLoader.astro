@@ -49,17 +49,11 @@ const {
     }
   }
 
+  // Functional consent, read from Zest. Only the Google Translate fallback
+  // needs it; the native Translator API path is cookieless.
   function hasFunctionalConsent() {
     try {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].trim();
-        if (cookie.indexOf('cookie-consent=') === 0) {
-          var value = decodeURIComponent(cookie.substring(15));
-          var consent = JSON.parse(value);
-          return consent && consent.functionality_storage === true;
-        }
-      }
+      return window.Zest && window.Zest.hasConsent("functional") === true;
     } catch (e) {}
     return false;
   }
@@ -162,6 +156,8 @@ const {
     // Only load if user has a non-English preference
     if (savedLang && savedLang !== "en") {
       // For native API, we need consent or native support
+      // The native Translator API is cookieless — it runs regardless of
+      // consent. Only the Google fallback requires functional consent.
       var canTranslate = hasNativeTranslatorAPI() || (enableGoogle && hasFunctionalConsent());
 
       if (canTranslate) {
@@ -188,7 +184,7 @@ const {
   }
 
   // Listen for consent changes
-  window.addEventListener("consent-changed", function() {
+  window.addEventListener("zest:change", function() {
     var savedLang = getStoredLanguage();
     if (savedLang && savedLang !== "en" && !isLoaded) {
       loadTranslationScript(function() {

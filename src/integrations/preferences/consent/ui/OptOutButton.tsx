@@ -4,13 +4,12 @@
  */
 
 import { useState } from "react";
-import { optOutOfSale } from "@/integrations/preferences/consent/core/utils/consent";
 
 export default function OptOutButton() {
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleOptOut = () => {
-    optOutOfSale();
+    (window as any).Zest?.rejectAll?.();
     setShowConfirmation(true);
     setTimeout(() => window.location.reload(), 1500);
   };
