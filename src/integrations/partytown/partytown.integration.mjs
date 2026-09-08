@@ -19,7 +19,10 @@
  *   <PartytownLoader forward={['dataLayer.push']} />
  */
 
-import { copyLibFiles } from '@builder.io/partytown/utils';
+// @qwik.dev/partytown is the maintained continuation of @builder.io/partytown
+// (Builder handed the project to the Qwik team; the old scope is unmaintained).
+// Same `copyLibFiles` API, so the integration below is unchanged.
+import { copyLibFiles } from '@qwik.dev/partytown/utils';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 

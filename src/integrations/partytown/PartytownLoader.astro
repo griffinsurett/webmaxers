@@ -25,18 +25,47 @@ const forwardConfig = JSON.stringify(forward);
 ---
 
 <script is:inline define:vars={{ forwardConfig, debug }}>
-  // Conditional Partytown loader - only loads if partytown scripts exist
+  // Conditional Partytown loader — only boots if partytown scripts exist.
+  //
+  // Consent interaction (this is load-bearing, do not simplify):
+  // A tracker authored as `type="text/partytown"` is rewritten to
+  // `type="text/plain"` by Zest's script blocker before this runs, so a naive
+  // `querySelector('script[type="text/partytown"]')` finds nothing and the
+  // worker never boots. Zest snapshots the original type and restores it when
+  // consent is granted — at which point the tag is text/partytown again but
+  // there is no worker to run it, and the tracker silently never fires.
+  //
+  // So we look for BOTH shapes, and boot again on zest:change.
   (function() {
-    // Check if there are any partytown scripts on the page
-    if (!document.querySelector('script[type="text/partytown"]')) return;
+    var booted = false;
 
-    // Partytown scripts exist, configure and load
-    var f = JSON.parse(forwardConfig);
-    window.partytown = { lib: '/~partytown/', debug: debug, forward: f };
+    function hasPartytownScripts() {
+      return !!document.querySelector(
+        'script[type="text/partytown"],' +
+        // Zest-blocked: type flipped to text/plain, category attribute added.
+        // Only these two categories are ever routed through Partytown.
+        'script[data-consent-category="analytics"],' +
+        'script[data-consent-category="marketing"]'
+      );
+    }
 
-    // Load partytown bootstrap dynamically
-    var s = document.createElement('script');
-    s.src = '/~partytown/partytown.js';
-    document.head.appendChild(s);
+    function boot() {
+      if (booted) return;
+      if (!hasPartytownScripts()) return;
+      booted = true;
+
+      var f = JSON.parse(forwardConfig);
+      window.partytown = { lib: '/~partytown/', debug: debug, forward: f };
+
+      var s = document.createElement('script');
+      s.src = '/~partytown/partytown.js';
+      document.head.appendChild(s);
+    }
+
+    boot();
+
+    // Consent granted after load releases blocked scripts back to
+    // text/partytown — make sure a worker exists to run them.
+    window.addEventListener('zest:change', boot);
   })();
 </script>
