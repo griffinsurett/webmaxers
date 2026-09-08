@@ -82,6 +82,9 @@ export default defineConfig({
         policyUrl: "/privacy-policy",
         theme: "auto",
         branding: false,
+        // The footer's "Your Privacy Choices" link already reopens the
+        // settings modal on every page, so the floating widget is redundant.
+        showWidget: false,
         consentModeGoogle: true,
         respectDNT: true,
         dntBehavior: "reject",
