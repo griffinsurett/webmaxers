@@ -39,7 +39,7 @@ function CookiePreferencesModal({
   isOpen,
   onClose,
 }: CookiePreferencesModalProps) {
-  const { consent, updateConsent, acceptAll, rejectAll } = useZestConsent();
+  const { consent, updateConsent, rejectAll } = useZestConsent();
   const [isPending, startTransition] = useTransition();
 
   const fromEngine = useCallback(
@@ -102,8 +102,6 @@ function CookiePreferencesModal({
   const handleRejectAll = () => {
     rejectAll();
   };
-
-  const handleAcceptAll = () => acceptAll();
 
   const handleConfirm = () => {
     updateConsent({
@@ -248,15 +246,6 @@ function CookiePreferencesModal({
           disabled={isPending}
         >
           Reject All
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={handleAcceptAll}
-          className="flex-1"
-          type="button"
-          disabled={isPending}
-        >
-          Accept All
         </Button>
         <Button
           variant="primary"
