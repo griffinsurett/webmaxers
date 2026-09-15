@@ -28,25 +28,15 @@ const forwardConfig = JSON.stringify(forward);
   // Conditional Partytown loader — only boots if partytown scripts exist.
   //
   // Consent interaction (this is load-bearing, do not simplify):
-  // A tracker authored as `type="text/partytown"` is rewritten to
-  // `type="text/plain"` by Zest's script blocker before this runs, so a naive
-  // `querySelector('script[type="text/partytown"]')` finds nothing and the
-  // worker never boots. Zest snapshots the original type and restores it when
-  // consent is granted — at which point the tag is text/partytown again but
-  // there is no worker to run it, and the tracker silently never fires.
-  //
-  // So we look for BOTH shapes, and boot again on zest:change.
+  // Zest temporarily rewrites a blocked Partytown script to text/plain. Once
+  // consent is granted it restores the type and emits zest:change, allowing
+  // the listener below to boot the worker. Consent categories cannot be used
+  // as a proxy because main-thread integrations use those attributes too.
   (function() {
     var booted = false;
 
     function hasPartytownScripts() {
-      return !!document.querySelector(
-        'script[type="text/partytown"],' +
-        // Zest-blocked: type flipped to text/plain, category attribute added.
-        // Only these two categories are ever routed through Partytown.
-        'script[data-consent-category="analytics"],' +
-        'script[data-consent-category="marketing"]'
-      );
+      return !!document.querySelector('script[type="text/partytown"]');
     }
 
     function boot() {

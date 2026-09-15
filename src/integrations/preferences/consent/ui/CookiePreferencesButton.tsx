@@ -1,5 +1,6 @@
 // src/integrations/preferences/ui/consent/components/CookiePreferencesButton.tsx
 import { memo } from "react";
+import { requestCookieSettings } from "@/integrations/preferences/consent/core/hooks/useZestConsent";
 import Button from "@/components/Button/Button";
 import type { ButtonSize } from "@/components/Button/Button";
 
@@ -23,7 +24,7 @@ function CookiePreferencesButton({
       <Button
         variant="link"
         size={size}
-        onClick={() => (window as any).Zest?.showSettings?.()}
+        onClick={requestCookieSettings}
         rightIcon="lucide:settings"
         className={className}
       >

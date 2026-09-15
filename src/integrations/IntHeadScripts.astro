@@ -17,15 +17,18 @@
  *   </head>
  */
 
+import ZestEngine from "@/integrations/preferences/consent/core/ZestEngine.astro";
+import { zestConfig } from "@/integrations/preferences/consent/core/consentConfig";
 import GoogleTagManager from "@/integrations/analytics/GoogleTagManager.astro";
 import AccessibilityScript from "@/integrations/preferences/accessibility/core/scripts/AccessibilityScript.astro";
 import LanguageDetectionScript from "@/integrations/preferences/language/core/scripts/LanguageDetectionScript.astro";
 ---
 
+<!-- Consent interceptors must install before any tracker is evaluated. -->
+<ZestEngine config={zestConfig} />
+
 <!-- Analytics: Google Tag Manager with Consent Mode v2 -->
 <GoogleTagManager />
-
-<!-- Consent: Mark existing consent for components -->
 
 <!-- Accessibility: Apply saved preferences before content renders (prevents FOUC) -->
 <AccessibilityScript />

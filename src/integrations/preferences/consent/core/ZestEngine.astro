@@ -1,0 +1,57 @@
+---
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+
+export interface Props {
+  config?: Record<string, unknown>;
+}
+
+const { config = {} } = Astro.props;
+const require = createRequire(import.meta.url);
+const bundlePath = require.resolve(
+  "@freshjuice/zest/dist/zest.headless.esm.min.js",
+);
+const bundle = readFileSync(bundlePath, "utf8");
+const exportMatch = bundle.match(/export\{([^}]*)\};?\s*$/);
+
+if (!exportMatch) {
+  throw new Error("[ZestEngine] Could not read the headless Zest exports.");
+}
+
+const exportMap = Object.fromEntries(
+  exportMatch[1].split(",").map((pair) => {
+    const [local, exported] = pair.split(" as ").map((value) => value.trim());
+    return [exported ?? local, local];
+  }),
+);
+const body = bundle.slice(0, exportMatch.index);
+const assignments = Object.entries(exportMap)
+  .filter(([exported]) => exported !== "default")
+  .map(([exported, local]) => `Zest.${exported}=${local};`)
+  .join("");
+const configJson = JSON.stringify(config);
+---
+
+<script is:inline set:html={`
+(function(){
+  var Zest = {};
+  ${body}
+  ${assignments}
+  window.Zest = Zest;
+  try {
+    var runtimeConfig = ${configJson};
+    if (runtimeConfig.geo && typeof runtimeConfig.geo.endpoint === 'string' && runtimeConfig.geo.endpoint.charAt(0) === '/') {
+      runtimeConfig.geo.endpoint = new URL(runtimeConfig.geo.endpoint, window.location.origin).href;
+    }
+    var initSnapshot = Zest.init(runtimeConfig);
+    window.__webmaxxersZestInitSnapshot = initSnapshot;
+    if (initSnapshot && initSnapshot.geoPending) {
+      document.addEventListener('zest:geo', function () {
+        initSnapshot.geoPending = false;
+      }, { once: true });
+    }
+  } catch (error) {
+    console.error('[Zest] init failed', error);
+  }
+})();
+`} />

@@ -8,22 +8,13 @@
  * After preferences are saved, enables scripts via scriptManager.
  */
 
-import { useState, useMemo, useTransition, useRef, useEffect, memo } from "react";
+import { useState, useCallback, useTransition, useRef, useEffect, memo } from "react";
 import Modal from "@/components/Modal";
-import { enableConsentedScripts } from "@/integrations/preferences/consent/core/scripts/scriptManager";
 import {
-  AD_TYPES,
-  ALWAYS_GRANTED,
-  CONSENT_VERSION,
-  defaultConsent,
-  type ConsentType,
-  type CookieConsent,
-  type CookieCategoryInfo,
-} from "@/integrations/preferences/consent/core/types";
-import {
-  getConsent,
-  saveConsent,
-} from "@/integrations/preferences/consent/core/utils/consent";
+  CONSENT_CATEGORIES,
+  type ConsentCategory,
+} from "@/integrations/preferences/consent/core/consentConfig";
+import { useZestConsent } from "@/integrations/preferences/consent/core/hooks/useZestConsent";
 import Button from "@/components/Button/Button";
 import ToggleControl from "@/integrations/preferences/shared/ui/ToggleControl";
 import Accordion from "@/components/LoopTemplates/Accordion";
@@ -42,49 +33,31 @@ interface CookiePreferencesModalProps {
  * them separate, but asking a visitor to distinguish ad_user_data from
  * ad_personalization is not a meaningful choice.
  */
-const cookieCategories: CookieCategoryInfo[] = [
-  {
-    id: "security_storage",
-    title: "Strictly Necessary",
-    description:
-      "Essential for the website to function properly. They enable core functionality such as security, network management, and accessibility, and cannot be switched off.",
-    required: true,
-  },
-  {
-    id: "functionality_storage",
-    title: "Functionality",
-    description:
-      "Remember choices you make — such as your language, theme, and accessibility settings — so the site behaves the way you left it.",
-  },
-  {
-    id: "analytics_storage",
-    title: "Analytics",
-    description:
-      "Let us count visits and traffic sources so we can measure and improve the performance of our site. Everything is aggregated, so it stays anonymous.",
-  },
-  {
-    id: "ad_storage",
-    title: "Advertising",
-    description:
-      "Used by us and our advertising partners to measure ad performance, build a profile of your interests, and show you more relevant adverts.",
-  },
-];
+const cookieCategories = CONSENT_CATEGORIES;
 
 function CookiePreferencesModal({
   isOpen,
   onClose,
 }: CookiePreferencesModalProps) {
+  const { consent, updateConsent, acceptAll, rejectAll } = useZestConsent();
   const [isPending, startTransition] = useTransition();
 
-  // Read the stored choice once. getConsent() returns null when nothing is
-  // stored or the cookie predates the current shape, in which case we start
-  // from "essentials only".
-  const initialPreferences = useMemo<CookieConsent>(
-    () => getConsent() ?? defaultConsent(),
-    [],
+  const fromEngine = useCallback(
+    () => ({
+      essential: true,
+      functional: consent.functional === true,
+      analytics: consent.analytics === true,
+      marketing: consent.marketing === true,
+    }),
+    [consent.functional, consent.analytics, consent.marketing],
   );
 
-  const [preferences, setPreferences] = useState<CookieConsent>(initialPreferences);
+  const [preferences, setPreferences] =
+    useState<Record<ConsentCategory, boolean>>(fromEngine);
+
+  useEffect(() => {
+    setPreferences(fromEngine());
+  }, [isOpen, fromEngine]);
   const [canScroll, setCanScroll] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -116,41 +89,28 @@ function CookiePreferencesModal({
     contentSlotId: `cookie-category-${idx}-content`,
   }));
 
-  const handleToggle = (categoryId: ConsentType, nextValue?: boolean) => {
-    if (ALWAYS_GRANTED.includes(categoryId)) return;
+  const handleToggle = (categoryId: ConsentCategory, nextValue?: boolean) => {
+    if (categoryId === "essential") return;
 
     setPreferences((prev) => {
       const value =
         typeof nextValue === "boolean" ? nextValue : !prev[categoryId];
-
-      // The Advertising row stands in for all three ad_* types.
-      if (AD_TYPES.includes(categoryId)) {
-        const adState = Object.fromEntries(
-          AD_TYPES.map((type) => [type, value]),
-        );
-        return { ...prev, ...adState };
-      }
-
       return { ...prev, [categoryId]: value };
     });
   };
 
   const handleRejectAll = () => {
-    saveConsent(defaultConsent());
-    enableConsentedScripts();
-
-    startTransition(() => {
-      onClose();
-    });
+    rejectAll();
   };
 
+  const handleAcceptAll = () => acceptAll();
+
   const handleConfirm = () => {
-    saveConsent({
-      ...preferences,
-      version: CONSENT_VERSION,
-      timestamp: Date.now(),
+    updateConsent({
+      functional: preferences.functional,
+      analytics: preferences.analytics,
+      marketing: preferences.marketing,
     });
-    enableConsentedScripts();
 
     startTransition(() => {
       onClose();
@@ -288,6 +248,15 @@ function CookiePreferencesModal({
           disabled={isPending}
         >
           Reject All
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={handleAcceptAll}
+          className="flex-1"
+          type="button"
+          disabled={isPending}
+        >
+          Accept All
         </Button>
         <Button
           variant="primary"

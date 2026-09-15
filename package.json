@@ -19,7 +19,6 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@formspree/react": "^3.0.0",
     "@freshjuice/zest": "2.7.0",
-    "@freshjuice/zest-astro": "2.7.0",
     "@iconify-json/fa6-solid": "^1.2.4",
     "@supabase/supabase-js": "^2.107.0",
     "@tailwindcss/vite": "^4.1.12",

@@ -8,65 +8,47 @@
  * After consent is given, enables scripts via scriptManager.
  */
 
-import { useState, useEffect, useTransition, lazy, Suspense } from "react";
-import { enableConsentedScripts } from "@/integrations/preferences/consent/core/scripts/scriptManager";
+import { useState, useEffect, useTransition, lazy, Suspense, useCallback } from "react";
 import Modal from "@/components/Modal";
 import {
-  defaultConsent,
-  fullConsent,
-} from "@/integrations/preferences/consent/core/types";
-import {
-  getConsent,
-  saveConsent,
-} from "@/integrations/preferences/consent/core/utils/consent";
+  useCookieSettingsRequests,
+  useZestConsent,
+} from "@/integrations/preferences/consent/core/hooks/useZestConsent";
 import Button from "@/components/Button/Button";
 
 const CookiePreferencesModal = lazy(() => import("./CookiePreferencesModal"));
 
 export default function CookieConsentBanner() {
-  const [showBanner, setShowBanner] = useState(false);
+  const { decided, geoPending, acceptAll, rejectAll } = useZestConsent();
+  const [dismissed, setDismissed] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    // Returning visitor with a valid, current-version choice: honour it.
-    // getConsent() returns null for a pre-v2 cookie, so those visitors see the
-    // banner again and reconsent under the Consent Mode types.
-    if (getConsent()) {
-      enableConsentedScripts();
-      return;
-    }
+  const showBanner =
+    decided === false && geoPending === false && !dismissed;
 
-    setShowBanner(true);
-  }, []);
+  const openSettings = useCallback(() => setShowModal(true), []);
+  useCookieSettingsRequests(openSettings);
 
   const handleAcceptAll = () => {
-    // saveConsent writes the cookie and dispatches "consent-changed", which the
-    // GTM inline script listens for to send its `consent update`.
-    saveConsent(fullConsent());
-    enableConsentedScripts();
-
+    acceptAll();
     startTransition(() => {
-      setShowBanner(false);
+      setDismissed(true);
     });
   };
 
   const handleRejectAll = () => {
-    // Records an explicit refusal (essentials only) rather than leaving the
-    // visitor in the "no choice made" state — the banner must not reappear.
-    saveConsent(defaultConsent());
-    enableConsentedScripts();
-
+    rejectAll();
     startTransition(() => {
-      setShowBanner(false);
+      setDismissed(true);
     });
   };
 
-  const handleOpenSettings = () => {
-    startTransition(() => {
-      setShowModal(true);
-    });
-  };
+  useEffect(() => {
+    const onChange = () => setDismissed(true);
+    window.addEventListener("zest:change", onChange);
+    return () => window.removeEventListener("zest:change", onChange);
+  }, []);
 
   return (
     <>
@@ -74,9 +56,9 @@ export default function CookieConsentBanner() {
           the Modal marks header/main/footer `inert`, which leaves the page
           scrollable but makes nothing on it clickable until the banner is
           answered. */}
-      <Modal
+      {showBanner && <Modal
         isOpen={showBanner}
-        onClose={() => setShowBanner(false)}
+        onClose={() => setDismissed(true)}
         closeButton={false}
         position="bottom-full"
         className="consent-banner"
@@ -114,7 +96,7 @@ export default function CookieConsentBanner() {
                   marketing purposes.{" "}
                   <Button
                     variant="link"
-                    onClick={handleOpenSettings}
+                    onClick={openSettings}
                     type="button"
                     className="text-sm"
                   >
@@ -160,7 +142,7 @@ export default function CookieConsentBanner() {
             </div>
           </div>
         </div>
-      </Modal>
+      </Modal>}
 
       {showModal && (
         <Suspense fallback={null}>

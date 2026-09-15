@@ -10,7 +10,6 @@ import { manualChunks, assetFileNames } from "./vite.chunks.js";
 import iconGeneratorIntegration from "./src/integrations/icons/icon-generator.integration.mjs";
 import clientDirectivesIntegration from "./src/integrations/client-directives/client-directives.integration.mjs";
 import conditionalPartytown from "./src/integrations/partytown/partytown.integration.mjs";
-import zest from "@freshjuice/zest-astro";
 import robotsLlmsIntegration from "./src/integrations/robots-llms/robots-llms.integration.ts";
 // Chatbot knowledge-base generator (feeds the API-connected ChatBot). Must stay
 // enabled: /api/chat imports the file it writes, so leaving it off freezes the
@@ -73,36 +72,6 @@ export default defineConfig({
     mdx(),
     react(),
     sitemap(),
-    // Zest installs its cookie/storage/script interceptors head-inline, so it
-    // must be injected before any tracker script is evaluated.
-    zest({
-      language: "en",
-      config: {
-        mode: "safe",
-        policyUrl: "/privacy-policy",
-        theme: "auto",
-        branding: false,
-        // The footer's "Your Privacy Choices" link already reopens the
-        // settings modal on every page, so the floating widget is redundant.
-        showWidget: false,
-        consentModeGoogle: true,
-        respectDNT: true,
-        dntBehavior: "reject",
-        // patterns.<category> REPLACES that category's built-in list, so the
-        // five Zest defaults are restated alongside the site keys.
-        patterns: {
-          functional: [
-            "^user-language$",
-            "^googtrans$",
-            "^lang",
-            "^locale",
-            "^theme",
-            "^preferences",
-            "^ui_",
-          ],
-        },
-      },
-    }),
     conditionalPartytown(),
     robotsLlmsIntegration(),
     chatbotKbIntegration(),
