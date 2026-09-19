@@ -70,7 +70,10 @@ Please include:
 Keep it concise, practical, and easy to scan.`;
 ---
 
-<SiteLayout {...seoProps}>
+{/* Editorial content opts IN to BlogPosting. SEO.astro defaults to WebPage —
+    a publishDate alone doesn't imply a post (legal docs carry one too).
+    Spread last so a post's own seo.* still wins. */}
+<SiteLayout {...seoProps} seo={{ schemaType: "BlogPosting", ...(seoProps as any).seo }}>
   <section class="outer-section pt-[clamp(6.5rem,9vw,8.5rem)] pb-[clamp(4rem,6vw,6rem)]">
     <div class="inner-section">
       <nav aria-label="Breadcrumb" class="mb-[clamp(2rem,3vw,3rem)]">

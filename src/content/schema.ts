@@ -307,6 +307,9 @@ export const seoSchema = ({ image }: { image: Function }) =>
       twitterCard: z
         .enum(["summary", "summary_large_image", "app", "player"])
         .optional(),
+      // schema.org @type for the page node. Defaults to WebPage (WebSite at
+      // the root); editorial content sets "BlogPosting"/"Article" explicitly.
+      schemaType: z.string().optional(),
       robots: z.string().optional(),
       canonicalUrl: z.url().optional(),
       keywords: z.array(z.string()).optional(),

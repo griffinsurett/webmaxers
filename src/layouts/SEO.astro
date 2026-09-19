@@ -98,8 +98,19 @@ const makeAbsolute = (url: string): string => {
 const absoluteOgImage = makeAbsolute(finalOgImageUrl);
 const absoluteTwitterImage = makeAbsolute(finalTwitterImageUrl);
 
-// Determine schema type based on content
-const schemaType = !publishDate ? "WebSite" : "Article";
+// Only the root URL is the WebSite entity; everything else defaults to WebPage.
+//
+// This previously read `!publishDate ? "WebSite" : "Article"`, which typed
+// EVERY undated page as WebSite — so the whole site shipped nodes each claiming
+// to be the site root. A `publishDate` also means "this content has a date",
+// not "this is editorial": legal docs render a "last updated" date and were
+// typed as articles because of it.
+//
+// WebPage is the safe default. Editorial content opts IN via `seo.schemaType`
+// (BlogLayout sets "BlogPosting"), the same override pattern as every other
+// seo.* field above.
+const schemaType =
+  seo?.schemaType || (canonicalPath === "/" ? "WebSite" : "WebPage");
 
 /**
  * Structured data for search engines (JSON-LD)

@@ -88,6 +88,8 @@ function buildRobots(siteUrl: string, config: RobotsLlmsConfig): string {
   if (blockQueryUrls) lines.push('Disallow: /*?*');
   for (const path of disallowedPaths) lines.push(`Disallow: ${path}`);
   lines.push(`Sitemap: ${siteUrl}/sitemap-index.xml`);
+  // Non-standard, but some AI crawlers look for it and it costs nothing.
+  lines.push(`LLMS: ${siteUrl}/llms.txt`);
 
   return lines.join('\n');
 }
