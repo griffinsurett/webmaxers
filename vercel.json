@@ -85,5 +85,11 @@
       "path": "/api/sync",
       "schedule": "*/15 * * * *"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap-index.xml"
+    }
   ]
 }
