@@ -17,6 +17,7 @@ import IntHeadScripts from "@/integrations/IntHeadScripts.astro";
 import IntBodyScripts from "@/integrations/IntBodyScripts.astro";
 import IntFooterScripts from "@/integrations/IntFooterScripts.astro";
 import PreferencesLayout from "./PreferencesLayout.astro";
+import PlayForDiscountPopupHost from "@/components/PlayForDiscountPopup/PlayForDiscountPopupHost.astro";
 
 export interface Props {
   [key: string]: any;
@@ -81,6 +82,12 @@ const {
 
     {/* Integration footer scripts (chat widget, etc.) */}
     {!noChat && <IntFooterScripts />}
+
+    {/* "Play for a discount" popup — INSIDE the noChat gate, unlike consent:
+        this is promotional, not a legal requirement, so any page that rejects
+        floating furniture (the game itself) rejects this too. The host adds a
+        /game check of its own and reads all copy/timing from siteData. */}
+    {!noChat && <PlayForDiscountPopupHost />}
 
     {/* Consent banner — outside the noChat gate on purpose: consent is a legal
         requirement and must not be switchable off with the chat widget. */}

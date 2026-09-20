@@ -1,0 +1,66 @@
+---
+// src/components/PlayForDiscountPopup/PlayForDiscountPopupHost.astro
+/**
+ * Server-side gate + config reader for the "play for a discount" popup.
+ *
+ * Mirrors i75's `SpecialCampaignPopupHost`: the .astro half reads siteData and
+ * decides WHETHER to render at all, so a disabled popup ships no island and no
+ * JavaScript. The React half only handles timing and presentation.
+ *
+ * ── Hydration ──────────────────────────────────────────────────────────────
+ * `client:idle`, not `client:load`. The popup does not appear for 8 seconds, so
+ * there is no reason for it to compete with the hero, the 3D mark or the
+ * consent banner for main-thread time during load — which is the performance
+ * requirement behind the delay in the first place.
+ *
+ * `client:idle` schedules hydration in a requestIdleCallback, so the island's
+ * timer starts once the browser is quiet rather than on first paint. In
+ * practice that is well inside the 8s window; the popup still lands on time,
+ * but never at the cost of load. (`client:visible` would never fire — the
+ * island renders no layout of its own until the modal opens.)
+ *
+ * NOT rendered on /game: inviting someone to play a game they are already
+ * playing is nonsense, and the modal would cover the playfield.
+ */
+import PlayForDiscountPopup from "./PlayForDiscountPopup";
+import { popupData } from "@/content/siteData";
+
+const isGamePage = Astro.url.pathname.replace(/\/+$/, "") === "/game";
+const shouldRender = popupData.enabled !== false && !isGamePage;
+
+/**
+ * DEV ALWAYS SHOWS IT.
+ *
+ * In production the popup is once-per-browser (`frequencyMode: "campaign"`,
+ * localStorage). That rule makes it effectively invisible while working on it:
+ * you see it once, dismiss it, and every reload after that is a blank page
+ * until you manually clear storage.
+ *
+ * So `import.meta.env.DEV` forces "always" — no persistence, opens on every
+ * boot. This overrides ONLY the frequency; the delay and scroll trigger are
+ * untouched, so what you see locally is still the real timing. The production
+ * build takes `popupData.frequencyMode` unchanged.
+ */
+const frequencyMode = import.meta.env.DEV ? "always" : popupData.frequencyMode;
+---
+
+{
+  shouldRender && (
+    <PlayForDiscountPopup
+      eyebrow={popupData.eyebrow}
+      heading={popupData.heading}
+      description={popupData.description}
+      buttonText={popupData.buttonText}
+      href={popupData.href}
+      secondaryButtonText={popupData.secondaryButtonText}
+      secondaryHref={popupData.secondaryHref}
+      secondaryExternal={popupData.secondaryExternal}
+      campaignSlug={popupData.campaignSlug}
+      delayMs={popupData.delayMs}
+      scrollPercent={popupData.scrollPercent}
+      frequencyMode={frequencyMode}
+      storageKeyPrefix={popupData.storageKeyPrefix}
+      client:idle
+    />
+  )
+}
