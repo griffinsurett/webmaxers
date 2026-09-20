@@ -1,11 +1,17 @@
 ---
 // src/components/PlayForDiscountPopup/PlayForDiscountPopupHost.astro
 /**
- * Server-side gate + config reader for the "play for a discount" popup.
+ * Server-side gate + content resolver for the timed promo popup.
  *
- * Mirrors i75's `SpecialCampaignPopupHost`: the .astro half reads siteData and
- * decides WHETHER to render at all, so a disabled popup ships no island and no
- * JavaScript. The React half only handles timing and presentation.
+ * Mirrors i75's `SpecialCampaignPopupHost`: the .astro half reads the ACTIVE
+ * PROMO from the `promos` content collection and decides whether to render at
+ * all, so a disabled or missing promo ships no island and no JavaScript. The
+ * React half only handles timing and presentation.
+ *
+ * Nothing about the offer is written here or in the component — copy, links and
+ * per-campaign timing come from the promo entry (see src/utils/promos.ts for
+ * the override-with-fallback chain). Swapping promos is a change to
+ * `siteData.activePromoSlug`; adding one is a new .mdx file.
  *
  * ── Hydration ──────────────────────────────────────────────────────────────
  * `client:idle`, not `client:load`. The popup does not appear for 8 seconds, so
@@ -18,15 +24,20 @@
  * practice that is well inside the 8s window; the popup still lands on time,
  * but never at the cost of load. (`client:visible` would never fire — the
  * island renders no layout of its own until the modal opens.)
- *
- * NOT rendered on /game: inviting someone to play a game they are already
- * playing is nonsense, and the modal would cover the playfield.
  */
 import PlayForDiscountPopup from "./PlayForDiscountPopup";
 import { popupData } from "@/content/siteData";
+import { getActivePromoEntry, resolvePromoPopup, isExcludedPath } from "@/utils/promos";
 
-const isGamePage = Astro.url.pathname.replace(/\/+$/, "") === "/game";
-const shouldRender = popupData.enabled !== false && !isGamePage;
+const promo = resolvePromoPopup(await getActivePromoEntry());
+
+// `excludePaths` comes from the promo itself (the game promo excludes /game —
+// inviting someone to play a game they are already playing is nonsense, and the
+// modal would cover the playfield). Keeping it in content means a future promo
+// declares its own exclusions without touching this file.
+const excluded = isExcludedPath(Astro.url.pathname, promo.excludePaths);
+
+const shouldRender = popupData.enabled !== false && promo.enabled && !excluded;
 
 /**
  * DEV ALWAYS SHOWS IT.
@@ -39,27 +50,27 @@ const shouldRender = popupData.enabled !== false && !isGamePage;
  * So `import.meta.env.DEV` forces "always" — no persistence, opens on every
  * boot. This overrides ONLY the frequency; the delay and scroll trigger are
  * untouched, so what you see locally is still the real timing. The production
- * build takes `popupData.frequencyMode` unchanged.
+ * build takes the resolved promo's mode unchanged.
  */
-const frequencyMode = import.meta.env.DEV ? "always" : popupData.frequencyMode;
+const frequencyMode = import.meta.env.DEV ? "always" : promo.frequencyMode;
 ---
 
 {
   shouldRender && (
     <PlayForDiscountPopup
-      eyebrow={popupData.eyebrow}
-      heading={popupData.heading}
-      description={popupData.description}
-      buttonText={popupData.buttonText}
-      href={popupData.href}
-      secondaryButtonText={popupData.secondaryButtonText}
-      secondaryHref={popupData.secondaryHref}
-      secondaryExternal={popupData.secondaryExternal}
-      campaignSlug={popupData.campaignSlug}
-      delayMs={popupData.delayMs}
-      scrollPercent={popupData.scrollPercent}
+      eyebrow={promo.eyebrow}
+      heading={promo.heading}
+      description={promo.description}
+      buttonText={promo.buttonText}
+      href={promo.href}
+      secondaryButtonText={promo.secondaryButtonText}
+      secondaryHref={promo.secondaryHref}
+      secondaryExternal={promo.secondaryExternal}
+      campaignSlug={promo.campaignSlug}
+      delayMs={promo.delayMs}
+      scrollPercent={promo.scrollPercent}
       frequencyMode={frequencyMode}
-      storageKeyPrefix={popupData.storageKeyPrefix}
+      storageKeyPrefix={promo.storageKeyPrefix}
       client:idle
     />
   )

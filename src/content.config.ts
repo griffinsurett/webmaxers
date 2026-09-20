@@ -138,6 +138,53 @@ export const collections = {
       }),
   }),
 
+  /**
+   * PROMOS — timed popup campaigns.
+   *
+   * Ported from i75's `specials` collection (see its `specialCampaignSchema`).
+   * `siteData.activePromoSlug` names which entry is live, so swapping the promo
+   * is a one-line change and adding a second one is a new .mdx file, not a code
+   * change.
+   *
+   * Popup copy follows i75's override-with-fallback rule: `popup.heading` wins
+   * if set, otherwise the entry's own `title`; `popup.description` otherwise
+   * `description`. So the minimum viable promo is a title + description + a
+   * `popup.enabled`.
+   */
+  "promos": defineCollection({
+    loader: GlobLoad("promos"),
+    schema: ({ image }) =>
+      baseSchema({ image }).extend({
+        /** Where the promo's primary CTA goes (e.g. "/game"). */
+        link: z.string().optional(),
+        /** Small label above the heading. */
+        eyebrow: z.string().optional(),
+        popup: z
+          .object({
+            enabled: z.boolean().optional(),
+            /** Overrides the entry's `title`. Supports \n for a line break. */
+            heading: z.string().optional(),
+            /** Overrides the entry's `description`. */
+            description: z.string().optional(),
+            eyebrow: z.string().optional(),
+            buttonText: z.string().optional(),
+            /** Overrides the entry's `link`. */
+            href: z.string().optional(),
+            /** Secondary action. Omit the text to render only one button. */
+            secondaryButtonText: z.string().optional(),
+            secondaryHref: z.string().optional(),
+            secondaryExternal: z.boolean().optional(),
+            /** Timing/frequency overrides; fall back to siteData.popupData. */
+            delayMs: z.number().optional(),
+            scrollPercent: z.number().optional(),
+            frequencyMode: z.enum(["campaign", "session", "always"]).optional(),
+            /** Routes the popup must never show on, e.g. ["/game"]. */
+            excludePaths: z.array(z.string()).optional(),
+          })
+          .optional(),
+      }),
+  }),
+
   "testimonials": defineCollection({
     loader: GlobLoad("testimonials"),
     schema: ({ image }) =>

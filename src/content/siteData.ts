@@ -23,6 +23,12 @@ export const siteData = {
   location: "Freehold, New Jersey, United States",
   address: null,
   tagline: "Get a website your business can be proud of — fast, secure, and built to last.",
+  /**
+   * The live promo — an entry id in the `promos` collection (filename without
+   * extension). Empty string or a slug that does not resolve = no popup, with
+   * no code change needed. i75 calls this `activeSpecialSlug`.
+   */
+  activePromoSlug: "play-for-a-discount",
 };
 
 export const CALENDLY_URL = "https://calendly.com/griffinswebservices/30min";
@@ -45,21 +51,17 @@ export const quoteCtaData = {
 };
 
 /**
- * "Play for a discount" popup — the timed modal that invites visitors to the
- * Saucer Defender game at /game.
+ * Popup DEFAULTS — timing and frequency only.
  *
- * Mirrors the i75 `popupData` contract (each site's own src/content/siteData.ts
- * under i75-websites/sites) so both are configured the same way: copy and timing live HERE, and
- * the component reads them as props. Nothing about the offer is hardcoded in
- * the island.
+ * The popup's CONTENT lives in the `promos` content collection, not here;
+ * `activePromoSlug` (in siteData above) names the live entry, and each promo
+ * may override any of these per-campaign. This split mirrors i75, where
+ * `popupData` carries the mechanics and the `specials` collection carries the
+ * copy.
  *
  * TIMING — `delayMs` races `scrollPercent`; whichever fires first opens it.
  * 8000ms matches i75. The island is hydrated `client:idle` and does no work
- * before that, so the delay costs nothing at load; see PlayForDiscountPopupHost.
- *
- * COPY — the discount is deliberately unquantified ("a discount"), matching
- * what /game itself promises in its meta description. Put a figure in
- * `description` when there is one to commit to.
+ * before that, so the delay costs nothing at load.
  */
 export const popupData = {
   enabled: true,
@@ -68,17 +70,4 @@ export const popupData = {
   delayMs: 8000,
   scrollPercent: 35,
   storageKeyPrefix: "play-for-discount",
-  /** Bump to re-show the popup to everyone who already dismissed it. */
-  campaignSlug: "saucer-defender-v1",
-  eyebrow: "Play for a discount",
-  heading: "Beat the game.\nWin a discount.",
-  description:
-    "Score 10,000 points in 90 seconds of Saucer Defender and claim a discount on your website project.",
-  /** Primary action — the game. */
-  buttonText: "Play for a discount",
-  href: "/game",
-  /** Secondary action — for visitors who would rather just talk. */
-  secondaryButtonText: "Just book a call",
-  secondaryHref: CALENDLY_URL,
-  secondaryExternal: true,
 };

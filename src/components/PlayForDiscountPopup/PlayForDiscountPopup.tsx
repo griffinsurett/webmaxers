@@ -3,8 +3,10 @@
  * "Play for a discount" popup — a timed modal inviting visitors to /game.
  *
  * Port of the i75 `SpecialCampaignPopup` pattern: every string, the timing and
- * the frequency rule arrive as props from `popupData` in siteData.ts. Nothing
- * about the offer is decided here.
+ * the frequency rule arrive as PROPS — resolved by PlayForDiscountPopupHost
+ * from the active entry in the `promos` content collection (copy) plus
+ * `popupData` in siteData.ts (site-wide timing defaults). Nothing about the
+ * offer is decided here, and this component never reads content itself.
  *
  * ── Trigger ────────────────────────────────────────────────────────────────
  * A `delayMs` timer RACES a `scrollPercent` threshold; whichever lands first
@@ -165,52 +167,65 @@ export default function PlayForDiscountPopup({
       onClose={handleClose}
       ariaLabel={heading.replace(/\n/g, " ")}
       ariaDescribedBy={description ? descriptionId : undefined}
-      // Matches i75's popup exactly: a plain 65% black scrim and NO blur.
-      // The blur was the real culprit in the earlier version — at /70 the
-      // opacity alone still left the page legible, but `backdrop-blur-sm`
-      // smeared the hero into a grey field, so the site read as "gone" rather
-      // than "behind". Tint dims; blur destroys. Keep this un-blurred.
-      overlayClass="bg-black/65"
-      // The shell carries NO theme-dependent colour of its own: the panel
-      // re-scopes the palette to dark on the div below, and anything painted
-      // out here would resolve against the SITE theme instead — a light border
-      // ringing a dark panel. Border and fill both live inside.
-      className="w-full max-w-2xl mx-4 overflow-hidden rounded-2xl shadow-2xl"
+      // Blur the page a little. That is all this does.
+      //
+      // No tint: the point is that the site stays visible behind the modal,
+      // just softened so the panel is what your eye lands on. A full-screen
+      // starfield layer was tried here and was flatly wrong — it PAINTED OVER
+      // the page instead of letting it show through. Do not add a covering
+      // layer to this overlay.
+      overlayClass="backdrop-blur-[3px]"
+      // DO NOT LOCK BODY SCROLL. This is what was "hiding the page".
+      //
+      // Modal's default scroll lock sets `overflow: hidden` on <html>/<body>.
+      // The homepage hero is CurtainReveal's top panel — `position: sticky;
+      // bottom: 0` sitting after a 100svh travel spacer — and **sticky only
+      // holds while the page can scroll**. Locking overflow dropped the hero to
+      // its static position exactly one viewport DOWN (measured:
+      // `.home-top` top = 900 with the modal open, 0 with it closed), so the
+      // page behind the transparent overlay was genuinely empty.
+      //
+      // Nothing to do with scrim colour or blur — three attempts at re-tinting
+      // the overlay could never have fixed a layout shift. Leaving the page
+      // scrollable keeps the curtain pinned and the hero on screen.
+      allowScroll
+      className="w-full max-w-2xl mx-4"
       closeButtonClass="absolute top-4 right-4 z-30 text-white/60 hover:text-white transition-colors"
     >
-      {/* The star field is the panel's background, so the panel is forced dark
-          in BOTH themes — a white-on-light field is invisible, and this is the
-          one surface on the site that is explicitly "space", matching /game.
-          Tokens are re-scoped rather than hardcoded so the panel still tracks
-          the palette. */}
-      <div
-        className="relative isolate rounded-2xl border border-heading/15"
-        data-theme="dark"
-        data-play-for-discount
-      >
-        <div className="absolute inset-0 bg-bg" aria-hidden="true" />
-        <PanelStarfield className="z-0" />
+      {/* Forced dark in BOTH site themes: this is the one surface that is
+          explicitly "space", matching /game. `data-theme` re-scopes the tokens
+          rather than hardcoding colours, so it still tracks the palette. */}
+      <div className="relative" data-theme="dark" data-play-for-discount>
+        {/* THE PANEL — OPAQUE. `bg-bg`, not `bg-bg/88`.
+            The game's win overlay uses 88% because it floats over a live game
+            canvas and wants the stars showing through. Over the real site that
+            just means the hero headline reads straight through the card. The
+            panel's own starfield is the texture here; the page behind it should
+            not show at all. No backdrop-blur either — nothing behind to blur. */}
+        <div className="relative space-y-4 overflow-hidden rounded-[1.25rem] border border-heading/12 bg-bg p-8 pr-14 shadow-[0_24px_60px_rgba(0,0,0,0.55)] md:p-10 md:pr-16">
+          {/* STARS — INSIDE THE PANEL ONLY, never over the page.
+              `overflow-hidden` + `rounded-[1.25rem]` on the parent clip the
+              canvas to the card, and PanelStarfield sizes itself from its own
+              element (ResizeObserver), so it fills exactly this box.
 
-        {/* Readability scrim: the copy sits over a moving field, so it needs a
-            floor under it that the stars cannot lift. */}
-        <div
-          className="absolute inset-0 z-0 bg-linear-to-br from-bg/55 via-bg/35 to-bg/65"
-          aria-hidden="true"
-        />
+              An earlier version portalled a FULL-SCREEN field to <body> to get
+              stars around the card as well. That painted over the whole site
+              and had to be ripped out. The field belongs in the panel; the page
+              behind gets nothing but the overlay's blur. */}
+          <PanelStarfield className="z-0" density={2200} />
 
-        <div className="relative z-10 space-y-4 p-8 pr-14 md:p-10 md:pr-16">
           {eyebrow && (
-            <p className="eyebrow-text text-accent">{eyebrow}</p>
+            <p className="relative z-10 eyebrow-text text-accent">{eyebrow}</p>
           )}
 
           {/* `whitespace-pre-line` so the intentional line break in the
               siteData heading survives without markup in the config. */}
-          <h2 className="whitespace-pre-line text-3xl font-bold leading-tight text-heading md:text-4xl">
+          <h2 className="relative z-10 whitespace-pre-line text-3xl font-bold leading-tight text-heading md:text-4xl">
             {heading}
           </h2>
 
           {description && (
-            <p id={descriptionId} className="text-base text-text md:text-lg">
+            <p id={descriptionId} className="relative z-10 text-base text-text md:text-lg">
               {description}
             </p>
           )}
@@ -224,7 +239,7 @@ export default function PlayForDiscountPopup({
               `items-start` (not `items-center`/`items-stretch`): the primary is
               a pill that must hug its label, and stretching it is what forced
               "Play for a discount" to wrap onto two lines. */}
-          <div className="flex flex-col items-start gap-4 pt-2 sm:flex-row sm:items-center sm:gap-6">
+          <div className="relative z-10 flex flex-col items-start gap-4 pt-2 sm:flex-row sm:items-center sm:gap-6">
             {/* animated={false}: the variants' scroll-reveal wrapper starts at
                 opacity:0 and clears only when its IntersectionObserver fires.
                 Inside a position:fixed modal it never does, leaving the button

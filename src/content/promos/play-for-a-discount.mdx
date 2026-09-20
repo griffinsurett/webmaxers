@@ -1,0 +1,22 @@
+---
+title: "Beat the game.\nWin a discount."
+description: "Score 10,000 points in 90 seconds of Saucer Defender and claim a discount on your website project."
+eyebrow: "Play for a discount"
+link: "/game"
+order: 1
+popup:
+  enabled: true
+  buttonText: "Play for a discount"
+  secondaryButtonText: "Just book a call"
+  secondaryExternal: true
+  # The game page must never show an invitation to the game.
+  excludePaths:
+    - "/game"
+---
+
+The Saucer Defender promo. Beat 10,000 points in 90 seconds and claim a
+discount on a website project.
+
+`secondaryHref` is deliberately left unset — the resolver falls back to the
+site's booking CTA (`contactCtaData.link`), so the Calendly URL stays in one
+place rather than being duplicated per promo.
