@@ -150,7 +150,17 @@ const legalColClass = [
       footer's bottom and uncovered as the content above lifts off. Spans the
       viewport, clipped at both edges. Desktop/tablet only (hidden on mobile).
       The mark reuses the header's scroll-driven animated logo. */}
-  <div slot="base" class="footer-wordmark" aria-hidden="true">
+  {/* `inert` alongside `aria-hidden`, not aria-hidden alone. <Logo> always
+      renders an <a href="/">, and hiding that link from the a11y tree while
+      leaving it in the TAB ORDER is the worst of both: a keyboard user tabs
+      into a stop that screen readers are told does not exist, so it announces
+      nothing. (axe: "ARIA hidden element must not be focusable or contain
+      focusable elements".) `pointer-events: none` below only covers the mouse.
+
+      `inert` removes the whole subtree from focus AND from the a11y tree, so
+      it is the correct partner for a purely decorative lockup. The header's
+      logo link is the real, focusable one — this is its oversized echo. */}
+  <div slot="base" class="footer-wordmark" aria-hidden="true" inert>
     {/* The same <Logo> lockup the header uses — mark plus the wordmark text
         the component already renders from
         siteData. Only the scale differs: the mark box comes from

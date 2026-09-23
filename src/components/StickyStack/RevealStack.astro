@@ -7,8 +7,9 @@
  * is confined to the RevealStack.
  *
  * How it works (pure CSS, native scroll — no JS):
- *  - The container is `overflow: clip` and tall (min-height ≥ 100svh by default)
- *    so there's scroll travel for the cover to lift across.
+ *  - The container is `overflow: clip` and exactly as tall as its content. The
+ *    cover's own height is the scroll travel: the base sticks to the viewport
+ *    bottom behind it and is uncovered as the cover scrolls up.
  *  - `cover` slot: opaque, painted on top (z-10). Fills the top and scrolls up
  *    out of the clip window as you scroll.
  *  - `base` slot: `position: sticky; bottom: 0` (z-0), parked at the container's
@@ -27,12 +28,14 @@
 interface Props {
   /** Extra classes on the stack container. */
   class?: string;
-  /** Container height — the reveal travel. Default one viewport. */
+  /** Optional container min-height. Defaults to `auto` (content height): a
+   *  taller floor only stretches the cover, leaving empty space above the
+   *  base, and adds no reveal — the cover's height is already the travel. */
   height?: string;
   id?: string;
 }
 
-const { class: className = "", height = "100svh", id } = Astro.props as Props;
+const { class: className = "", height = "auto", id } = Astro.props as Props;
 ---
 
 <div
@@ -78,7 +81,8 @@ const { class: className = "", height = "100svh", id } = Astro.props as Props;
       flex-direction: column;
       min-height: var(--reveal-h);
     }
-    /* Cover fills the top and grows, pushing the base to the container floor;
+    /* Cover fills the top (and grows if a `height` floor is set), keeping the
+       base at the container floor;
        the reveal happens as the cover scrolls up past the pinned base. */
     .reveal-stack__cover {
       order: -1; /* paint the cover above the base in DOM-flow order */

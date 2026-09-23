@@ -106,14 +106,14 @@ export default function CookieConsentBanner() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 lg:shrink-0">
+                {/* Stacked on phones it stretches like the hero's mobile CTA; in
+                    the row it sits level with Accept All. No arrow: it's an
+                    in-place action (secondary only defaults one on links). */}
                 <Button
                   variant="secondary"
                   onClick={handleRejectAll}
-                  fullWidth={true}
-                  animated={false}
                   type="button"
-                  buttonWrapperClasses="text-center"
-                  className="text-xs lg:w-auto lg:whitespace-nowrap"
+                  className="w-full! max-w-none! self-stretch! sm:w-fit! sm:self-center! lg:whitespace-nowrap"
                   size="md"
                   disabled={isPending}
                 >

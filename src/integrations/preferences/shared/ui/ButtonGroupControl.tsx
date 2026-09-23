@@ -31,7 +31,7 @@ export default function ButtonGroupControl({
         {label}
       </label>
       {description && <p className="text-sm text-text mb-3">{description}</p>}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
         {options.map((option) => {
           const isSelected = option.value === value;
           return (

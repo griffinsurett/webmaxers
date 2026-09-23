@@ -55,10 +55,9 @@ const hasAtSign = firstWordParts.length > 1;
   <span class={`${firstClass} ${textColorClass} leading-wide font-semibold no-translate`} style="line-height: normal;">
     {hasAtSign
       ? firstWordParts.map((part, i) => (
-          <>
-            {i > 0 && <span class="logo-at">@</span>}
-            {part}
-          </>
+          // One line on purpose: Astro 7's compiler keeps the whitespace between
+          // lines inside a fragment, which would put spaces around the @.
+          <>{i > 0 && <span class="logo-at">@</span>}{part}</>
         ))
       : firstWord}
   </span>

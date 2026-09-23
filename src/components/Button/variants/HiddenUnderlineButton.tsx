@@ -1,6 +1,6 @@
 // src/components/Button/variants/HiddenUnderlineButton.tsx
-// Like UnderlineButton, but the underline is HIDDEN at rest and only appears on
-// hover — sweeping in (and back out when you leave). The regular UnderlineButton
+// Like SecondaryButton, but the underline is HIDDEN at rest and only appears on
+// hover — sweeping in (and back out when you leave). The regular SecondaryButton
 // (always underlined) is unchanged.
 import { ButtonBase, type ButtonProps } from '../Button';
 import { renderButtonIcon } from '../utils';

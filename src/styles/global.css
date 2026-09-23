@@ -18,7 +18,7 @@
 @custom-variant dark   (&:where([data-theme="dark"],  [data-theme="dark"]  *));
 
 @theme {
-  /* Underline wipe for the ported UnderlineButton. Defined as a theme token so
+  /* Underline wipe for the SecondaryButton. Defined as a theme token so
      Tailwind generates a composable `animate-underline-sweep` utility that the
      button's `hover:after:animate-underline-sweep` variant can target on the
      ::after pseudo-element. */
@@ -1060,7 +1060,7 @@ body {
 
 /* ============================================================
  * AboutSection port (from webmaxers) — shared utilities the ported
- * AboutSection / EyebrowSection / Marquee / UnderlineButton rely on.
+ * AboutSection / EyebrowSection / Marquee / SecondaryButton rely on.
  * ============================================================ */
 
 /* Horizontal section inset, matching the ported components' expectations. */
@@ -1082,7 +1082,7 @@ body {
   @apply text-xs lg:text-sm leading-tight uppercase tracking-[0.2em];
 }
 
-/* Underline wipe used by the ported UnderlineButton: collapses out to the right,
+/* Underline wipe used by the SecondaryButton: collapses out to the right,
    then re-enters from the left — one continuous sweep on hover. The composable
    `animate-underline-sweep` utility comes from the --animate-underline-sweep
    theme token above (so it works under the button's hover:after: variant). */

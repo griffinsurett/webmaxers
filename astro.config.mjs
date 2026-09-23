@@ -46,10 +46,16 @@ export default defineConfig({
       assetsInlineLimit: 10240, // 10KB - will inline your 7.3KB CSS automatically
       cssCodeSplit: true,
       cssMinify: "esbuild",
-      rollupOptions: {
+      // Vite 8 (Astro 7) bundles with Rolldown: `rollupOptions` became
+      // `rolldownOptions`, and the `manualChunks` function became a
+      // `codeSplitting` group — the same conversion Rolldown applied
+      // internally to the deprecated option.
+      rolldownOptions: {
         output: {
           assetFileNames,
-          manualChunks,
+          codeSplitting: {
+            groups: [{ name: manualChunks }],
+          },
         },
       },
     },

@@ -238,10 +238,13 @@ function CookiePreferencesModal({
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-4 shrink-0">
+        {/* Same layout as the banner's Reject All: stretched when stacked on
+            phones, level with the primary in the row. */}
         <Button
           variant="secondary"
           onClick={handleRejectAll}
-          className="flex-1"
+          size="md"
+          className="w-full! max-w-none! self-stretch! sm:w-fit! sm:self-center! whitespace-nowrap"
           type="button"
           disabled={isPending}
         >

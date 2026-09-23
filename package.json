@@ -11,23 +11,23 @@
     "sync:draco": "cp node_modules/three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js node_modules/three/examples/jsm/libs/draco/gltf/draco_decoder.wasm public/draco/"
   },
   "dependencies": {
-    "@astrojs/mdx": "^6.0.3",
-    "@astrojs/partytown": "^2.1.7",
-    "@astrojs/react": "^5.0.7",
-    "@astrojs/sitemap": "^3.7.3",
-    "@astrojs/vercel": "^10.0.8",
+    "@astrojs/mdx": "^8.0.2",
+    "@astrojs/partytown": "^2.1.8",
+    "@astrojs/react": "^7.0.0",
+    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/vercel": "^11.0.11",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@formspree/react": "^3.0.0",
     "@freshjuice/zest": "2.7.0",
     "@iconify-json/fa6-solid": "^1.2.4",
     "@supabase/supabase-js": "^2.107.0",
-    "@tailwindcss/vite": "^4.1.12",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.7",
     "@types/three": "^0.184.1",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
-    "astro": "^6.4.8",
+    "astro": "^7.3.4",
     "emoji-picker-react": "^4.19.1",
     "gsap": "^3.15.0",
     "lottie-web": "^5.13.0",
@@ -38,11 +38,15 @@
     "react-dom": "^19.1.1",
     "react-icons": "^5.5.0",
     "react-masonry-css": "^1.0.16",
-    "tailwindcss": "^4.1.12",
+    "tailwindcss": "^4.3.3",
     "three": "^0.184.0"
   },
   "devDependencies": {
     "@qwik.dev/partytown": "^0.14.4",
     "playwright-core": "^1.61.1"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "@ffmpeg-installer/darwin-arm64@4.1.5": true
   }
 }

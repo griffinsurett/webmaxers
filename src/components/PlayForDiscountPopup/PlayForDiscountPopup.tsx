@@ -259,7 +259,7 @@ export default function PlayForDiscountPopup({
 
             {secondaryButtonText && secondaryHref && (
               <Button
-                variant="underline"
+                variant="secondary"
                 href={secondaryHref}
                 animated={false}
                 onClick={handleClose}

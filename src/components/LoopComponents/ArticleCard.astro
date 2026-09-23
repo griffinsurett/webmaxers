@@ -50,6 +50,10 @@ if (imageMeta) {
 }
 const imgAlt = getImageAlt(featuredImage, `${title} cover image`);
 
+// The cover is a link only when there is somewhere to go; otherwise a plain
+// box. Capitalized so Astro treats it as a component (dynamic tag name).
+const MediaTag = url ? "a" : "div";
+
 const dateLabel = displayDate
   ? new Date(displayDate).toLocaleDateString("en-US", {
       year: "numeric",
@@ -61,7 +65,14 @@ const dateLabel = displayDate
 
 <article class="ac-dark group flex  flex-col">
   {/* Media */}
-  <a href={url} class="ac-dark__media block w-full overflow-hidden" aria-hidden={!url}>
+  {/* No url -> a plain <div>, not a hidden <a>. This was `<a href={url}
+      aria-hidden={!url}>`, which still emitted `href=""` — a VALID href that
+      resolves to the current page, so the card kept a tab stop that screen
+      readers were told to ignore and that reloaded the page when taken.
+      Matches how the title below already handles it (<a> or <span>).
+
+      `MediaTag` swaps the element without duplicating the contents. */}
+  <MediaTag {...(url ? { href: url } : {})} class="ac-dark__media block w-full overflow-hidden">
     {imgSrc ? (
       <img
         src={imgSrc}
@@ -73,7 +84,7 @@ const dateLabel = displayDate
     ) : (
       <div class="ac-dark__placeholder">Article</div>
     )}
-  </a>
+  </MediaTag>
 
   {/* Meta row */}
   <div class="ac-dark__meta">
@@ -92,7 +103,7 @@ const dateLabel = displayDate
 
   {url && (
     <Button
-      variant="underline"
+      variant="secondary"
       href={url}
       size="sm"
       className="ac-dark__link mt-4 self-start"
