@@ -7,6 +7,9 @@
  * GWS's default StatsVariant uses. Each item provides `value` plus optional
  * `prefix`/`suffix`/`decimals`, and `title` is the label. Animation +
  * reduced-motion handling come from the shared Counter component.
+ *
+ * `stacked` lays the stats out in a column instead of a row — the CTA section's
+ * aside and the hero's bottom-right use it.
  */
 import type { BaseVariantProps } from "../ContentRenderer.types";
 import Counter from "@/components/Counter.astro";
@@ -14,13 +17,20 @@ import Counter from "@/components/Counter.astro";
 type Props = BaseVariantProps & {
   /** Count-up duration in ms (passed through to each Counter). */
   counterDuration?: number;
+  /** Stack the stats in a column instead of a wrapping row. */
+  stacked?: boolean;
 };
 
-const { items = [], id, className = "", counterDuration = 1800 } =
-  Astro.props as Props;
+const {
+  items = [],
+  id,
+  className = "",
+  counterDuration = 1800,
+  stacked = false,
+} = Astro.props as Props;
 ---
 
-<ul class:list={["stats-row list-none", className]} id={id}>
+<ul class:list={["stats-row list-none", stacked && "stats-row--stacked", className]} id={id}>
   {items.map((item: any) => (
     <li class="stat">
       <span class="stat-value">
@@ -43,6 +53,12 @@ const { items = [], id, className = "", counterDuration = 1800 } =
     flex-wrap: wrap;
     gap: clamp(1.75rem, 4vw, 3.5rem);
     align-items: flex-end;
+  }
+
+  .stats-row--stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2rem;
   }
 
   .stat {

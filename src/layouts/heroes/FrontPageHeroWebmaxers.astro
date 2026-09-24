@@ -66,14 +66,13 @@ const {
           {headline}<br />{headlineLine2}
         </h1>
 
-        {/* Mobile only: supporting text under the heading. On desktop this copy
-            lives in the stat card (bottom-right) instead.
+        {/* Supporting text under the heading, at every breakpoint.
             No mobile max-width: the column already spans the section's content
             box, so the copy wraps to the full available measure. (A `75vw` cap
             here was measured against the VIEWPORT while the row is already inset
             by the section's 24px side padding, so it could never fill the row —
             it left ~46px of dead space on the right at 375px.) */}
-        <p class="text-base leading-relaxed text-text lg:max-w-[20rem] lg:hidden">
+        <p class="text-base lg:text-lg leading-relaxed text-text lg:max-w-xl lg:mt-4">
           {bodyText || statDescription}
         </p>
 
@@ -166,15 +165,18 @@ const {
         className="order-last lg:order-none self-center lg:self-end mb-2 lg:mb-0 relative bottom-auto left-auto translate-x-0 static-in-row"
       />
 
-      <!-- Stat box + body text — DESKTOP bottom-right only. Hidden on mobile
-           (the same stats reappear in the About section). -->
-      <ContentRenderer
-        query={query("stats").orderBy(sortByOrder())}
-        variant="HeroStatsVariant"
-        description={bodyText || statDescription}
-        showHeadingSection={false}
-        className="hidden lg:flex shrink-0 lg:w-[380px] lg:mb-10"
-      />
+      <!-- Stats — DESKTOP bottom-right only, stacked like the CTA section's.
+           Hidden on mobile (the same stats reappear in the About section). The
+           wrapper carries the visibility: the variant's own scoped `display:
+           flex` would beat a `hidden` utility put on the list itself. -->
+      <div class="hidden lg:block shrink-0 lg:mb-10">
+        <ContentRenderer
+          query={query("stats").orderBy(sortByOrder())}
+          variant="AboutStatsVariant"
+          showHeadingSection={false}
+          stacked
+        />
+      </div>
     </div>
   </div>
 

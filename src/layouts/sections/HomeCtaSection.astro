@@ -109,7 +109,7 @@ const markClass = "absolute inset-0 light:opacity-40 dark:invert dark:opacity-30
         query={query("stats").orderBy(sortByOrder())}
         variant="AboutStatsVariant"
         showHeadingSection={false}
-        className="home-cta__stats"
+        stacked
       />
 
       {/* The CTA with the testimonial circles beside it; they wrap under the
@@ -254,12 +254,5 @@ const markClass = "absolute inset-0 light:opacity-40 dark:invert dark:opacity-30
       padding-left: 3rem;
       justify-content: space-between;
     }
-  }
-
-  /* The About stats, stacked instead of in a row. */
-  .home-cta :global(.home-cta__stats) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2rem;
   }
 </style>
