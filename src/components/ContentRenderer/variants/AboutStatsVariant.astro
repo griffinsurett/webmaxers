@@ -8,8 +8,9 @@
  * `prefix`/`suffix`/`decimals`, and `title` is the label. Animation +
  * reduced-motion handling come from the shared Counter component.
  *
- * `stacked` lays the stats out in a column instead of a row — the CTA section's
- * aside and the hero's bottom-right use it.
+ * `stacked` lays the stats out in a column instead of a row below 2xl, and
+ * side by side again from 2xl up — the CTA section's aside and the hero's
+ * bottom-right use it.
  */
 import type { BaseVariantProps } from "../ContentRenderer.types";
 import Counter from "@/components/Counter.astro";
@@ -59,6 +60,16 @@ const {
     flex-direction: column;
     align-items: flex-start;
     gap: 2rem;
+  }
+
+  /* Really large screens (Tailwind's 2xl, 96rem / 1536px) have the room to
+     put the stats back side by side; everything narrower keeps the column. */
+  @media (min-width: 96rem) {
+    .stats-row--stacked {
+      flex-direction: row;
+      align-items: flex-end;
+      gap: clamp(1.75rem, 4vw, 3.5rem);
+    }
   }
 
   .stat {
