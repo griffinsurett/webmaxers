@@ -7,7 +7,7 @@
  * Import this single component in your BaseLayout head section.
  *
  * Includes:
- * - Google Tag Manager (with Consent Mode v2)
+ * - Direct Google tags (with Consent Mode v2)
  * - Accessibility Script (applies saved preferences before render)
  * - Language Detection Script (detects browser language)
  *
@@ -19,7 +19,7 @@
 
 import ZestEngine from "@/integrations/preferences/consent/core/ZestEngine.astro";
 import { zestConfig } from "@/integrations/preferences/consent/core/consentConfig";
-import GoogleTagManager from "@/integrations/analytics/GoogleTagManager.astro";
+import GoogleTags from "@/integrations/analytics/GoogleTags.astro";
 import AccessibilityScript from "@/integrations/preferences/accessibility/core/scripts/AccessibilityScript.astro";
 import LanguageDetectionScript from "@/integrations/preferences/language/core/scripts/LanguageDetectionScript.astro";
 ---
@@ -27,8 +27,8 @@ import LanguageDetectionScript from "@/integrations/preferences/language/core/sc
 <!-- Consent interceptors must install before any tracker is evaluated. -->
 <ZestEngine config={zestConfig} />
 
-<!-- Analytics: Google Tag Manager with Consent Mode v2 -->
-<GoogleTagManager />
+<!-- Analytics: Direct Google tags with Consent Mode v2 -->
+<GoogleTags />
 
 <!-- Accessibility: Apply saved preferences before content renders (prevents FOUC) -->
 <AccessibilityScript />

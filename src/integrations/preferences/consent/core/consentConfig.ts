@@ -44,6 +44,10 @@ export const zestConfig = {
   respectDNT: true,
   dntBehavior: "reject",
   consentModeGoogle: true,
+  // Shared GA4/Ads library is loaded explicitly by GoogleTags only after
+  // analytics OR marketing consent. Zest otherwise classifies this host
+  // as analytics-only, preventing advertising-only consent from working.
+  allowedDomains: ["www.googletagmanager.com"],
   expiration: 365,
   geo: {
     endpoint: "/api/geo",
