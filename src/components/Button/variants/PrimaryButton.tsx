@@ -14,7 +14,6 @@
 import { animationProps } from "@/integrations/scroll-animations";
 import { ButtonBase, type ButtonProps } from "../Button";
 import { getButtonBaseClasses, renderButtonIcon } from "../utils";
-import IconGradientDefs, { useIconGradient } from "@/components/IconGradientDefs";
 
 /**
  * Primary button: rounded pill, bg2 fill, hairline border, heading label.
@@ -28,8 +27,6 @@ export default function PrimaryButton({
   fullWidth = false,
   ...props
 }: ButtonProps) {
-  // Primary-gradient arrow. See @/utils/iconGradient.
-  const iconGrad = useIconGradient();
   const baseShell = getButtonBaseClasses(props.size);
   const variantClasses = [
     baseShell,
@@ -51,9 +48,9 @@ export default function PrimaryButton({
     // saturated slab. (Replaces the primary→primary-700 gradient fill.)
     //
     // The border carries the BRAND ACCENT at rest, at 40% so it reads as a tint
-    // on the hairline rather than a hard outline — it is the same accent the
-    // arrow icon already carries, so the control is tied to the brand without
-    // becoming a coloured slab. Hover/focus brings it to full strength.
+    // on the hairline rather than a hard outline, so the control is tied to the
+    // brand without becoming a coloured slab. Hover/focus brings it to full
+    // strength.
     //
     // Note `--color-primary` differs by theme: it is the blue accent in dark
     // mode but zinc-900 in light, so this reads as a blue hairline on dark and
@@ -73,24 +70,21 @@ export default function PrimaryButton({
     // the surface does not lift. The arrow's translate animation is untouched
     // and still runs in both themes.
     "dark:border-primary dark:hover:border-primary/40 dark:hover:bg-bg2 dark:focus-visible:border-primary/40",
-    // The icon carries the brand gradient while the label stays neutral — the
-    // one spot of colour on an otherwise quiet control. The paint comes from
-    // `iconGrad.style` below (an SVG gradient), not a text colour.
+    // The icon takes the label's colour (`currentColor` → text-heading: white
+    // on dark, near-black on light). It used to carry the brand gradient; the
+    // blue hairline border is now the control's only accent.
     "[&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:translate-x-[0.16rem] hover:[&_svg]:-translate-y-[0.16rem]",
   ]
     .filter(Boolean)
     .join(" ");
 
   const buttonContent = (
-    <>
-      <IconGradientDefs {...iconGrad.defsProps} />
-      <ButtonBase
-        {...props}
-        className={`${variantClasses} ${className}`.trim()}
-        leftIcon={renderButtonIcon(leftIcon, props.size, iconGrad.style)}
-        rightIcon={renderButtonIcon(rightIcon, props.size, iconGrad.style)}
-      />
-    </>
+    <ButtonBase
+      {...props}
+      className={`${variantClasses} ${className}`.trim()}
+      leftIcon={renderButtonIcon(leftIcon, props.size)}
+      rightIcon={renderButtonIcon(rightIcon, props.size)}
+    />
   );
 
   const wrapperClasses = [
