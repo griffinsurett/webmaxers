@@ -453,7 +453,7 @@ Headline stats shown as animated counters.
   value: 7
   suffix: +
   icon: lu:users
-- Client Revenue
+- Client Revenue Per Year
   value: 1
   prefix: $
   suffix: M+
