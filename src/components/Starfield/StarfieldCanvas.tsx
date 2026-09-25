@@ -1,7 +1,7 @@
 // src/components/Starfield/StarfieldCanvas.tsx
 // Animated starfield overlay — twinkling stars + occasional shooting stars on a
 // full-viewport <canvas>. This is the INTERACTIVE layer: it's a React island
-// hydrated `client:idle` from Starfield.astro, so none of this canvas work runs
+// hydrated `client:idle` from HeroBackdrop.astro, so none of this canvas work runs
 // until the browser is idle. Until then the static CSS placeholder (rendered by
 // the .astro wrapper) is on screen.
 //
@@ -47,20 +47,32 @@ export default function StarfieldCanvas() {
     let stars: Star[] = [];
     let shootingStars: Shooting[] = [];
     let raf = 0;
-    let stopped = false;
+    let active = false;
+    let visible = false;
+    let dirty = true;
+    let lastFrame = 0;
+    let lastDraw = 0;
+    let shootingElapsed = 0;
+    let width = 0;
+    let height = 0;
+    const frameInterval = 1000 / 30;
 
-    const W = () => window.innerWidth;
-    const H = () => window.innerHeight;
+    const W = () => width;
+    const H = () => height;
 
     const sizeCanvas = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      // Bound the backing buffer even on large/high-density screens.
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5,
+        Math.sqrt(2_000_000 / Math.max(1, width * height)));
       canvas.width = Math.floor(W() * dpr);
       canvas.height = Math.floor(H() * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
     };
 
     const initStars = () => {
-      const count = Math.floor((W() * H()) / 1800);
+      const count = Math.min(400, Math.floor((W() * H()) / 1800));
       stars = [];
       for (let i = 0; i < count; i++) {
         stars.push({
@@ -86,13 +98,25 @@ export default function StarfieldCanvas() {
       });
     };
 
-    const frame = () => {
-      if (stopped) return;
+    const frame = (now: number) => {
+      if (!active) return;
+      raf = requestAnimationFrame(frame);
+      const elapsed = now - lastFrame;
+      if (elapsed < frameInterval) return;
+      lastFrame = now - (elapsed % frameInterval);
+      const delta = Math.min(now - lastDraw, 100);
+      lastDraw = now;
+      const step = delta / (1000 / 60);
+      shootingElapsed += delta;
+      if (shootingElapsed >= 2200) {
+        shootingElapsed = 0;
+        if (Math.random() < 0.7) spawnShootingStar();
+      }
       ctx.clearRect(0, 0, W(), H());
 
       // Twinkling stars.
       for (const s of stars) {
-        s.phase += s.twinkleSpeed;
+        s.phase += s.twinkleSpeed * step;
         const alpha = s.baseAlpha + Math.sin(s.phase) * s.twinkleAmount;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
@@ -115,41 +139,61 @@ export default function StarfieldCanvas() {
         ctx.lineTo(ss.x - dx, ss.y - dy);
         ctx.stroke();
 
-        ss.x += Math.cos(ss.angle) * ss.speed;
-        ss.y += Math.sin(ss.angle) * ss.speed;
-        ss.life -= 0.012;
+        ss.x += Math.cos(ss.angle) * ss.speed * step;
+        ss.y += Math.sin(ss.angle) * ss.speed * step;
+        ss.life -= 0.012 * step;
         if (ss.life <= 0) shootingStars.splice(i, 1);
       }
 
+    };
+
+    const sync = () => {
+      const shouldRun = visible && !document.hidden &&
+        document.documentElement.dataset.theme === "dark";
+      if (!shouldRun) {
+        active = false;
+        cancelAnimationFrame(raf);
+        canvas.style.opacity = "0";
+        return;
+      }
+      if (dirty) {
+        sizeCanvas();
+        initStars();
+        shootingStars = [];
+        dirty = false;
+      }
+      if (active) return;
+      active = true;
+      lastFrame = performance.now();
+      lastDraw = lastFrame;
+      canvas.style.opacity = "1";
       raf = requestAnimationFrame(frame);
     };
-
     const onResize = () => {
-      sizeCanvas();
-      initStars();
+      dirty = true;
+      sync();
     };
-
-    sizeCanvas();
-    initStars();
-    // Fade the canvas in over the static placeholder once it's ready.
-    canvas.style.opacity = "1";
-    frame();
-
-    const shootingTimer = window.setInterval(() => {
-      if (Math.random() < 0.7) spawnShootingStar();
-    }, 2200);
+    const intersection = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    });
+    intersection.observe(canvas);
+    const theme = new MutationObserver(sync);
+    theme.observe(document.documentElement, {
+      attributes: true, attributeFilter: ["data-theme"],
+    });
+    document.addEventListener("visibilitychange", sync);
     window.addEventListener("resize", onResize);
 
     return () => {
-      stopped = true;
+      active = false;
       cancelAnimationFrame(raf);
-      clearInterval(shootingTimer);
+      intersection.disconnect();
+      theme.disconnect();
+      document.removeEventListener("visibilitychange", sync);
       window.removeEventListener("resize", onResize);
-      // Hand back to the static placeholder (e.g. when motion is turned off).
-      if (canvas) {
-        canvas.style.opacity = "0";
-        ctx.clearRect(0, 0, W(), H());
-      }
+      canvas.style.opacity = "0";
+      ctx.clearRect(0, 0, W(), H());
     };
   }, [reduced]);
 
