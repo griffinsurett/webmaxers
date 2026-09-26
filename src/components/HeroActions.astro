@@ -1,0 +1,27 @@
+---
+import Button from "@/components/Button/Button";
+
+interface Props {
+  ctaText: string;
+  ctaLink: string;
+  ctaExternal?: boolean;
+}
+
+const { ctaText, ctaLink, ctaExternal = false } = Astro.props;
+const externalAttrs = ctaExternal
+  ? { target: "_blank", rel: "noopener noreferrer" }
+  : {};
+---
+
+<div class="flex w-2/3 flex-col items-stretch gap-4 py-6 lg:w-auto lg:flex-row lg:flex-wrap lg:items-center lg:gap-6 lg:py-0 lg:mt-8">
+  <Button variant="primary" href={ctaLink} rightIcon="lu:arrow-up-right" {...externalAttrs}>
+    {ctaText}
+  </Button>
+  <Button
+    variant="secondary"
+    href="/projects"
+    className="w-full! max-w-none! self-stretch! lg:w-fit! lg:max-w-xs! lg:self-center!"
+  >
+    View Our Work
+  </Button>
+</div>

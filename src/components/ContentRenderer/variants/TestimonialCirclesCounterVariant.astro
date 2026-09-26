@@ -29,11 +29,8 @@ const {
   counterPrefix = "",
   counterSuffix = "+",
   counterLabel = "Happy Clients",
-  /* Matches StatBlock's number exactly (`text-2xl lg:text-3xl font-light`), so
-     the Happy Clients counter reads at the same scale as the hero stat boxes it
-     sits beside. Was `text-[1.7rem] sm:text-3xl lg:text-4xl` at weight 400 —
-     36px vs the stat boxes' 30px. */
-  counterClassName = "text-heading m-0 p-0 text-2xl lg:text-3xl font-light",
+  // Keep the stat typography, with a slightly smaller number beside the photos.
+  counterClassName = "text-heading m-0 p-0 text-[clamp(1.5rem,2.6vw,2.25rem)] font-light leading-none tracking-[-0.02em]",
   link = "/#testimonials-home",
   id,
 } = Astro.props as Props;
@@ -83,7 +80,7 @@ const resolveImage = (face: any) => {
     ))}
   </div>
 
-  <div class="flex flex-col items-start">
+  <div class="flex flex-col items-start gap-[0.35rem]">
     {/* NOT a heading. This is a stat figure — a number paired with the label
         below it — and the whole block is already a link with its own accessible
         name, so a heading role adds no navigational value.
@@ -105,9 +102,7 @@ const resolveImage = (face: any) => {
         class="leading-none"
       />
     </span>
-    {/* `support-text text-text mt-0.5` mirrors StatBlock's label so the two
-        number+label pairs are typographically identical. */}
-    <p class="support-text m-0 mt-0.5 text-base capitalize text-text">
+    <p class="m-0 text-xs font-medium tracking-[0.14em] uppercase text-text">
       {counterLabel}
     </p>
   </div>

@@ -2,7 +2,7 @@
 // src/layouts/heroes/FrontPageHero.astro
 import { ctaData } from "@/content/siteData";
 import ScrollIndicator from "@/components/ScrollIndicator.astro";
-import Button from "@/components/Button/Button";
+import HeroActions from "@/components/HeroActions.astro";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import { query, sortByOrder } from "@/utils/query";
 
@@ -76,29 +76,7 @@ const {
           {bodyText || statDescription}
         </p>
 
-        {/* Mobile: CTAs above the testimonial circles, stacked and sharing one
-            edge. `items-stretch` makes both fill this box, and the underline
-            button's own `w-fit max-w-xs self-start` (which keeps its rule
-            tracking the text elsewhere) is overridden below to match.
-            `w-3/4` caps the BOX at three quarters of the hero text column, so
-            the buttons stay narrower than the copy instead of running its full
-            measure — without it they inherited the column's width exactly. */}
-        <div class="flex flex-col items-stretch gap-4 py-6 w-2/3 lg:w-auto lg:hidden">
-          <Button
-            variant="primary"
-            href={ctaLink}
-            rightIcon="lu:arrow-up-right"
-          >
-            {ctaText}
-          </Button>
-          <Button
-            variant="secondary"
-            href="/projects"
-            className="w-full! max-w-none! self-stretch!"
-          >
-            View Our Work
-          </Button>
-        </div>
+        <HeroActions ctaText={ctaText} ctaLink={ctaLink} />
 
         {/* Mobile only: testimonial circles under the CTAs. */}
         <ContentRenderer
@@ -114,24 +92,6 @@ const {
           counterLabel="Happy Clients"
         />
 
-        {/* CTAs — DESKTOP: under the headline (top-left). MOBILE: shown above. */}
-        <div class="hidden lg:flex flex-wrap items-center gap-6 mt-8">
-          <Button
-            variant="primary"
-            href={ctaLink}
-            rightIcon="lu:arrow-up-right"
-          >
-            {ctaText}
-          </Button>
-
-          <Button
-            variant="secondary"
-            href="/projects"
-            className="!self-center"
-          >
-            View Our Work
-          </Button>
-        </div>
       </div>
     </div>
 
@@ -139,14 +99,14 @@ const {
          justify-between. Mobile: only the scroll arrow (CTAs + circles live up
          under the headline; stats hidden). lg+: [circles] [scroll arrow centred]
          [stat box]. -->
-    <div class="flex flex-col gap-10 mt-auto lg:mt-0 lg:flex-row lg:items-end lg:justify-between w-full">
+    <div class="flex flex-col gap-10 mt-auto lg:mt-0 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center w-full">
       <!-- Desktop only: testimonial circles pinned bottom-left. -->
       <ContentRenderer
         query={query("testimonials")
           .where((entry) => entry.data.featured === true)
           .limit(3)}
         variant="TestimonialCirclesCounterVariant"
-        className="hidden lg:flex shrink-0 lg:w-[340px] lg:mb-10"
+        className="hidden lg:flex shrink-0 lg:w-[340px]"
         counterStart={10}
         counterEnd={100}
         counterDuration={1800}
@@ -154,22 +114,18 @@ const {
         counterLabel="Happy Clients"
       />
 
-      <!-- Scroll indicator: centred in the row on desktop, below on mobile.
-           Deliberately does NOT carry the siblings' `lg:mb-10` — the circles and
-           stat block are lifted off the hero's bottom edge, while the arrow sits
-           at the lowest point of the bottom bar (`lg:self-end`, no bottom
-           margin) so it reads as the page's "keep going" marker. On mobile
-           `mb-2` keeps it just clear of the hero's edge. -->
+      <!-- Equal-width outer columns keep the arrow at the hero's true center;
+           all three desktop elements share the same vertical alignment. -->
       <ScrollIndicator
         href={scrollTarget}
-        className="order-last lg:order-none self-center lg:self-end mb-2 lg:mb-0 relative bottom-auto left-auto translate-x-0 static-in-row"
+        className="order-last lg:order-none self-center mb-2 lg:mb-0 relative bottom-auto left-auto translate-x-0 static-in-row"
       />
 
       <!-- Stats — DESKTOP bottom-right only, stacked like the CTA section's.
            Hidden on mobile (the same stats reappear in the About section). The
            wrapper carries the visibility: the variant's own scoped `display:
            flex` would beat a `hidden` utility put on the list itself. -->
-      <div class="hidden lg:block shrink-0 lg:mb-10">
+      <div class="hidden lg:block shrink-0 lg:justify-self-end">
         <ContentRenderer
           query={query("stats").orderBy(sortByOrder())}
           variant="AboutStatsVariant"

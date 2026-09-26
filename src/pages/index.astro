@@ -71,6 +71,7 @@ import { animationProps } from "@/integrations/scroll-animations/props";
     <ContentRenderer
       query={query("blog").orderBy(sortByDate("publishDate", "desc")).limit(4)}
       variant="BlogVariant"
+      className="bg-gradient section-rule-t"
       columns={2}
       showButtonSection={false}
       eyebrow="Latest Articles"
@@ -119,6 +120,17 @@ import { animationProps } from "@/integrations/scroll-animations/props";
           window.matchMedia &&
           window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+        function targetY() {
+          var region = el.closest("[data-about-expand]");
+          var pin = region && region.querySelector("[data-about-expand-pin]");
+          if (pin && !region.classList.contains("is-reduced")) {
+            // The carousel is inside a sticky overlay. Its DOM position is not
+            // the scroll position at which the image has finished expanding.
+            return Math.round(region.getBoundingClientRect().bottom + window.scrollY - pin.clientHeight);
+          }
+          return Math.round(el.getBoundingClientRect().top + window.scrollY - offset);
+        }
+
         // Smooth-scroll to the current best guess, then WAIT for the page to
         // stop moving before re-measuring.
         //
@@ -136,7 +148,7 @@ import { animationProps } from "@/integrations/scroll-animations/props";
         function go() {
           var target = Math.max(
             0,
-            Math.round(el.getBoundingClientRect().top + window.scrollY - offset)
+            targetY()
           );
 
           window.scrollTo({
@@ -161,7 +173,7 @@ import { animationProps } from "@/integrations/scroll-animations/props";
 
             // Where does the target sit NOW that everything has settled?
             var drift = Math.round(
-              el.getBoundingClientRect().top - offset
+              targetY() - window.scrollY
             );
             passes++;
             if (Math.abs(drift) > 2 && passes < MAX_PASSES) {
@@ -179,10 +191,13 @@ import { animationProps } from "@/integrations/scroll-animations/props";
         if (e.defaultPrevented || e.button !== 0) return;
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
-        var a = e.target && e.target.closest && e.target.closest('a[href^="#"]');
+        var a = e.target && e.target.closest && e.target.closest('a[href]');
         if (!a) return;
 
-        var hash = a.getAttribute("href");
+        if (a.hasAttribute("download") || (a.target && a.target !== "_self")) return;
+        var url = new URL(a.href, window.location.href);
+        if (url.origin !== location.origin || url.pathname !== location.pathname || url.search !== location.search) return;
+        var hash = url.hash;
         if (!hash || hash === "#") return;
 
         var el = null;

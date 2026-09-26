@@ -21,8 +21,7 @@ import Logo from "@/components/Logo/Logo.astro";
 import RevealStack from "@/components/StickyStack/RevealStack.astro";
 
 const eyebrow = "Let's build work that inspires.";
-const heading = "Ready to build";
-const headingLine2 = "something bold?";
+const heading = "Ready to build something bold?";
 
 const aiFooterPrompt = `I'm researching ${siteData.title} for a potential website project.
 
@@ -58,37 +57,39 @@ const legalColClass = [
   <RevealStack>
   {/* The cover is split in two: this outer div paints the opaque background
       edge to edge (so it covers the wordmark across the full width, not just
-      inside the container inset), while the inner one keeps the
-      `inner-section` container and the content grid. */}
-  <div slot="cover" class="footer-content">
+      inside the container inset), while the inner one shares the header's
+      `head-foot-section` width and keeps the content grid. */}
+  <div slot="cover" class="footer-content bg-gradient section-rule-y">
   <div
-    class="relative inner-section grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2"
+    class="relative head-foot-section grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2 2xl:grid-cols-12"
   >
     {/* Top-left — eyebrow + heading */}
-    <div class="flex flex-col gap-3">
+    <div class="flex flex-col gap-3 2xl:col-span-10">
       <Eyebrow>{eyebrow}</Eyebrow>
-      <h2 class="heading-display">
-        {heading}<br />{headingLine2}
+      <h2 class="heading-display 2xl:text-[clamp(4rem,4.5vw,5rem)]">
+        {heading}
       </h2>
     </div>
 
     {/* Top-right — CTA (GWS button style), dropped to the bottom of its cell */}
-    <div class="flex items-end justify-start lg:col-start-2 lg:row-start-1 lg:justify-end">
+    <div class="flex items-end justify-start lg:col-start-2 lg:row-start-1 lg:justify-end 2xl:col-start-11 2xl:col-span-2">
       <Button variant="primary" href={ctaData.link} client:visible>
         {ctaData.text}
       </Button>
     </div>
 
     {/* Lower-left — copyright + privacy control, then the Ask-AI prompt buttons */}
-    <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2">
+    <div class="flex flex-col gap-6 lg:col-start-1 lg:row-start-2 2xl:col-span-7">
       <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted">
-        <p class="m-0">
-          &copy; {new Date().getFullYear()}
-          {siteData.legalName}
-        </p>
-        {siteData.dbaNotice && (
-          <p class="m-0 basis-full">{siteData.dbaNotice}</p>
-        )}
+        <div class="flex basis-full flex-col gap-x-6 gap-y-2 2xl:flex-row 2xl:flex-wrap">
+          <p class="m-0">
+            &copy; {new Date().getFullYear()}
+            {siteData.legalName}
+          </p>
+          {siteData.dbaNotice && (
+            <p class="m-0">{siteData.dbaNotice}</p>
+          )}
+        </div>
         {/* Live here rather than inside the legal query, so that list stays a
             plain collection of pages. */}
         <CookiePreferencesButton client:visible />
@@ -104,7 +105,7 @@ const legalColClass = [
 
     {/* Lower-right — NAVIGATE + LEGAL + SOCIAL, aligned under the CTA */}
     <div
-      class="flex flex-wrap gap-x-16 gap-y-10 lg:col-start-2 lg:row-start-2 lg:justify-end"
+      class="flex flex-wrap gap-x-16 gap-y-10 lg:col-start-2 lg:row-start-2 lg:justify-end 2xl:col-start-8 2xl:col-span-5"
     >
       <div class="flex flex-col gap-3">
         {/* Navigation links — the footer's OWN menu, so adding an item to the
@@ -200,18 +201,14 @@ const legalColClass = [
   /* The reveal mechanic (clip/sticky/stacking) lives in <RevealStack>. Here we
      only style the footer's own content + wordmark lockup. */
 
-  /* One continuous background across the whole footer — the same flat --color-bg
-     the body paints, so the footer reads as one surface with no seam against the
-     page above it or between its own parts. (Was a fixed bg3→bg gradient,
-     dropped along with the body's: `background-attachment: fixed` repaints on
-     every scroll frame, and a flat colour matches by definition.) */
+  /* Keep the logo's base on the existing flat background. Only the upper
+     cover uses the shared gradient and section borders. */
   footer {
     background-color: var(--color-bg);
   }
 
-  /* The RevealStack `cover` has to be OPAQUE so the wordmark stays hidden until
-     it is revealed. The same flat colour as the footer behind it covers the
-     lockup completely while staying visually indistinguishable. */
+  /* Opaque fallback beneath the gradient keeps the wordmark covered until
+     RevealStack lifts this panel away. */
   .footer-content {
     background-color: var(--color-bg);
   }
@@ -263,6 +260,23 @@ const legalColClass = [
       padding-top: clamp(0.75rem, 1.5vw, 1.5rem);
       padding-bottom: 0;
       pointer-events: none;
+  }
+
+  /* Match the hero’s static stars without adding another canvas or animation loop. */
+  :global([data-theme="dark"]) .footer-wordmark {
+    background-color: var(--color-bg);
+    background-image:
+      radial-gradient(1.2px 1.2px at 20% 30%, rgba(255, 255, 255, 0.85) 50%, transparent 52%),
+      radial-gradient(1px 1px at 70% 20%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
+      radial-gradient(1.4px 1.4px at 40% 70%, rgba(255, 255, 255, 0.8) 50%, transparent 52%),
+      radial-gradient(1px 1px at 85% 60%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+      radial-gradient(1.1px 1.1px at 55% 45%, rgba(255, 255, 255, 0.75) 50%, transparent 52%),
+      radial-gradient(0.9px 0.9px at 10% 80%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+      radial-gradient(1.3px 1.3px at 90% 90%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
+      radial-gradient(1px 1px at 30% 15%, rgba(255, 255, 255, 0.65) 50%, transparent 52%);
+    background-repeat: repeat;
+    background-size: 320px 320px, 280px 280px, 360px 360px, 300px 300px,
+      340px 340px, 260px 260px, 380px 380px, 290px 290px;
   }
 
   /* Scale the gap between mark and text with the lockup. The lockup keeps its

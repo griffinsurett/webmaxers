@@ -954,17 +954,14 @@ const hasExpandSlot = Astro.slots.has("expand-content");
       // Reduced motion: leave the static CSS fallback (image shown in grid).
       if (readMotionPreference()) return;
 
-      // Rest geometry = the placeholder's box relative to the REGION's top-left.
-      // At progress 0 the sticky pin's top aligns with the region top, so this
-      // region-relative offset equals the placeholder's position inside the pin
-      // at rest — and being pure layout (both in flow within the region) it's
-      // scroll-invariant, so it's safe to measure on any refresh.
+      // Center horizontally while preserving the original grid's top position.
+      // Region-relative coordinates stay stable as the viewport scrolls.
       let rest = { x: 0, y: 0, w: 0, h: 0 };
       const measureRest = () => {
-        const regionRect = region.getBoundingClientRect();
         const phRect = placeholder.getBoundingClientRect();
+        const regionRect = region.getBoundingClientRect();
         rest = {
-          x: phRect.left - regionRect.left,
+          x: (pin.clientWidth - phRect.width) / 2,
           y: phRect.top - regionRect.top,
           w: phRect.width,
           h: phRect.height,

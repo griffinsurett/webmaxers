@@ -48,8 +48,6 @@ import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
 import FrontPageHero from "@/layouts/heroes/FrontPageHero.astro";
 import AboutSection from "@/components/AboutSection/AboutSection.astro";
 import TestimonialCarousel from "@/components/TestimonialCarousel/TestimonialCarousel.astro";
-import { Image } from "astro:assets";
-import heroLogo3dPoster from "@/assets/hero-logo3d-poster.png";
 import { contactCtaData, siteData } from "@/content/siteData";
 
 interface Props {
@@ -72,22 +70,10 @@ const heroDescription =
       a descendant of this same region — so the range it measures and the region
       it lives in can never drift apart. */}
   <HeroLogo3D
-    class="home-top__pinned light:opacity-40 dark:invert dark:opacity-30"
+    variant="hero"
+    class="home-top__pinned"
     breakSelector="#about .about-sticky-section"
-  >
-    {/* Poster: a render of the 3D logo at progress 0 on a SQUARE canvas with the
-        same perspective camera. The live canvas frames the logo by VERTICAL fov,
-        so we size the poster by height and centre it — matching the live logo
-        exactly for a seamless swap. */}
-    <Image
-      src={heroLogo3dPoster}
-      alt=""
-      width={1000}
-      loading="eager"
-      fetchpriority="high"
-      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2/5 md:h-full w-auto"
-    />
-  </HeroLogo3D>
+  />
 <div class="flex flex-col gap-15 lg:gap-30">
   <FrontPageHero
     headline="Launch a website"

@@ -1,43 +1,12 @@
 ---
 // src/layouts/sections/HomeCtaSection.astro
-/**
- * HomeCtaSection — the homepage's closing CTA, between the blog and the footer.
- *
- * Wireframe (desktop):
- *   ┌──────────────────────────┬───────────────────────────┐
- *   │ PANEL (bg-gradient)      │ SPACE (star field)        │
- *   │  eyebrow                 │   ╭──╮          7+        │
- *   │  heading                ─┼─ │🌀│ spinning   $1M+      │
- *   │  text                    │   ╰──╯ mark               │
- *   │                          │     button + testimonials │
- *   └──────────────────────────┴───────────────────────────┘
- *
- *   • LEFT — the same `bg-gradient` surface as the projects filmstrip and the
- *     "Why Choose Us" section, with the site's SectionHeading (eyebrow, heading,
- *     description).
- *   • RIGHT — outer space like the top of the page (the star field), the 3D mark
- *     turning slowly, and the hero's stats in the About section's bare-number
- *     style, stacked, above the primary CTA with the testimonial circles beside it.
- *
- * One viewport tall (min-height), so it reads as a closing scene.
- *
- * Layering: the mark straddles the seam and the PANEL paints over it — the left
- * side sits at a higher z-index than the right, so the mark reads as passing
- * behind the copy. The mark is the lightweight SpinningLogo3D (constant spin,
- * no shatter, no scroll hooks), not the hero's HeroLogo3D.
- *
- * Previous version: HomeFounderCtaSectionOld (photo + raised card).
- */
-import { Image } from "astro:assets";
-import SectionHeading from "@/components/SectionHeading.astro";
+/** Closing CTA: hero-style copy and actions over a space backdrop. */
+import Eyebrow from "@/components/Eyebrow";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import Button from "@/components/Button/Button";
-import PanelStarfield from "@/components/Starfield/PanelStarfield";
-import SpinningLogo3D from "@/components/HeroLogo3D/SpinningLogo3D";
-import HydrateResponsive from "@/components/HydrateResponsive.astro";
+import HeroActions from "@/components/HeroActions.astro";
+import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
 import { query, sortByOrder } from "@/utils/query";
 import { contactCtaData } from "@/content/siteData";
-import logoPoster from "@/assets/hero-logo3d-poster.png";
 
 interface Props {
   id?: string;
@@ -60,81 +29,37 @@ const {
   ctaExternal = contactCtaData.external ?? false,
 } = Astro.props as Props;
 
-const externalAttrs = ctaExternal
-  ? { target: "_blank", rel: "noopener noreferrer" }
-  : {};
-
-/* Same theme treatment the hero gives the mark: faint in light mode, inverted
-   and fainter in dark. */
-const markClass = "absolute inset-0 light:opacity-40 dark:invert dark:opacity-30";
 ---
 
-<section id={id} class="home-cta section-rule-t">
-  {/* SPACE — dark mode only, like the hero backdrop. Painted across the whole
-      section; the opaque panel covers its left half. */}
-  <div class="home-cta__sky" aria-hidden="true">
-    <PanelStarfield client:visible density={2400} />
+<section id={id} class="home-cta section-rule-t section-container">
+  <div class="home-cta__sky" aria-hidden="true"></div>
+  <div class="home-cta__mark" aria-hidden="true">
+    <HeroLogo3D variant="spin" class="absolute inset-0" />
   </div>
 
-  {/* LEFT — highest layer: covers the mark where the two meet. */}
-  <div class="home-cta__panel bg-gradient">
-    <div class="home-cta__panel-inner">
-      <SectionHeading
-        eyebrow={eyebrow}
-        heading={heading}
-        description={text}
-        className="text-left"
+  <div class="home-cta__content">
+    <div class="home-cta__copy">
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h2 class="heading-display home-cta__heading">{heading}</h2>
+      <p class="text-base lg:text-lg leading-relaxed text-text max-w-xl">{text}</p>
+      <HeroActions ctaText={ctaText} ctaLink={ctaLink} ctaExternal={ctaExternal} />
+    </div>
+
+    <div class="home-cta__proof">
+      <ContentRenderer
+        query={query("testimonials").where((entry) => entry.data.featured === true).limit(3)}
+        variant="TestimonialCirclesCounterVariant"
+        className="px-0 order-last md:order-none"
+        id={`${id}-testimonial-circles`}
+        counterStart={10}
+        counterEnd={100}
+        counterDuration={1800}
       />
-    </div>
-  </div>
-
-  {/* RIGHT — the mark, then stats + CTA over it. */}
-  <div class="home-cta__aside">
-    <div class="home-cta__mark" aria-hidden="true">
-      {/* xl+: the live spinning mark, hydrated only once scrolled near.
-          Below xl: the poster alone — no Three.js on phones and tablets, the
-          same line HeroLogo3D draws. */}
-      <HydrateResponsive min="1280px">
-        <SpinningLogo3D slot="desktop" className={markClass} client:visible>
-          <Image src={logoPoster} alt="" width={1000} loading="lazy" class="home-cta__poster" />
-        </SpinningLogo3D>
-        <div slot="mobile" class={markClass}>
-          <Image src={logoPoster} alt="" width={1000} loading="lazy" class="home-cta__poster" />
-        </div>
-      </HydrateResponsive>
-    </div>
-
-    <div class="home-cta__aside-inner">
       <ContentRenderer
         query={query("stats").orderBy(sortByOrder())}
         variant="AboutStatsVariant"
         showHeadingSection={false}
-        stacked
       />
-
-      {/* The CTA with the testimonial circles beside it; they wrap under the
-          button when the column is too narrow for both. */}
-      <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
-        <Button
-          href={ctaLink}
-          variant="primary"
-          size="lg"
-          rightIcon="lu:arrow-up-right"
-          className="!w-auto whitespace-nowrap"
-          buttonWrapperClasses="!w-auto justify-start"
-          {...externalAttrs}
-        >
-          {ctaText}
-        </Button>
-        <ContentRenderer
-          query={query("testimonials")
-            .where((entry) => entry.data.featured === true)
-            .limit(5)}
-          variant="TestimonialCirclesCounterVariant"
-          className="px-0"
-          id={`${id}-testimonial-circles`}
-        />
-      </div>
     </div>
   </div>
 </section>
@@ -142,117 +67,69 @@ const markClass = "absolute inset-0 light:opacity-40 dark:invert dark:opacity-30
 <style>
   .home-cta {
     position: relative;
-    /* Confines the star field and the mark (which overhangs the seam). */
+    isolation: isolate;
     overflow: clip;
-    display: grid;
     background: var(--color-bg);
-    /* One viewport. svh where supported, so a collapsing mobile URL bar can't
-       leave it a sliver short or tall. */
-    min-height: 100vh;
-    min-height: 100svh;
-  }
-  @media (min-width: 1024px) {
-    .home-cta {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    }
-  }
-
-  /* ── Layers: sky 0 → right side 10 → left panel 20 ─────────────────── */
-  .home-cta__sky {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    display: none;
-    pointer-events: none;
-  }
-  :global([data-theme="dark"]) .home-cta__sky {
-    display: block;
-  }
-
-  .home-cta__aside {
-    position: relative;
-    z-index: 10;
-  }
-
-  .home-cta__panel {
-    position: relative;
-    z-index: 20;
+    min-height: 75svh;
     display: flex;
-    align-items: center;
-    border-bottom: 1px solid var(--color-border);
+    padding-block: clamp(3rem, 5vw, 5rem) 2rem;
   }
-  @media (min-width: 1024px) {
-    .home-cta__panel {
-      border-bottom: 0;
-      border-right: 1px solid var(--color-border);
-    }
-  }
-
-  /* Same horizontal inset as `section-container`, so the copy lines up with the
-     sections above. */
-  .home-cta__panel-inner,
-  .home-cta__aside-inner {
+  .home-cta__content {
     position: relative;
+    z-index: 1;
     width: 100%;
-    padding: clamp(4rem, 8vw, 7rem) 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(2rem, 4vw, 4rem);
   }
-  @media (min-width: 768px) {
-    .home-cta__panel-inner,
-    .home-cta__aside-inner {
-      padding-inline: 80px;
-    }
+  .home-cta__copy {
+    max-width: min(60rem, 68%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
   }
-
-  /* ── The mark ─────────────────────────────────────────────────────────── */
-  /* Mobile: centred behind the right-side copy. */
+  .home-cta__heading {
+    font-size: clamp(2.85rem, 5.5vw, 5.75rem);
+    margin: 0;
+  }
+  .home-cta__proof {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+  }
   .home-cta__mark {
     position: absolute;
     inset: 0;
     pointer-events: none;
   }
-  /* Desktop: the box reaches back across the seam so the mark is centred just
-     right of it (~55% of the section) — its left part runs under the panel.
-     The mark is framed by the box HEIGHT (perspective camera, ~60% of it), so
-     the box overhangs the section top and bottom to make the mark bigger (the
-     section clips the overhang); its width only has to contain the mark. */
-  @media (min-width: 1024px) {
-    .home-cta__mark {
-      top: -15%;
-      bottom: -15%;
-      left: -45%;
-      right: 35%;
-    }
+  @media (max-width: 767px) {
+    .home-cta { min-height: auto; padding-block: 4rem 3rem; }
+    .home-cta__copy { max-width: 100%; }
+    .home-cta__proof { flex-direction: column; align-items: flex-start; gap: 2rem; }
+    .home-cta__content { gap: 4rem; }
   }
-
-  /* Square poster rendered with the live camera: sized by height and centred,
-     it sits exactly where the live mark does, for a seamless crossfade. */
-  .home-cta__poster {
+  .home-cta__sky {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    height: 100%;
-    width: auto;
-    max-width: none;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    display: none;
+    pointer-events: none;
   }
-
-  /* ── Right-side content ───────────────────────────────────────────────── */
-  .home-cta__aside-inner {
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 3rem;
-  }
-  @media (min-width: 1024px) {
-    .home-cta__aside-inner {
-      height: 100%;
-      /* Wide enough for the button and the testimonial circles side by side
-         (32rem of content + the 3rem / 80px side padding). The left padding
-         keeps the copy off the seam when the column is narrower than that. */
-      max-width: calc(32rem + 3rem + 80px);
-      margin-left: auto;
-      padding-left: 3rem;
-      justify-content: space-between;
-    }
+  :global([data-theme="dark"]) .home-cta__sky {
+    display: block;
+    background-image:
+      radial-gradient(1.2px 1.2px at 20% 30%, #ffffffd9 50%, transparent 52%),
+      radial-gradient(1px 1px at 70% 20%, #ffffffb3 50%, transparent 52%),
+      radial-gradient(1.4px 1.4px at 40% 70%, #ffffffcc 50%, transparent 52%),
+      radial-gradient(1px 1px at 85% 60%, #ffffff99 50%, transparent 52%),
+      radial-gradient(1.1px 1.1px at 55% 45%, #ffffffbf 50%, transparent 52%),
+      radial-gradient(0.9px 0.9px at 10% 80%, #ffffff99 50%, transparent 52%),
+      radial-gradient(1.3px 1.3px at 90% 90%, #ffffffb3 50%, transparent 52%),
+      radial-gradient(1px 1px at 30% 15%, #ffffffa6 50%, transparent 52%);
+    background-size: 320px 320px, 280px 280px, 360px 360px, 300px 300px,
+      340px 340px, 260px 260px, 380px 380px, 290px 290px;
   }
 </style>

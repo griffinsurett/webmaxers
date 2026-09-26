@@ -29,10 +29,14 @@
  *
  * Positioning is yours via `class`. The break scrubs across `breakSelector`.
  */
+import SpinningLogo3D from "./SpinningLogo3D";
+import LogoPoster from "./LogoPoster.astro";
 import HeroLogo3DIsland from "./HeroLogo3D.tsx";
 import HydrateResponsive from "@/components/HydrateResponsive.astro";
 
 interface Props {
+  /** Hero keeps its scroll shatter; spin is the contained CTA variant. */
+  variant?: "hero" | "spin";
   class?: string;
   /** Contained (footer box) vs full-viewport (hero). Only affects sizing. */
   contained?: boolean;
@@ -41,21 +45,28 @@ interface Props {
   breakSelector?: string;
 }
 
-const { class: className = "", contained, hideOnLeave, breakSelector } = Astro.props;
+const { class: className = "", variant = "hero", contained, hideOnLeave, breakSelector } = Astro.props;
+const themeClass = `${className} light:opacity-40 dark:invert dark:opacity-30`;
 ---
 
-{/* xl+ : the 3D island, hydrated on superIdle so three.js + the GLB stay
-    off the critical path. Below xl: nothing — no mobile slot, so neither
-    the island nor a poster renders. */}
+{/* One responsive gate for both variants: no mobile poster or island.
+    Keep the hero root directly in the parent flow for its sticky positioning. */}
 <HydrateResponsive min="1280px">
-  <HeroLogo3DIsland
-    slot="desktop"
-    className={className}
-    contained={contained}
-    hideOnLeave={hideOnLeave}
-    breakSelector={breakSelector}
-    client:superIdle
-  >
-    <slot />
-  </HeroLogo3DIsland>
+  <Fragment slot="desktop">
+    {variant === "hero" ? (
+      <HeroLogo3DIsland
+        className={themeClass}
+        contained={contained}
+        hideOnLeave={hideOnLeave}
+        breakSelector={breakSelector}
+        client:superIdle
+      >
+        <slot><LogoPoster eager /></slot>
+      </HeroLogo3DIsland>
+    ) : (
+      <SpinningLogo3D className={themeClass} client:visible>
+        <slot><LogoPoster /></slot>
+      </SpinningLogo3D>
+    )}
+  </Fragment>
 </HydrateResponsive>
