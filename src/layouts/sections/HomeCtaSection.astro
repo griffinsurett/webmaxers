@@ -1,9 +1,10 @@
 ---
 // src/layouts/sections/HomeCtaSection.astro
-/** Closing CTA: hero-style copy and actions over a space backdrop. */
+/** Closing CTA: hero-style copy and actions over the hero starfield. */
 import Eyebrow from "@/components/Eyebrow";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import HeroActions from "@/components/HeroActions.astro";
+import HeroBackdrop from "@/components/HeroBackdrop/HeroBackdrop.astro";
 import HeroLogo3D from "@/components/HeroLogo3D/HeroLogo3D.astro";
 import { query, sortByOrder } from "@/utils/query";
 import { contactCtaData } from "@/content/siteData";
@@ -32,7 +33,7 @@ const {
 ---
 
 <section id={id} class="home-cta section-rule-t section-container">
-  <div class="home-cta__sky" aria-hidden="true"></div>
+  <HeroBackdrop class="home-cta__background" />
   <div class="home-cta__mark" aria-hidden="true">
     <HeroLogo3D variant="spin" class="absolute inset-0" />
   </div>
@@ -101,7 +102,7 @@ const {
     justify-content: space-between;
     gap: 3rem;
   }
-  .home-cta__mark {
+  :global(.home-cta__background) {
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -112,24 +113,9 @@ const {
     .home-cta__proof { flex-direction: column; align-items: flex-start; gap: 2rem; }
     .home-cta__content { gap: 4rem; }
   }
-  .home-cta__sky {
+  .home-cta__mark {
     position: absolute;
-    inset: 0;
-    display: none;
+    inset: -12.5% 0;
     pointer-events: none;
-  }
-  :global([data-theme="dark"]) .home-cta__sky {
-    display: block;
-    background-image:
-      radial-gradient(1.2px 1.2px at 20% 30%, #ffffffd9 50%, transparent 52%),
-      radial-gradient(1px 1px at 70% 20%, #ffffffb3 50%, transparent 52%),
-      radial-gradient(1.4px 1.4px at 40% 70%, #ffffffcc 50%, transparent 52%),
-      radial-gradient(1px 1px at 85% 60%, #ffffff99 50%, transparent 52%),
-      radial-gradient(1.1px 1.1px at 55% 45%, #ffffffbf 50%, transparent 52%),
-      radial-gradient(0.9px 0.9px at 10% 80%, #ffffff99 50%, transparent 52%),
-      radial-gradient(1.3px 1.3px at 90% 90%, #ffffffb3 50%, transparent 52%),
-      radial-gradient(1px 1px at 30% 15%, #ffffffa6 50%, transparent 52%);
-    background-size: 320px 320px, 280px 280px, 360px 360px, 300px 300px,
-      340px 340px, 260px 260px, 380px 380px, 290px 290px;
   }
 </style>

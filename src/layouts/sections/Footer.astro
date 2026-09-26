@@ -18,6 +18,9 @@ import Button from "@/components/Button/Button";
 import AIIconPrompt from "@/components/Footer/AIIconPrompt";
 import Eyebrow from "@/components/Eyebrow";
 import Logo from "@/components/Logo/Logo.astro";
+import { Image } from "astro:assets";
+import footerImage from "@/assets/meoncomp.png";
+import HeroBackdrop from "@/components/HeroBackdrop/HeroBackdrop.astro";
 import RevealStack from "@/components/StickyStack/RevealStack.astro";
 
 const eyebrow = "Let's build work that inspires.";
@@ -59,7 +62,12 @@ const legalColClass = [
       edge to edge (so it covers the wordmark across the full width, not just
       inside the container inset), while the inner one shares the header's
       `head-foot-section` width and keeps the content grid. */}
-  <div slot="cover" class="footer-content bg-gradient section-rule-y">
+  <div slot="cover" class="footer-content section-rule-y">
+  <div class="footer-photo" aria-hidden="true">
+    <Image src={footerImage} alt="" widths={[640, 1024, 1920, 2560]}
+      sizes="100vw" format="webp" quality={70} loading="lazy" decoding="async" />
+    <div class="footer-photo__overlay"></div>
+  </div>
   <div
     class="relative head-foot-section grid gap-x-12 gap-y-16 py-12 lg:grid-cols-2 2xl:grid-cols-12"
   >
@@ -162,6 +170,7 @@ const legalColClass = [
       it is the correct partner for a purely decorative lockup. The header's
       logo link is the real, focusable one — this is its oversized echo. */}
   <div slot="base" class="footer-wordmark" aria-hidden="true" inert>
+    <HeroBackdrop class="footer-stars" />
     {/* The same <Logo> lockup the header uses — mark plus the wordmark text
         the component already renders from
         siteData. Only the scale differs: the mark box comes from
@@ -201,14 +210,39 @@ const legalColClass = [
   /* The reveal mechanic (clip/sticky/stacking) lives in <RevealStack>. Here we
      only style the footer's own content + wordmark lockup. */
 
-  /* Keep the logo's base on the existing flat background. Only the upper
-     cover uses the shared gradient and section borders. */
+  /* The upper photo panel reveals the starfield wordmark beneath it. */
   footer {
     background-color: var(--color-bg);
   }
 
-  /* Opaque fallback beneath the gradient keeps the wordmark covered until
-     RevealStack lifts this panel away. */
+  .footer-content,
+  .footer-wordmark {
+    position: relative;
+    isolation: isolate;
+  }
+  :global(.footer-photo),
+  :global(.footer-stars) {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  :global(.footer-photo) { overflow: hidden; }
+  :global(.footer-photo img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  :global(.footer-photo__overlay) {
+    position: absolute;
+    inset: 0;
+    background: var(--color-bg);
+    opacity: 0.88;
+  }
+  :global([data-theme="dark"] .footer-photo__overlay) { opacity: 0.95; }
+
+  /* Keep the wordmark covered until RevealStack lifts this panel away. */
   .footer-content {
     background-color: var(--color-bg);
   }
@@ -262,23 +296,6 @@ const legalColClass = [
       pointer-events: none;
   }
 
-  /* Match the hero’s static stars without adding another canvas or animation loop. */
-  :global([data-theme="dark"]) .footer-wordmark {
-    background-color: var(--color-bg);
-    background-image:
-      radial-gradient(1.2px 1.2px at 20% 30%, rgba(255, 255, 255, 0.85) 50%, transparent 52%),
-      radial-gradient(1px 1px at 70% 20%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
-      radial-gradient(1.4px 1.4px at 40% 70%, rgba(255, 255, 255, 0.8) 50%, transparent 52%),
-      radial-gradient(1px 1px at 85% 60%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
-      radial-gradient(1.1px 1.1px at 55% 45%, rgba(255, 255, 255, 0.75) 50%, transparent 52%),
-      radial-gradient(0.9px 0.9px at 10% 80%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
-      radial-gradient(1.3px 1.3px at 90% 90%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
-      radial-gradient(1px 1px at 30% 15%, rgba(255, 255, 255, 0.65) 50%, transparent 52%);
-    background-repeat: repeat;
-    background-size: 320px 320px, 280px 280px, 360px 360px, 300px 300px,
-      340px 340px, 260px 260px, 380px 380px, 290px 290px;
-  }
-
   /* Scale the gap between mark and text with the lockup. The lockup keeps its
      horizontal mark-beside-text arrangement at every width — only the scale
      changes. */
@@ -302,6 +319,7 @@ const legalColClass = [
      two lines. `!important` is what it takes to beat the inline style, and
      this is scoped to the footer so the header lockup is unaffected. */
   .footer-wordmark :global(.footer-wordmark__line-lg) {
+    color: var(--color-heading);
     font-size: var(--footer-type-lg);
     line-height: 0.78 !important;
   }
