@@ -66,6 +66,20 @@ export interface ShatterUniforms {
   uShardShrink: { value: number };
   /** Peak rock of the per-shard flutter, radians. Bounded by construction. */
   uTumbleSwing: { value: number };
+  /**
+   * 0 = rubble at rest, 1 = swallowed. Scroll-driven, and only ever rises
+   * AFTER the break is complete: the shards spiral into the mark's centre and
+   * shrink to nothing, like matter falling into a black hole.
+   */
+  uCollapse: { value: number };
+  /**
+   * The camera's view axis expressed in the MESH's own space (the render loop
+   * sets it from the group's rotation). The swirl turns about this, so the
+   * spiral always faces the viewer whatever angle the idle spin stopped at.
+   */
+  uSpinAxis: { value: { x: number; y: number; z: number } };
+  /** The mark's centre (the group origin) in the mesh's own space — where the rubble falls to. */
+  uCenter: { value: { x: number; y: number; z: number } };
 }
 
 const SHATTER_CHUNK = /* glsl */ `
@@ -191,6 +205,35 @@ const SHATTER_CHUNK = /* glsl */ `
       displaced += vec3(flutter.x, flutter.y * 0.95, flutter.z * 0.8);
     }
   }
+
+  // ── Black-hole collapse ────────────────────────────────────────────────────
+  // After the break, the rubble falls into the mark's centre instead of being
+  // switched off: each shard swirls about the view axis while its distance to
+  // the centre (and its own size, since every vertex scales together) shrinks
+  // to zero. A pure function of uCollapse, so scrolling back up spirals every
+  // shard back out along the same path.
+  //
+  // Outer shards lag the inner ones, so the field is consumed from the middle
+  // outward and the edge visibly sweeps inward — the read of a black hole
+  // rather than a uniform zoom-out.
+  if (uCollapse > 1e-4) {
+    vec3 rel = displaced - uCenter;
+    float reach = length(rel - uSpinAxis * dot(rel, uSpinAxis));
+    float lag = clamp(reach / 6.0, 0.0, 1.0) * 0.45;
+    float c = clamp((uCollapse - lag) / max(1.0 - lag, 1e-4), 0.0, 1.0);
+    float fall = c * c * (3.0 - 2.0 * c);
+
+    // Swirl harder as it falls in, as orbital speed rises near the centre.
+    // Bounded by construction: fall is 0-1, so the angle is at most ~1.3 turns.
+    float ang = fall * fall * (5.0 + tumbRate * 3.0);
+    float ca = cos(ang);
+    float sa = sin(ang);
+    vec3 k = uSpinAxis;
+    // Rodrigues rotation of the point about k, through the centre.
+    vec3 p = rel * ca + cross(k, rel) * sa + k * dot(k, rel) * (1.0 - ca);
+
+    displaced = uCenter + p * (1.0 - fall);
+  }
 `;
 
 /**
@@ -218,6 +261,9 @@ export function applyShatterToMaterial(
     uTumble: { value: opts.tumble },
     uShardShrink: { value: opts.shardShrink },
     uTumbleSwing: { value: opts.tumbleSwing },
+    uCollapse: { value: 0 },
+    uSpinAxis: { value: { x: 0, y: 0, z: 1 } },
+    uCenter: { value: { x: 0, y: 0, z: 0 } },
   };
 
   material.onBeforeCompile = (shader: any) => {
@@ -235,6 +281,9 @@ export function applyShatterToMaterial(
         uniform float uTumble;
         uniform float uShardShrink;
         uniform float uTumbleSwing;
+        uniform float uCollapse;
+        uniform vec3 uSpinAxis;
+        uniform vec3 uCenter;
         attribute vec3 aOffset;
         attribute vec4 aShard;
         attribute vec3 aCentroid;
@@ -260,7 +309,7 @@ export function applyShatterToMaterial(
   // cache key so three.js cannot hand this material a program compiled for an
   // unpatched MeshStandardMaterial.
   material.needsUpdate = true;
-  material.customProgramCacheKey = () => "logo-shatter-v2";
+  material.customProgramCacheKey = () => "logo-shatter-v3";
 
   return uniforms;
 }

@@ -292,7 +292,7 @@ const hasExpandSlot = Astro.slots.has("expand-content");
             <p class="about-flow-text text-base font-normal leading-relaxed text-text">
               {rightText}
             </p>
-            <Button variant="secondary" href={ctaLink}>
+            <Button variant="secondary" href={ctaLink} className="shape-halo">
               {ctaText}
             </Button>
           </div>
@@ -367,8 +367,10 @@ const hasExpandSlot = Astro.slots.has("expand-content");
   .about-portrait {
     position: absolute;
     left: 0;
-    /* Sit just above the bottom-left stats block (~stats height + gap). */
-    bottom: 5.5rem;
+    /* Sit just above the bottom-left stats block (stats height + gap). On a
+       phone both stats stack, ~8.2rem tall; the old 5.5rem was sized for a
+       single stat and put the photo on top of the first one. */
+    bottom: 9.75rem;
     width: clamp(7rem, 32vw, 11rem);
     height: auto;
     object-fit: contain;

@@ -60,6 +60,13 @@ const CFG = {
   /** Cap the scrubbed break (1 = full shatter). */
   maxBreak: 1,
   /**
+   * How visible the mark is once FULLY shattered, 0-1. It fades from 1 down to
+   * this as it breaks, so the About statement scrolling over the rubble stays
+   * readable — hundreds of bright shard edges beat the text's halo otherwise.
+   * Not 0: it should still read as an explosion, just behind the words.
+   */
+  brokenOpacity: 0.3,
+  /**
    * Random scatter half-extent per axis — [x, y, z]. Mean throw lands at
    * ±3.8 × ±2.5 (the frame is ±3.31 × ±2.07), so the field FILLS the frame and
    * only the strongest outliers leave it.
@@ -108,10 +115,25 @@ const CFG = {
    * that one wheel notch does not land as a visible step.
    */
   progressTau: 0.1,
-  /** Fraction of the range the mark stays whole before it begins to break. */
+  /**
+   * Timeline stops, as fractions of the TRIGGER's height (the About sticky
+   * section). They may run past 1: the scroll range is extended to cover
+   * `collapseEnd`, so the collapse gets its own scroll distance after the
+   * section ends instead of squeezing the break to make room for it.
+   */
+  /** The mark stays whole until here, then begins to break. */
   spinEnd: 0.35,
-  /** Fraction of the range by which the break is complete. */
+  /** The break is complete here. */
   breakEnd: 0.95,
+  /**
+   * The rubble then falls into the centre like a black hole, from breakEnd to
+   * here. The mark used to hold at full scatter until the range ended and then
+   * simply vanish (the canvas is hidden once the range is passed); collapsing
+   * it to nothing first means there is nothing left to vanish. 0.65 of the
+   * section's height is ~3x the scroll the first version gave it, which read
+   * as too quick. See the collapse block in shatterMaterial.ts.
+   */
+  collapseEnd: 1.6,
   /** Per-shard break-delay spread — drives the erosion wave. */
   breakDelaySpread: 0.4,
   /** How much each shard shrinks toward its centroid as it breaks free (0→1). */
@@ -239,7 +261,8 @@ export default function HeroLogo3D({
         if (!trigger) return;
         const rect = trigger.getBoundingClientRect();
         rangeStart = rect.top + window.scrollY;
-        rangeLen = Math.max(rect.height, 1);
+        // Extended past the trigger to cover the collapse (see collapseEnd).
+        rangeLen = Math.max(rect.height * cfg.collapseEnd, 1);
       };
 
       /** Raw scroll position → 0-1 across the range. */
@@ -253,7 +276,10 @@ export default function HeroLogo3D({
        * load-time snap and the per-frame update can never disagree about what a
        * given scroll position looks like.
        */
-      const breakFromProgress = (p: number) => {
+      const breakFromProgress = (range: number) => {
+        // Range progress (0-1 over the extended range) → trigger fractions,
+        // which is what every timeline stop in CFG is expressed in.
+        const p = range * cfg.collapseEnd;
         const raw =
           p <= cfg.spinEnd
             ? 0
@@ -263,6 +289,19 @@ export default function HeroLogo3D({
         // as a snap. Smoothstep is C1-continuous at both ends.
         return raw * raw * (3 - 2 * raw) * cfg.maxBreak;
       };
+
+      /** Range progress → black-hole collapse, 0 until the break is done. */
+      const collapseFromProgress = (range: number) => {
+        const p = range * cfg.collapseEnd;
+        if (p <= cfg.breakEnd) return 0;
+        const raw = Math.min((p - cfg.breakEnd) / (cfg.collapseEnd - cfg.breakEnd), 1);
+        return raw * raw * (3 - 2 * raw);
+      };
+
+      // Reused every frame, so the per-frame collapse update allocates nothing.
+      const spinAxis = new THREE.Vector3();
+      const center = new THREE.Vector3();
+      const invMesh = new THREE.Matrix4();
 
       // Raw target from scroll, and the smoothed value actually rendered.
       let progressTarget = 0;
@@ -363,9 +402,32 @@ export default function HeroLogo3D({
         tilt += (tiltTarget - tilt) * tk;
         group.rotation.x = tilt;
 
-        // Two uniform writes; no geometry is touched.
+        // A few uniform writes; no geometry is touched.
         shatter.uBreak.value = breakAmount;
         shatter.uTime.value = elapsed;
+        const collapse = collapseFromProgress(progress);
+        shatter.uCollapse.value = collapse;
+        // The collapse works in the MESH's own space, which carries the GLB
+        // node's transform as well as the group's spin. Map the view axis
+        // (world Z) and the mark's centre (the group's origin) into it. Every mesh
+        // shares one material and the same node transform, so the first mesh
+        // speaks for all of them.
+        const first = group.children[0];
+        if (collapse > 0 && first) {
+          first.updateMatrixWorld();
+          invMesh.copy(first.matrixWorld).invert();
+          spinAxis.set(0, 0, 1).transformDirection(invMesh);
+          center.setFromMatrixPosition(group.matrixWorld).applyMatrix4(invMesh);
+          shatter.uSpinAxis.value = spinAxis;
+          shatter.uCenter.value = center;
+        }
+
+        // Fade with the break, as a pure function of it — so scrolling back up
+        // restores full strength exactly, and an unbroken mark (the CTA spin,
+        // or the hero before About arrives) is never dimmed. Canvas opacity is
+        // a compositor property: no re-render, no shader change.
+        const fade = 1 - (1 - cfg.brokenOpacity) * Math.min(breakAmount, 1);
+        renderer.domElement.style.opacity = fade.toFixed(3);
 
         renderer.render(scene, camera);
       }

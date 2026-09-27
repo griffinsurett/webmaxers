@@ -177,6 +177,22 @@ const items: SerializedItem[] = await Promise.all(
     --tc-quote-size: clamp(1.1rem, 2.9vw, 2.3rem);
   }
 
+  /* Largest screens only (2xl, 96rem / 1536px+): lift each tier's ceiling. The
+     vw slopes already ask for more there — 2.9vw is ~50px at 1728 — but the
+     caps held long quotes at ~37px, which read small across a screen that
+     wide. Below 96rem every size above applies unchanged. */
+  @media (min-width: 96rem) {
+    :global(.tc-quote-wrap) {
+      --tc-quote-size: clamp(1.35rem, 4vw, 4rem);
+    }
+    :global(.tc-quote-wrap[data-length="md"]) {
+      --tc-quote-size: clamp(1.2rem, 3.35vw, 3.4rem);
+    }
+    :global(.tc-quote-wrap[data-length="sm"]) {
+      --tc-quote-size: clamp(1.1rem, 2.9vw, 3rem);
+    }
+  }
+
   /*
    * The square image floats left. Its size is tied to two line-heights of the
    * quote text so it occupies exactly the first two lines, matching the reference.

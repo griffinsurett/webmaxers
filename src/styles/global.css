@@ -395,6 +395,17 @@ body {
     0 0 28px color-mix(in srgb, var(--color-bg) 80%, transparent);
 }
 
+/* The same halo for shapes, not just glyphs: a text-shadow cannot reach an
+   underline drawn as a pseudo-element or an SVG arrow, so this is a filter
+   drop-shadow over the whole element. Used on the secondary (underline)
+   buttons that sit over the 3D mark. */
+@utility shape-halo {
+  filter:
+    drop-shadow(0 0 1px var(--color-bg))
+    drop-shadow(0 0 6px var(--color-bg))
+    drop-shadow(0 0 14px color-mix(in srgb, var(--color-bg) 80%, transparent));
+}
+
 @utility logo-class {
   @apply light:invert;
 }

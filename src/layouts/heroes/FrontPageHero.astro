@@ -57,7 +57,7 @@ const {
     {/* Mobile: exactly one screen tall (100svh less the header clearance the
         section already pads), content centred, with the scroll arrow at its
         foot — so the quote card and stats start below the fold. */}
-    <div class="hero-first-screen relative flex flex-1 items-center justify-between gap-8 w-full pb-20 lg:pb-0 lg:min-h-0 lg:flex-none lg:items-start">
+    <div class="hero-first-screen relative flex flex-1 items-center justify-between gap-8 w-full min-h-[calc(100svh-var(--site-header-height,3.8rem))] pb-20 lg:pb-0 lg:min-h-0 lg:flex-none lg:items-start">
 
       <!-- Left: headline (+ CTA on desktop). Children spaced by a flex gap
            rather than per-element top margins. -->
@@ -70,15 +70,8 @@ const {
           {headline}<br />{headlineLine2}
         </h1>
 
-        {/* Supporting text under the heading, at every breakpoint.
-            No mobile max-width: the column already spans the section's content
-            box, so the copy wraps to the full available measure. (A `75vw` cap
-            here was measured against the VIEWPORT while the row is already inset
-            by the section's 24px side padding, so it could never fill the row —
-            it left ~46px of dead space on the right at 375px.) */}
-        <p class="text-base lg:text-lg leading-relaxed text-text text-halo lg:max-w-xl lg:mt-4">
-          {bodyText || statDescription}
-        </p>
+        {/* No supporting paragraph here — the hero is the headline alone, and
+            that line now lives in the quote card (see the bottom row). */}
 
         <HeroActions ctaText={ctaText} ctaLink={ctaLink} />
 
@@ -128,23 +121,25 @@ const {
            circles and arrow up off the bottom edge. -->
       <ScrollIndicator
         href={scrollTarget}
-        className="hidden lg:block self-center relative bottom-auto left-auto translate-x-0 static-in-row"
+        className="hidden lg:block self-end justify-self-center relative bottom-auto left-auto translate-x-0 static-in-row"
       />
 
       <!-- Quote card + stats, bottom-right on lg+. Modelled on the Hymanson
            Law hero: the quote card sits directly above the stats. Shown on
            mobile too (above the scroll arrow, which is order-last there), so
            the stats are no longer desktop-only. -->
-      <div class="shrink-0 w-full max-w-[28rem] lg:w-[28rem] lg:justify-self-end flex flex-col gap-6 lg:gap-4">
-        <HeroQuoteCard />
-        {/* Side by side under the card on lg+, as on Hymanson. nowrap because
-            the column is only just wide enough — wrapping stacked them and made
-            the row tall enough to push the hero past the viewport. */}
+      <div class="shrink-0 w-full max-w-[30rem] lg:w-[30rem] lg:justify-self-end flex flex-col gap-6 lg:gap-4">
+        <HeroQuoteCard body={bodyText || statDescription} />
+        {/* Side by side under the card on lg+, as on Hymanson, spread so the
+            second stat ends on the card's right edge (the gap is only the
+            minimum). nowrap because the column is only just wide enough —
+            wrapping stacked them and made the row tall enough to push the hero
+            past the viewport. */}
         <ContentRenderer
           query={query("stats").orderBy(sortByOrder())}
           variant="AboutStatsVariant"
           showHeadingSection={false}
-          className="lg:flex-nowrap!"
+          className="lg:flex-nowrap! lg:gap-7! lg:justify-between!"
         />
       </div>
     </div>
@@ -157,17 +152,6 @@ const {
   /* The hero fills the viewport under the fixed header, and its bottom row is
      pinned to the bottom edge with the SAME vertical padding the header uses for
      its own row (py-2), so the top and bottom edges read as symmetrical. */
-  /* Mobile first screen: 100svh less the header clearance the section pads
-     above it. lg+ goes back to a natural-height block. */
-  .hero-first-screen {
-    min-height: calc(100svh - var(--site-header-height, 3.8rem));
-  }
-  @media (min-width: 64rem) {
-    .hero-first-screen {
-      min-height: 0;
-    }
-  }
-
   .hero-gap-py {
     padding-top: var(--site-header-height, 3.8rem);
     padding-bottom: 0.5rem; /* matches the header's py-2 */
