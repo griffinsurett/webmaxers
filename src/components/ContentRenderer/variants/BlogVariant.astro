@@ -21,6 +21,8 @@ interface Props extends BaseVariantProps {
   eyebrow?: string;
   /** Show the "View all" section button. Default true; pass false to hide it. */
   showButtonSection?: boolean;
+  /** Heading element; "h1" when the grid is the top of the page (blog index). */
+  headingTag?: "h1" | "h2";
 }
 
 const {
@@ -34,6 +36,7 @@ const {
   collectionUrl,
   collectionTitle,
   showButtonSection = true,
+  headingTag = "h2",
   id,
 } = Astro.props as Props;
 
@@ -57,6 +60,7 @@ const columnClasses = {
           title={eyebrow ?? title}
           heading={heading}
           description={description}
+          headingTag={headingTag}
           className="text-section"
         />
       </div>

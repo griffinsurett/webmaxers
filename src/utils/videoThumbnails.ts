@@ -9,6 +9,7 @@ import { promisify } from "node:util";
 import { mkdir } from "node:fs/promises";
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 
 const execFileAsync = promisify(execFile);
@@ -34,8 +35,22 @@ function resolveVideoPath(src: string): string {
   return path.join(PROJECT_ROOT, src);
 }
 
+/**
+ * Cache name for a video's thumbnails. The filename alone is not unique —
+ * several projects ship a `desktop.mp4`, and they used to share (and overwrite
+ * each other's) cached frames. A short hash of the public-relative path plus
+ * the file size keeps same-named videos apart and regenerates the frame when a
+ * video is re-exported. Size, not mtime: a git checkout resets mtimes, which
+ * would force a regeneration on every deploy.
+ */
 function getBaseName(videoPath: string): string {
-  return path.basename(videoPath, path.extname(videoPath));
+  const name = path.basename(videoPath, path.extname(videoPath));
+  const relPath = path.relative(PROJECT_ROOT, videoPath).split(path.sep).join("/");
+  const hash = createHash("sha1")
+    .update(`${relPath}:${fs.statSync(videoPath).size}`)
+    .digest("hex")
+    .slice(0, 8);
+  return `${name}-${hash}`;
 }
 
 function toSafeNumberToken(value: number): string {

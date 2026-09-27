@@ -1,0 +1,32 @@
+---
+import HeroBackdrop from "@/components/HeroBackdrop/HeroBackdrop.astro";
+---
+<div class="collection-index-space">
+  <HeroBackdrop class="collection-index-stars" />
+  <div class="collection-index-content"><slot /></div>
+</div>
+<style>
+  .collection-index-space { position: relative; isolation: isolate; }
+  :global(.collection-index-stars) {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    margin-bottom: -100svh;
+    z-index: -1;
+  }
+  .collection-index-content { position: relative; }
+  /* Match the FAQ page's rhythm: heading sits a section's padding (6rem)
+     below the top and ~4rem above the content, instead of centered in a
+     half-viewport hero. */
+  .collection-index-content { --secondary-hero-pt: 6rem; }
+  .collection-index-content :global(.landscape-hero) {
+    border-bottom: 0;
+    min-height: 0;
+    padding-bottom: 1.5rem;
+  }
+  :global([data-theme="dark"]) .collection-index-content :global(section),
+  :global([data-theme="dark"]) .collection-index-content :global(.bg-gradient) {
+    background-color: transparent;
+    background-image: none;
+  }
+</style>

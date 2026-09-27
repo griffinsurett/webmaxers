@@ -7,6 +7,7 @@
  * Custom page structure should live inside each collection's _meta.mdx body.
  */
 import type { CollectionKey } from "astro:content";
+import CollectionIndexBackdrop from "./CollectionIndexBackdrop.astro";
 import SiteLayout from "@/layouts/SiteLayout.astro";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import { query } from "@/utils/query";
@@ -30,6 +31,7 @@ const {
 ---
 
 <SiteLayout {...seoProps}>
+  <CollectionIndexBackdrop>
   {
     hasContent && Content ? (
       <Content />
@@ -40,4 +42,5 @@ const {
       />
     )
   }
+  </CollectionIndexBackdrop>
 </SiteLayout>

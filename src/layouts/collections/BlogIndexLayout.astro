@@ -6,15 +6,14 @@
  * The default layout for collection index pages (e.g., /blog, /services).
  *
  * Behavior:
- * - Always shows BreadcrumbHeroCenter with title and description
- * - Uses featuredImage from _meta.mdx if provided, otherwise default
+ * - No hero: the article grid heading doubles as the page h1
  * - If MDX Content exists → Renders it
  * - If no MDX Content → Renders default grid
  */
 import type { CollectionKey } from "astro:content";
+import CollectionIndexBackdrop from "./CollectionIndexBackdrop.astro";
 import SiteLayout from "@/layouts/SiteLayout.astro";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import SecondaryHero from "@/layouts/heroes/SecondaryHero.astro";
 import { query, sortByDate } from "@/utils/query";
 import DoubleCard from "../sections/DoubleCard.astro";
 
@@ -35,20 +34,12 @@ const {
   hasContent = false,
 } = Astro.props;
 
-// Get title/description from seoProps or fall back to collectionMeta
-const pageTitle = seoProps?.title || collectionMeta?.title || "Blog";
-const pageDescription = seoProps?.description || collectionMeta?.description || "";
-const pageHeading = collectionMeta?.heading || pageTitle;
 
 ---
 
 <SiteLayout {...seoProps}>
-    <SecondaryHero
-      title={pageTitle}
-      heading={pageHeading}
-      description={pageDescription}
-    />
-
+  <CollectionIndexBackdrop>
+    {/* No hero on the index: the article grid's own heading is the page h1. */}
     {/* Content - Either custom MDX or default grid */}
     <div>
       {
@@ -61,6 +52,8 @@ const pageHeading = collectionMeta?.heading || pageTitle;
             query={query(collectionName).orderBy(sortByDate("publishDate", "desc"))}
             variant="BlogVariant"
             columns={2}
+            className="pt-24 lg:pt-24"
+            headingTag="h1"
             title="Latest Articles"
             heading={{
               before: "Stay informed.",
@@ -72,4 +65,5 @@ const pageHeading = collectionMeta?.heading || pageTitle;
     </div>
 
      <DoubleCard />
+  </CollectionIndexBackdrop>
 </SiteLayout>
