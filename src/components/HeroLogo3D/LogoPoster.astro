@@ -1,8 +1,8 @@
 ---
 import { Image } from "astro:assets";
 import poster from "@/assets/hero-logo3d-poster.png";
-interface Props { eager?: boolean; }
-const { eager = false } = Astro.props;
+interface Props { eager?: boolean; class?: string; }
+const { eager = false, class: className = "" } = Astro.props;
 ---
 <Image
   src={poster}
@@ -10,5 +10,5 @@ const { eager = false } = Astro.props;
   width={1000}
   loading={eager ? "eager" : "lazy"}
   fetchpriority={eager ? "high" : "auto"}
-  class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto max-w-none"
+  class={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-full w-auto max-w-none ${className}`}
 />

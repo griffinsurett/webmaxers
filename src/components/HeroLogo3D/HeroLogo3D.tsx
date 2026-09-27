@@ -46,6 +46,7 @@
 import { useEffect, useRef, useState, type PropsWithChildren } from "react";
 import { useMotionPreference, readMotionPreference } from "@/hooks/useMotionPreference";
 import { applyShatterToMaterial, buildShatterAttributes } from "./shatterMaterial";
+import { createMetalLook, loadSmoothNormals } from "./metalLook";
 
 const MODEL_URL = "/lotties/scroll-affected-lottie-that-breaks/logo.glb";
 
@@ -126,8 +127,11 @@ interface Props {
   contained?: boolean;
   /** Hide the root once scrolled past the range (fixed/overlapping canvases). */
   hideOnLeave?: boolean;
-  /** Selector of the element the break scrubs across (top → bottom). */
-  breakSelector?: string;
+  /**
+   * Selector of the element the break scrubs across (top → bottom). `null`
+   * turns the shatter off: the mark just turns and tilts (the closing CTA).
+   */
+  breakSelector?: string | null;
   /** Crossfade duration poster → canvas, ms. */
   fadeMs?: number;
   respectReducedMotion?: boolean;
@@ -170,6 +174,7 @@ export default function HeroLogo3D({
 
       const THREE = await import("three");
       const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+      const smooth = await loadSmoothNormals();
       if (canceled) return;
 
       const cfg = CFG;
@@ -201,25 +206,20 @@ export default function HeroLogo3D({
       const cameraZ = () => (window.innerWidth < MOBILE_BP ? BASE_Z * 2.6 : BASE_Z);
       camera.position.z = cameraZ();
 
-      const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-      keyLight.position.set(3, 5, 5);
-      scene.add(keyLight);
-      const fillLight = new THREE.DirectionalLight(0xffffff, 0.25);
-      fillLight.position.set(-3, -2, -3);
-      scene.add(fillLight);
-      scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-
       const group = new THREE.Group();
       scene.add(group);
 
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        emissive: 0xffffff,
-        emissiveIntensity: 0.12,
-        metalness: 0.05,
-        roughness: 0.9,
-        side: THREE.DoubleSide,
-      });
+      // The shared polished-metal look (material, reflections, lights, theme
+      // tones). See metalLook.ts.
+      // A theme switch must repaint even if the loop is idle.
+      const metal = await createMetalLook(THREE, renderer, scene, () => start());
+      if (canceled) {
+        metal.dispose();
+        renderer.dispose();
+        renderer.domElement.remove();
+        return;
+      }
+      const material = metal.material;
 
       const shatter = applyShatterToMaterial(material, {
         jitter: cfg.jitter,
@@ -230,7 +230,8 @@ export default function HeroLogo3D({
       });
 
       // ── Scroll range, snapshotted in absolute document pixels ──────────────
-      const trigger = document.querySelector<HTMLElement>(breakSelector);
+      // No range → progress stays 0 → the mark never breaks.
+      const trigger = breakSelector ? document.querySelector<HTMLElement>(breakSelector) : null;
       let rangeStart = 0;
       let rangeLen = 1;
 
@@ -278,6 +279,10 @@ export default function HeroLogo3D({
       let mouseY = 0;
 
       let onScreen = true;
+      // Whether the root box is in the viewport at all. The hero's box always
+      // is while it is shown; a contained mark (the CTA) sits far down the page
+      // and must not render while scrolled out of view.
+      let inView = true;
       let running = false;
       let raf = 0;
       let shown = true;
@@ -291,7 +296,7 @@ export default function HeroLogo3D({
       }
 
       function start() {
-        if (running || !onScreen || document.hidden) return;
+        if (running || !onScreen || !inView || document.hidden) return;
         running = true;
         // Reset the delta-time baseline: `last` is stale after a pause, and a
         // huge dt would jump the spin on the first frame back.
@@ -400,6 +405,13 @@ export default function HeroLogo3D({
       window.addEventListener("resize", onResize);
 
       const onVisibility = () => (document.hidden ? stop() : start());
+
+      const io = new IntersectionObserver(([entry]) => {
+        inView = entry.isIntersecting;
+        if (inView) start();
+        else stop();
+      });
+      if (rootRef.current) io.observe(rootRef.current);
       document.addEventListener("visibilitychange", onVisibility);
 
       // Late webfont/image shifts move the range; re-measure once settled.
@@ -419,8 +431,10 @@ export default function HeroLogo3D({
             if (!obj.isMesh) return;
             // Non-indexed so every triangle owns its three vertices — shards
             // must be able to fly apart independently.
-            const geom = obj.geometry.toNonIndexed();
-            geom.computeVertexNormals();
+            //
+            // Normals are CREASED, not per-face, so the ring reads as one smooth
+            // curve instead of bands (see metalLook.ts → loadSmoothNormals).
+            const geom = smooth(obj.geometry);
             const pos = geom.attributes.position;
             const faceCount = pos.count / 3;
             const original = new Float32Array(pos.array);
@@ -472,8 +486,9 @@ export default function HeroLogo3D({
         window.removeEventListener("resize", onResize);
         window.removeEventListener("load", onLoad);
         document.removeEventListener("visibilitychange", onVisibility);
+        io.disconnect();
         group.traverse((o: any) => o.isMesh && o.geometry?.dispose());
-        material.dispose();
+        metal.dispose();
         renderer.dispose();
         renderer.domElement.remove();
       };

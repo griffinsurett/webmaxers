@@ -29,13 +29,13 @@
  *
  * Positioning is yours via `class`. The break scrubs across `breakSelector`.
  */
-import SpinningLogo3D from "./SpinningLogo3D";
 import LogoPoster from "./LogoPoster.astro";
 import HeroLogo3DIsland from "./HeroLogo3D.tsx";
 import HydrateResponsive from "@/components/HydrateResponsive.astro";
 
 interface Props {
-  /** Hero keeps its scroll shatter; spin is the contained CTA variant. */
+  /** Hero keeps its scroll shatter; spin is the same mark, contained to its
+   *  box and turning only (the CTA). */
   variant?: "hero" | "spin";
   class?: string;
   /** Contained (footer box) vs full-viewport (hero). Only affects sizing. */
@@ -46,7 +46,14 @@ interface Props {
 }
 
 const { class: className = "", variant = "hero", contained, hideOnLeave, breakSelector } = Astro.props;
-const themeClass = `${className} light:opacity-40 dark:invert dark:opacity-30`;
+// Both variants are polished metal whose tone already follows the theme
+// (metalLook.ts → METAL), so they render at full strength on both themes: any
+// fade washes the black on light out to grey, and inverting would turn the
+// reflections into a negative.
+//
+// The poster is a light-grey render; darkened on dark so it hands off to the
+// dark metal mark without a bright flash.
+const posterClass = "dark:invert";
 ---
 
 {/* One responsive gate for both variants: no mobile poster or island.
@@ -55,18 +62,26 @@ const themeClass = `${className} light:opacity-40 dark:invert dark:opacity-30`;
   <Fragment slot="desktop">
     {variant === "hero" ? (
       <HeroLogo3DIsland
-        className={themeClass}
+        className={className}
         contained={contained}
         hideOnLeave={hideOnLeave}
         breakSelector={breakSelector}
         client:superIdle
       >
-        <slot><LogoPoster eager /></slot>
+        <slot><LogoPoster eager class={posterClass} /></slot>
       </HeroLogo3DIsland>
     ) : (
-      <SpinningLogo3D className={themeClass} client:visible>
-        <slot><LogoPoster /></slot>
-      </SpinningLogo3D>
+      /* The SAME island as the hero, contained to its box, with the shatter
+         off — so the CTA mark is literally the hero mark, not a copy. */
+      <HeroLogo3DIsland
+        className={className}
+        contained
+        hideOnLeave={false}
+        breakSelector={null}
+        client:visible
+      >
+        <slot><LogoPoster class={posterClass} /></slot>
+      </HeroLogo3DIsland>
     )}
   </Fragment>
 </HydrateResponsive>
