@@ -403,3 +403,94 @@ export const SHIELD = {
 } as const;
 
 export type ItemKind = "grenade" | "shield";
+
+/**
+ * BLACK HOLE — a hazard that occasionally opens on the far side of the field,
+ * drifts in toward the player's craft, and pulls it in.
+ *
+ * It is the one thing in the game the craft cannot shoot, so it tests the
+ * other skill: steering. The craft only steers vertically, so the pull is
+ * two-dimensional — it drags the craft sideways off its lane, and the player
+ * gets out by flying up or down around the well. A spring (`returnSpeed`)
+ * brings the craft back to its lane once the pull weakens.
+ *
+ * Pull is a VELOCITY added to the craft's own, never an accumulated momentum
+ * (HANDOFF §4): the same distance always pulls the same amount, so the danger
+ * is readable and cannot build up invisibly over a long run.
+ *
+ * Tuned so that:
+ *   • at the edge of `influence` the pull is barely felt;
+ *   • inside ~20% of it the pull beats the craft's full vertical speed
+ *     (0.8 x 520 ≈ 420), so flying straight at it is fatal;
+ *   • sideways, the pull beats the lane spring inside ~70% of it, so you
+ *     visibly drift toward it and have to go around.
+ *
+ * Saucers are NOT pulled. They steer around it (`avoidSpeed`) — except the rare
+ * one that blunders in (`blunderChance`), which the hole swallows.
+ */
+export const BLACK_HOLE = {
+  /** Seconds into the run before the first can appear. */
+  firstAt: 18,
+  /** Seconds between holes, randomised ±30%. */
+  interval: 24,
+  /**
+   * Longest one can stay open, including its fade in and out. It usually ends
+   * sooner, by drifting off the left edge after passing the craft.
+   */
+  lifetime: 14,
+  /** Seconds to open fully, and to close — pull scales with this. */
+  fadeIn: 1.2,
+  fadeOut: 1.4,
+  /** Where it opens, as fractions of the world width — well ahead of the craft. */
+  minX: 0.72,
+  maxX: 0.88,
+  /**
+   * px/s it drifts left, toward the craft's lane. Slower than every saucer, so
+   * it creeps in and the player has time to read the pull and get around it.
+   * From 0.8 of the width it reaches the craft's lane in ~8s.
+   */
+  approachSpeed: 95,
+  /** px/s it eases toward the craft's height — it follows, but lazily. */
+  trackSpeed: 55,
+  /**
+   * It stops following the craft's height once it is this close horizontally,
+   * and holds its line from there. Without this it could shadow a dodging
+   * craft all the way to the screen edge and pin it there — there was no way
+   * past it. Committing to a line is what makes "go around it" possible.
+   */
+  commitX: 380,
+  /** It never follows the craft closer than this fraction to the top/bottom. */
+  edgeKeepOut: 0.2,
+  /** Closes once its centre is this far past the left edge. */
+  exitX: -140,
+  /** px of travel before `exitX` over which it fades out. */
+  exitFade: 300,
+  /**
+   * Seconds it takes to collapse after swallowing the craft. One bite per
+   * hole: it used to keep chasing the respawned craft and could take every
+   * life from a single hole.
+   */
+  collapseSeconds: 0.6,
+  /** Radius (px) inside which it pulls at all. */
+  influence: 520,
+  /** Pull speed (px/s) at the core; falls off toward `influence`. */
+  pullMax: 520,
+  /** Exponent on the falloff. >1 = gentle far out, steep close in. */
+  falloffPower: 1.6,
+  /** Craft within this of the centre is swallowed — costs a life. */
+  horizon: 30,
+  /** px/s the craft is drawn back to its lane once the pull lets go. */
+  returnSpeed: 150,
+  /** Saucers start steering away inside this radius (px). */
+  avoidRadius: 320,
+  /** px/s of vertical correction a saucer applies to steer clear. */
+  avoidSpeed: 300,
+  /** Chance a saucer spawned while a hole is open ignores it and falls in. */
+  blunderChance: 0.07,
+  /** Pull speed (px/s) on a blundering saucer, inside `avoidRadius`. */
+  blunderPull: 240,
+  /** Sprite scale (texture is drawn at 160px). */
+  scale: 1.35,
+  /** Accretion ring spin, degrees per second. */
+  spinDegPerSec: 70,
+} as const;

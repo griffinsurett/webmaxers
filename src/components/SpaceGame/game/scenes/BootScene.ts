@@ -22,6 +22,8 @@ export const TEX = {
   soundOff: "tex-sound-off",
   grenadeIcon: "tex-grenade-icon",
   shieldIcon: "tex-shield-icon",
+  blackHoleCore: "tex-black-hole-core",
+  blackHoleRing: "tex-black-hole-ring",
 } as const;
 
 export class BootScene extends Phaser.Scene {
@@ -158,6 +160,50 @@ export class BootScene extends Phaser.Scene {
     g.lineTo(16, 16);
     g.strokePath();
     g.generateTexture(TEX.soundOff, 26, 24);
+
+    // ── Black hole ────────────────────────────────────────────────────────
+    // Two textures so the accretion ring can spin while the core stays still.
+    // Violet throughout, with a pale lavender edge — no yellow or orange, so it
+    // never reads as the mystery box (yellow) or a grenade blast.
+    //
+    // Core: a soft lensing glow fading inward to a true-black centre. Black,
+    // not the page background, so it still reads as a hole on a light theme.
+    const HOLE = 160;
+    const hc = HOLE / 2;
+    g.clear();
+    for (let r = hc; r > 30; r -= 3) {
+      const t = (hc - r) / (hc - 30); // 0 at the rim → 1 near the core
+      g.fillStyle(0x7c3aed, 0.035 + t * 0.05);
+      g.fillCircle(hc, hc, r);
+    }
+    g.fillStyle(0x000000, 1);
+    g.fillCircle(hc, hc, 30);
+    // The photon ring: a thin bright edge right at the horizon.
+    g.lineStyle(2, 0xe9d5ff, 0.9);
+    g.strokeCircle(hc, hc, 31);
+    g.generateTexture(TEX.blackHoleCore, HOLE, HOLE);
+
+    // Ring: a tilted accretion disc, drawn as dashed arcs so the spin is
+    // visible — a uniform ellipse looks identical at every angle.
+    g.clear();
+    for (let i = 0; i < 14; i++) {
+      const a0 = (i / 14) * Math.PI * 2;
+      const a1 = a0 + (Math.PI * 2) / 14 * 0.62;
+      const hot = i % 3 === 0;
+      g.lineStyle(hot ? 5 : 3, hot ? 0xc4b5fd : 0x8b5cf6, hot ? 0.95 : 0.6);
+      g.beginPath();
+      for (let s2 = 0; s2 <= 8; s2++) {
+        const a = a0 + ((a1 - a0) * s2) / 8;
+        const px = hc + Math.cos(a) * 58;
+        const py = hc + Math.sin(a) * 58;
+        if (s2 === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
+      }
+      g.strokePath();
+    }
+    g.lineStyle(1.5, 0xddd6fe, 0.45);
+    g.strokeCircle(hc, hc, 46);
+    g.generateTexture(TEX.blackHoleRing, HOLE, HOLE);
 
     g.destroy();
   }

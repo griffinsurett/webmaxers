@@ -22,6 +22,7 @@ import CollectionBodyLayout from "@/layouts/collections/CollectionBodyLayout.ast
   title={frontmatter.title}
   heading={frontmatter.heading}
   description={frontmatter.description}
+  contentClassName="pb-24"
 >
   <ContentRenderer
     query={query('projects').orderBy(sortByOrder())}

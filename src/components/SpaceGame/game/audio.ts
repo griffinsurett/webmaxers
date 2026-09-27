@@ -31,6 +31,8 @@ const LEVEL = {
   grenade: 0.17,
   shield: 0.11,
   uiClick: 0.06,
+  blackHole: 0.16,
+  swallow: 0.15,
   win: 0.14,
   lose: 0.14,
 } as const;
@@ -202,6 +204,17 @@ export class GameAudio {
   /** Shield raised: a rising sweep. */
   shield() {
     this.tone(330, 880, 0.28, LEVEL.shield, "triangle");
+  }
+
+  /** A black hole opens: a long, low downward rumble. */
+  blackHole() {
+    this.tone(95, 38, 1.4, LEVEL.blackHole, "sine");
+    this.burst(1.1, LEVEL.blackHole * 0.5, 400, 40);
+  }
+
+  /** Something fell in: a fast falling sweep, swallowed rather than exploded. */
+  swallow() {
+    this.tone(700, 60, 0.45, LEVEL.swallow, "sine");
   }
 
   /** UI press. */

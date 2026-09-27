@@ -27,7 +27,7 @@ import { reportPhase } from "./phase";
 import type { GameAudio } from "../audio";
 import { TiltInput } from "../tilt";
 import {
-  PLAYER, SHOT, SAUCERS, SCORING, BOX, GRENADE, SHIELD, vScale, isRotated,
+  PLAYER, SHOT, SAUCERS, SCORING, BOX, GRENADE, SHIELD, BLACK_HOLE, vScale, isRotated,
   hudScale,
   type ItemKind,
 } from "../tuning";
@@ -76,6 +76,10 @@ import {
   throwGrenade, clearGrenade, updateGrenade, type Grenade,
 } from "../entities/grenade";
 import { spawnInterval, fireScale, maxAlive, pickKind } from "../waves";
+import {
+  openBlackHole, updateBlackHole, collapseBlackHole, pullAt, distanceTo,
+  type BlackHole,
+} from "../entities/blackhole";
 
 export class PlayScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Image;
@@ -114,6 +118,10 @@ export class PlayScene extends Phaser.Scene {
   private shieldRing?: Phaser.GameObjects.Arc;
   /** The one in-flight grenade. Only one may be airborne at a time. */
   private grenade!: Grenade;
+  /** The black hole. At most one open at a time; see BLACK_HOLE in tuning. */
+  private hole!: BlackHole;
+  /** Seconds until the next black hole opens. */
+  private holeIn = 0;
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keyW!: Phaser.Input.Keyboard.Key;
@@ -203,6 +211,7 @@ export class PlayScene extends Phaser.Scene {
     this.held = { grenade: 0, shield: 0 };
     this.boxIn = BOX.interval * 0.6;
     this.spawnIn = 1.2;
+    this.holeIn = BLACK_HOLE.firstAt;
     this.shieldRing?.destroy();
     this.shieldRing = undefined;
 
@@ -221,6 +230,19 @@ export class PlayScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor(p.int.bg);
     this.stars = createStarfield(this);
+
+    // Created before the craft and saucers so it draws BEHIND them — they fly
+    // over the well, which is what makes the pull read as depth.
+    this.hole = {
+      core: this.add.image(0, 0, TEX.blackHoleCore).setVisible(false).setActive(false),
+      ring: this.add.image(0, 0, TEX.blackHoleRing).setVisible(false).setActive(false),
+      active: false,
+      x: 0,
+      y: 0,
+      age: 0,
+      strength: 0,
+      collapseIn: null,
+    };
 
     this.player = this.add
       .image(width * PLAYER.x, height / 2, TEX.player)
@@ -246,6 +268,7 @@ export class PlayScene extends Phaser.Scene {
       age: 0,
       phase: 0,
       fireIn: Infinity,
+      blunder: false,
     }));
 
     this.boxes = new Pool<Box>(BOX.poolSize, () => ({
@@ -1067,6 +1090,7 @@ export class PlayScene extends Phaser.Scene {
     this.syncClock();
 
     updateStarfield(this, this.stars, dt);
+    this.updateBlackHoleCycle(dt, width, height);
     this.updatePlayer(dt, height);
     this.updateFiring(dt, p.int.shot);
     this.updateWaves(dt, width, height, p.int.alien, p.int.danger);
@@ -1113,14 +1137,34 @@ export class PlayScene extends Phaser.Scene {
         : Phaser.Math.Clamp(diff * 8, -speed, speed);
     }
 
+    // ── Black hole pull ───────────────────────────────────────────────────
+    // Added to the craft's own velocity, never integrated into momentum, so
+    // the same spot always pulls the same amount. Sideways it drags the craft
+    // off its lane; the lane spring below wins once the pull weakens.
+    const pull = pullAt(
+      this.hole,
+      this.player.x,
+      this.player.y,
+      BLACK_HOLE.pullMax,
+      BLACK_HOLE.influence,
+    );
+    const homeX = this.scale.width * PLAYER.x;
+    const backToLane = Phaser.Math.Clamp(
+      homeX - this.player.x,
+      -BLACK_HOLE.returnSpeed * dt,
+      BLACK_HOLE.returnSpeed * dt,
+    );
+    this.player.x += pull.vx * dt + backToLane;
+
     this.player.y = Phaser.Math.Clamp(
-      this.player.y + vy * dt,
+      this.player.y + (vy + pull.vy) * dt,
       margin,
       height - margin,
     );
 
-    // Bank into travel — bounded function of current velocity.
-    this.player.setAngle((vy / speed) * 12);
+    // Bank into travel — bounded function of current velocity. Clamped because
+    // the pull can push the combined speed past the craft's own.
+    this.player.setAngle(Phaser.Math.Clamp((vy + pull.vy) / speed, -1.5, 1.5) * 12);
 
     // Invulnerability: blink is sin of the remaining time, so it is bounded and
     // ends exactly when the timer does.
@@ -1214,7 +1258,10 @@ export class PlayScene extends Phaser.Scene {
           Math.round((PLAYER.margin + 30) * vScale()),
           Math.round(height - (PLAYER.margin + 30) * vScale()),
         );
-        spawnSaucer(s, kind, width + 40, y, alienTint);
+        // The blunder is rolled only while a hole is open — a saucer spawned
+        // with no hole around has nothing to blunder into.
+        const blunder = this.hole.active && Math.random() < BLACK_HOLE.blunderChance;
+        spawnSaucer(s, kind, width + 40, y, alienTint, blunder);
       }
       this.spawnIn = spawnInterval(this.elapsed);
     }
@@ -1223,6 +1270,7 @@ export class PlayScene extends Phaser.Scene {
 
     this.saucers.forEachActive((s) => {
       const wantsFire = updateSaucer(s, dt, this.player.y, scale);
+      if (this.hole.active && this.steerAroundHole(s, dt)) return;
 
       if (wantsFire) {
         const b = this.alienShots.get();
@@ -1525,6 +1573,19 @@ export class PlayScene extends Phaser.Scene {
       }
     });
 
+    // Swallowed by the black hole. Checked BEFORE the immunity return below,
+    // because the shield does not stop gravity — it stops bullets and rams. A
+    // shielded craft that flies into the hole is still lost. Only the brief
+    // respawn window protects, so a craft is never swallowed twice in a row.
+    if (
+      this.hole.active &&
+      this.invuln <= 0 &&
+      distanceTo(this.hole, this.player.x, this.player.y) < BLACK_HOLE.horizon
+    ) {
+      this.swallowPlayer(p);
+      return;
+    }
+
     // The shield makes the player immune exactly as respawn invulnerability
     // does — one check covers both so they can never disagree.
     if (this.invuln > 0 || this.shieldFor > 0) return;
@@ -1557,6 +1618,117 @@ export class PlayScene extends Phaser.Scene {
         this.hitPlayer(p);
       }
     });
+  }
+
+  // ── Black hole ──────────────────────────────────────────────────────────
+
+  /** Open, run and close the black hole on its own timer. */
+  private updateBlackHoleCycle(dt: number, width: number, height: number) {
+    if (this.hole.active) {
+      if (!updateBlackHole(this.hole, dt, this.player.x, this.player.y, height)) {
+        this.holeIn = BLACK_HOLE.interval * (0.7 + Math.random() * 0.6);
+      }
+      return;
+    }
+
+    this.holeIn -= dt;
+    if (this.holeIn > 0) return;
+
+    // Opens well ahead of the craft, then drifts in toward it (see
+    // updateBlackHole). Clear of the top and bottom so it can always be flown
+    // around on at least one side.
+    const k = vScale();
+    const x = Phaser.Math.Between(
+      Math.round(width * BLACK_HOLE.minX),
+      Math.round(width * BLACK_HOLE.maxX),
+    );
+    const y = Phaser.Math.Between(
+      Math.round(height * 0.22),
+      Math.round(height * 0.78),
+    );
+    openBlackHole(this.hole, x, y);
+    this.audio.blackHole();
+    this.cameras.main.shake(400, 0.003 / Math.max(1, k * 0.5));
+    this.flashBanner("BLACK HOLE", 900);
+  }
+
+  /**
+   * Keep a saucer out of the well. Returns true if the hole swallowed it, so
+   * the caller skips its firing and escape checks.
+   *
+   * Saucers are never PULLED by the hole — they steer. A normal saucer eases
+   * its lane away from the hole's centre while it is close; a blundering one
+   * (rare, rolled at spawn) fails to, is drawn in, and is swallowed. Neither
+   * scores nor costs anything: the hole took it, not the player.
+   */
+  private steerAroundHole(s: Saucer, dt: number): boolean {
+    const h = this.hole;
+    const k = vScale();
+
+    if (s.blunder) {
+      const pull = pullAt(h, s.img.x, s.img.y, BLACK_HOLE.blunderPull, BLACK_HOLE.avoidRadius);
+      s.img.x += pull.vx * dt;
+      s.baseY += pull.vy * dt;
+      s.img.y += pull.vy * dt;
+      if (pull.dist < BLACK_HOLE.horizon) {
+        this.swallowSaucer(s);
+        return true;
+      }
+      return false;
+    }
+
+    const dx = s.img.x - h.x;
+    const dy = (s.img.y - h.y) / k;
+    const dist = Math.hypot(dx, dy);
+    if (dist >= BLACK_HOLE.avoidRadius) return false;
+
+    // Push directly away vertically, harder the closer it is. Pick a side when
+    // it is dead centre so it never stalls on the line.
+    const side = dy === 0 ? (s.phase > Math.PI ? 1 : -1) : Math.sign(dy);
+    const push = BLACK_HOLE.avoidSpeed * k * (1 - dist / BLACK_HOLE.avoidRadius) * h.strength;
+    const margin = (PLAYER.margin + 20) * k;
+    s.baseY = Phaser.Math.Clamp(s.baseY + side * push * dt, margin, this.scale.height - margin);
+    s.img.y = Phaser.Math.Clamp(s.img.y + side * push * dt, margin, this.scale.height - margin);
+    return false;
+  }
+
+  /** A saucer fell in. Spiral it into the centre, then retire it. */
+  private swallowSaucer(s: Saucer) {
+    const ghost = this.add
+      .image(s.img.x, s.img.y, TEX.saucer)
+      .setScale(s.img.scaleX)
+      .setTint(s.img.tintTopLeft)
+      .setDepth(1);
+    despawnSaucer(s);
+    this.audio.swallow();
+    this.tweens.add({
+      targets: ghost,
+      x: this.hole.x,
+      y: this.hole.y,
+      scale: 0,
+      angle: 540,
+      duration: 420,
+      ease: "Cubic.easeIn",
+      onComplete: () => ghost.destroy(),
+    });
+  }
+
+  /**
+   * The craft crossed the horizon. Costs a life like any hit, then puts the
+   * craft back on its lane on whichever edge is further from the hole, so the
+   * respawn is not straight back into the well.
+   */
+  private swallowPlayer(p: ReturnType<typeof getPalette>) {
+    this.audio.swallow();
+    // One bite per hole — it collapses rather than chasing the respawn.
+    collapseBlackHole(this.hole);
+    this.hitPlayer(p);
+    if (this.over) return;
+
+    const margin = PLAYER.margin * vScale();
+    const safeY = this.hole.y > this.scale.height / 2 ? margin * 3 : this.scale.height - margin * 3;
+    this.player.setPosition(this.scale.width * PLAYER.x, safeY);
+    this.flashBanner("SWALLOWED", 700);
   }
 
   private hitPlayer(p: ReturnType<typeof getPalette>) {

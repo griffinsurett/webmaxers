@@ -8,7 +8,7 @@ import { Image } from "astro:assets";
 import { siteData } from "@/content/siteData";
 import Marquee from "@/components/Marquee.astro";
 import BackgroundMedia from "@/components/BackgroundMedia.astro";
-import { sortByOrder } from "@/utils/query";
+import { query, sortByOrder } from "@/utils/query";
 import { byTag } from "@/utils/query/snippets";
 import aboutExpandImage from "@/assets/meoncomp.png";
 import aboutPortraitImage from "@/assets/me-on-computer-office.png";
@@ -39,13 +39,11 @@ interface Props {
   /** Show the stat counters (bottom-left on desktop). */
   showStats?: boolean;
   /** The stats rendered when `showStats` is on. Each item is a plain record read
-      by AboutStatsVariant (value / prefix / suffix / decimals / title). */
+      by AboutStatsVariant (value / prefix / suffix / decimals / title). When
+      omitted, every entry in the `stats` collection is shown, in order — so
+      adding a stat there adds it here with no code change. */
   stats?: Array<Record<string, any>>;
 }
-
-const DEFAULT_STATS: Array<Record<string, any>> = [
-  { value: 7, suffix: "+", title: "Years of Experience" },
-];
 
 const {
   id,
@@ -68,7 +66,7 @@ const {
   // light, 0.97 too dark), text stays well past WCAG AA.
   expandOverlayOpacity = 0.88,
   showStats = false,
-  stats = DEFAULT_STATS,
+  stats,
 } = Astro.props;
 
 const words = splitTextIntoAnimatedWords(statement);
@@ -112,7 +110,7 @@ const hasExpandSlot = Astro.slots.has("expand-content");
                   data-about-word-progress
                 >
                   <span class="about-word-layer about-word-layer--base">{word.word}</span>
-                  <span class="about-word-layer about-word-layer--overlay">{word.word}</span>
+                  <span class="about-word-layer about-word-layer--overlay text-halo">{word.word}</span>
                 </span>
                 {!word.isLast && <span class="about-space" aria-hidden="true"> </span>}
               </>
@@ -125,7 +123,9 @@ const hasExpandSlot = Astro.slots.has("expand-content");
         {showStats && (
           <ContentRenderer
             id="about-metrics-section"
-            items={stats}
+            {...(stats
+              ? { items: stats }
+              : { query: query("stats").orderBy(sortByOrder()), showHeadingSection: false })}
             variant="AboutStatsVariant"
             className="about-stats"
           />

@@ -383,6 +383,18 @@ body {
   @apply dark:text-primary-light light:text-primary-dark;
 }
 
+/* A soft halo in the page background colour, for text that sits over the 3D
+   mark. The mark and the text share a colour on both themes (white on dark,
+   black on light), so a shadow of the page colour is what cuts the letters out
+   of it. Invisible over plain background. Only on text with an opaque fill — on
+   translucent text the halo shows through the glyphs. */
+@utility text-halo {
+  text-shadow:
+    0 0 2px var(--color-bg),
+    0 0 10px var(--color-bg),
+    0 0 28px color-mix(in srgb, var(--color-bg) 80%, transparent);
+}
+
 @utility logo-class {
   @apply light:invert;
 }

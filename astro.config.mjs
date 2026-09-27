@@ -11,6 +11,7 @@ import iconGeneratorIntegration from "./src/integrations/icons/icon-generator.in
 import clientDirectivesIntegration from "./src/integrations/client-directives/client-directives.integration.mjs";
 import conditionalPartytown from "./src/integrations/partytown/partytown.integration.mjs";
 import robotsLlmsIntegration from "./src/integrations/robots-llms/robots-llms.integration.ts";
+import videoThumbnailsIntegration from "./src/integrations/video-thumbnails/video-thumbnails.integration.ts";
 // Chatbot knowledge-base generator (feeds the API-connected ChatBot). Must stay
 // enabled: /api/chat imports the file it writes, so leaving it off freezes the
 // KB (and its site name/URLs) at whatever was last committed.
@@ -87,6 +88,7 @@ export default defineConfig({
     sitemap({ lastmod: new Date() }),
     conditionalPartytown(),
     robotsLlmsIntegration(),
+    videoThumbnailsIntegration(),
     chatbotKbIntegration(),
     {
       name: "background-sync",

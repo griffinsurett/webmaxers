@@ -3,6 +3,7 @@
 import { ctaData } from "@/content/siteData";
 import ScrollIndicator from "@/components/ScrollIndicator.astro";
 import HeroActions from "@/components/HeroActions.astro";
+import HeroQuoteCard from "@/components/HeroQuoteCard.astro";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import { query, sortByOrder } from "@/utils/query";
 
@@ -34,13 +35,13 @@ const {
 } = Astro.props;
 ---
 
-{/* Mobile runs taller than one viewport (112svh) so the stacked headline → copy
-    → CTAs → circles column has room to breathe instead of being squeezed to fit,
-    and the extra height signals there's more page below. lg+ stays exactly one
-    viewport, where the layout pins its rows top and bottom. */}
+{/* Mobile: the headline → copy → CTAs → circles block fills the first screen
+    on its own (see the top row), and the quote card + stats follow BELOW it, so
+    the section is as tall as its content. lg+ stays exactly one viewport, where
+    the layout pins its rows top and bottom. */}
 <section
   id={id}
-  class="relative w-full section-container min-h-[112svh] lg:min-h-svh flex flex-col hero-gap-py"
+  class="relative w-full section-container lg:min-h-svh flex flex-col hero-gap-py"
 >
 
   <!-- Hero body. Mobile: the whole stack is vertically CENTRED (left-aligned
@@ -53,7 +54,10 @@ const {
          fill everything above the scroll arrow and centres its own content, so
          the headline sits optically centred rather than leaving a large gap
          underneath. lg+: back to a natural-height block at the hero's top. -->
-    <div class="flex flex-1 items-center justify-between gap-8 w-full lg:flex-none lg:items-start">
+    {/* Mobile: exactly one screen tall (100svh less the header clearance the
+        section already pads), content centred, with the scroll arrow at its
+        foot — so the quote card and stats start below the fold. */}
+    <div class="hero-first-screen relative flex flex-1 items-center justify-between gap-8 w-full pb-20 lg:pb-0 lg:min-h-0 lg:flex-none lg:items-start">
 
       <!-- Left: headline (+ CTA on desktop). Children spaced by a flex gap
            rather than per-element top margins. -->
@@ -62,7 +66,7 @@ const {
       <div class="w-full lg:w-auto lg:max-w-3xl lg:pt-28 flex flex-col gap-2 text-left">
         {/* Hero headline. heading-display sets the desktop clamp; on mobile we
             override to a smaller size so it doesn't dominate the viewport. */}
-        <h1 class="heading-display text-[2.85rem]! sm:text-[2.75rem]! md:text-[clamp(2.8rem,6.5vw,6rem)]!">
+        <h1 class="heading-display text-halo text-[2.85rem]! sm:text-[2.75rem]! md:text-[clamp(2.8rem,6.5vw,6rem)]!">
           {headline}<br />{headlineLine2}
         </h1>
 
@@ -72,7 +76,7 @@ const {
             here was measured against the VIEWPORT while the row is already inset
             by the section's 24px side padding, so it could never fill the row —
             it left ~46px of dead space on the right at 375px.) */}
-        <p class="text-base lg:text-lg leading-relaxed text-text lg:max-w-xl lg:mt-4">
+        <p class="text-base lg:text-lg leading-relaxed text-text text-halo lg:max-w-xl lg:mt-4">
           {bodyText || statDescription}
         </p>
 
@@ -93,13 +97,17 @@ const {
         />
 
       </div>
+
+      {/* Mobile scroll arrow, at the foot of the first screen. The lg+ one
+          lives in the bottom row. */}
+      <ScrollIndicator href={scrollTarget} className="lg:hidden bottom-6!" />
     </div>
 
     <!-- Bottom row — pinned to the bottom of the hero by the parent's
-         justify-between. Mobile: only the scroll arrow (CTAs + circles live up
-         under the headline; stats hidden). lg+: [circles] [scroll arrow centred]
-         [stat box]. -->
-    <div class="flex flex-col gap-10 mt-auto lg:mt-0 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center w-full">
+         justify-between. Mobile: just the quote card and stats, below the
+         first screen (CTAs + circles live up under the headline). lg+:
+         [circles] [scroll arrow centred] [quote card + stats]. -->
+    <div class="flex flex-col gap-10 mt-auto pb-16 lg:pb-0 lg:mt-0 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-end w-full">
       <!-- Desktop only: testimonial circles pinned bottom-left. -->
       <ContentRenderer
         query={query("testimonials")
@@ -114,23 +122,29 @@ const {
         counterLabel="Happy Clients"
       />
 
-      <!-- Equal-width outer columns keep the arrow at the hero's true center;
-           all three desktop elements share the same vertical alignment. -->
+      <!-- Equal-width outer columns keep the arrow at the hero's true center.
+           The row is bottom-aligned (items-end), not centred: the right column
+           is taller now that it holds the quote card, and centring lifted the
+           circles and arrow up off the bottom edge. -->
       <ScrollIndicator
         href={scrollTarget}
-        className="order-last lg:order-none self-center mb-2 lg:mb-0 relative bottom-auto left-auto translate-x-0 static-in-row"
+        className="hidden lg:block self-center relative bottom-auto left-auto translate-x-0 static-in-row"
       />
 
-      <!-- Stats — DESKTOP bottom-right only, stacked like the CTA section's.
-           Hidden on mobile (the same stats reappear in the About section). The
-           wrapper carries the visibility: the variant's own scoped `display:
-           flex` would beat a `hidden` utility put on the list itself. -->
-      <div class="hidden lg:block shrink-0 lg:justify-self-end">
+      <!-- Quote card + stats, bottom-right on lg+. Modelled on the Hymanson
+           Law hero: the quote card sits directly above the stats. Shown on
+           mobile too (above the scroll arrow, which is order-last there), so
+           the stats are no longer desktop-only. -->
+      <div class="shrink-0 w-full max-w-[28rem] lg:w-[28rem] lg:justify-self-end flex flex-col gap-6 lg:gap-4">
+        <HeroQuoteCard />
+        {/* Side by side under the card on lg+, as on Hymanson. nowrap because
+            the column is only just wide enough — wrapping stacked them and made
+            the row tall enough to push the hero past the viewport. */}
         <ContentRenderer
           query={query("stats").orderBy(sortByOrder())}
           variant="AboutStatsVariant"
           showHeadingSection={false}
-          stacked
+          className="lg:flex-nowrap!"
         />
       </div>
     </div>
@@ -143,6 +157,17 @@ const {
   /* The hero fills the viewport under the fixed header, and its bottom row is
      pinned to the bottom edge with the SAME vertical padding the header uses for
      its own row (py-2), so the top and bottom edges read as symmetrical. */
+  /* Mobile first screen: 100svh less the header clearance the section pads
+     above it. lg+ goes back to a natural-height block. */
+  .hero-first-screen {
+    min-height: calc(100svh - var(--site-header-height, 3.8rem));
+  }
+  @media (min-width: 64rem) {
+    .hero-first-screen {
+      min-height: 0;
+    }
+  }
+
   .hero-gap-py {
     padding-top: var(--site-header-height, 3.8rem);
     padding-bottom: 0.5rem; /* matches the header's py-2 */

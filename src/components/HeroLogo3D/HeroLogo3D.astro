@@ -51,9 +51,9 @@ const { class: className = "", variant = "hero", contained, hideOnLeave, breakSe
 // fade washes the black on light out to grey, and inverting would turn the
 // reflections into a negative.
 //
-// The poster is a light-grey render; darkened on dark so it hands off to the
-// dark metal mark without a bright flash.
-const posterClass = "dark:invert";
+// The poster is a light-grey render, which already hands off to the white
+// metal mark on dark without a flash, so it is no longer inverted there.
+const posterClass = "";
 ---
 
 {/* One responsive gate for both variants: no mobile poster or island.

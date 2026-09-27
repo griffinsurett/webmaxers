@@ -20,13 +20,12 @@
  */
 
 /**
- * Contrast against the page, not a fixed tone: on the near-black dark
- * background (#080808) a black mark disappears, so it goes up to gunmetal with
- * stronger reflections; on the near-white light background it goes down to
- * deep black metal.
+ * Mirror images of each other: white metal on the near-black dark background
+ * (#080808), deep black metal on the near-white light one. Gunmetal was tried
+ * on dark and read as silver — mid-grey sitting between the two.
  */
 const METAL = {
-  dark: { color: 0x45484e, env: 0.6 },
+  dark: { color: 0xf4f5f7, env: 1.4 },
   light: { color: 0x08090a, env: 0.4 },
 };
 

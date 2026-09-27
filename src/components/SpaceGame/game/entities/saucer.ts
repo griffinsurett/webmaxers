@@ -30,6 +30,11 @@ export interface Saucer {
   phase: number;
   /** Seconds until it may fire again. */
   fireIn: number;
+  /**
+   * True for the rare saucer that ignores an open black hole instead of
+   * steering around it — and so gets swallowed. Rolled at spawn.
+   */
+  blunder: boolean;
 }
 
 /** Put a pooled saucer into play. */
@@ -39,8 +44,10 @@ export function spawnSaucer(
   x: number,
   y: number,
   tint: number,
+  blunder = false,
 ) {
   const def = SAUCERS[kind];
+  s.blunder = blunder;
   s.kind = kind;
   s.active = true;
   s.hp = def.hp;
