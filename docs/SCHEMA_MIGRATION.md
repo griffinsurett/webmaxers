@@ -1,8 +1,9 @@
 # Webmaxxers schema migration — 2026-09-29
 
-Status: shared port, local build, baseline comparison and Schema.org validation
-pass. Browser interaction and production verification are still pending.
-Do not call the site complete until those checks are recorded below.
+Status: implementation `0a88d7f9` is pushed to main and deployed. Local build,
+baseline comparison, Schema.org validation and automated production checks pass.
+**Final carousel interaction QA remains pending.** Do not call the site complete or
+start the next migration until that gate is resolved.
 
 ## Source and scope
 
@@ -13,9 +14,8 @@ older deployed commit. Source, existing output and the fresh baseline build
 were saved under `/tmp/webmaxxers-schema-baseline-20260929`; no environment files
 or bypass credentials were copied.
 
-Inherit Greastro's tested `c71c801` runtime plus the tested ContentBridge description
-opt-in discovered during this port. Its earlier documentation checkpoint
-is `71686d5`. Checksums for 29 inherited files are in
+Inherit Greastro's tested `70f377c` runtime, including the ContentBridge
+description opt-in discovered during this port. Checksums for 29 inherited files are in
 [schema-validation/webmaxxers-2026-09-29.json](schema-validation/webmaxxers-2026-09-29.json).
 Only `layoutUtils.ts` differs in trailing whitespace; runtime behavior matches.
 
@@ -72,6 +72,7 @@ Commands from this repository:
 TZ=UTC npm run build
 ./node_modules/.bin/astro check
 python3 ../greastro/tests/schema-output.py .
+python3 tests/schema-faq-output.py
 ```
 
 Typecheck remains a known deferred failure, not a clean check. Use a static
@@ -95,14 +96,47 @@ forms, chat messages or sync jobs as part of schema verification.
   AGENTS.md for the shared helper and the actual integration inventory. The
   reusable new-repository runbook is `../greastro/docs/VERCEL_SETUP.md`.
 
-## Remaining release gates
+## Production verification
 
-1. Browser: FAQ open/close and rendered MDX; all four testimonial slides, including
-   the three reviews absent from the initially rendered slide.
-2. Commit/push reviewed source; verify the production deployment's schema,
-   content, routes, generated crawler files and security headers against the build.
-3. Verify both approved keys on the protected deployment and negative access
-   without a valid key. Record anonymous crawler behavior separately.
+Vercel deployment `dpl_8yyCAHvWVDqHd8hY3Z15M5ZCJPVX` is Ready at
+`https://webmaxxers.com`, serving main commit `0a88d7f9`.
 
-Chrome interaction attempts were interrupted by concurrent user activity; they
-are not counted as failed bypass tests or completed browser checks.
+- All **21 automated checks** passed after accounting for the existing contact
+  form environment difference below. Twelve live HTML pages / 14 JSON-LD blocks
+  match the tested build, including canonicals, text, links, images, metadata and
+  external scripts. CSP headers are present. The image comparison removes only
+  the exact Vercel deployment-ID query suffix.
+- The live FAQ has all 22 questions; each schema answer matches its displayed
+  bridge answer. All four review quotes appear in the carousel's serialized data.
+  This does not substitute for testing the later slides interactively.
+- Author, disabled capability and temporary QA routes return 404. Crawler files
+  match generated output, and all three sitemap endpoints parse successfully.
+- Local `PUBLIC_FORMSPREE_CONTACT_ID` differs from production. The live form action
+  matches the pre-migration deployment `dpl_2DAghEVYqEdDyMCjMat4MvFUkBbv`; no form
+  destination changed in this migration. No form submission was made.
+- Both approved Claude/Codex keys return real HTML on the protected immutable
+  deployment. Missing/invalid credentials redirect to Vercel login (302).
+  No bypass credentials or protection settings were changed.
+- Anonymous homepage, FAQ and robots requests each returned 200 with expected
+  content and no challenge in this check. This is a point-in-time observation,
+  not a guarantee of unrestricted crawler access.
+- The fully merged local `feat/schema-system` branch was removed. Other branches
+  are untouched. Repository hosting and integration records are in AGENTS.md.
+
+See the compact production and deployment-access JSON records in
+`docs/schema-validation/` for each check.
+
+## Remaining release gate
+
+Chrome checks on the deployed FAQ passed: description-only answers open, Space
+collapses the focused answer, and the hosting FAQ displays both its introduction
+and complete MDX body. The prior answer closes when another opens. No form or
+chat submission was made.
+
+The carousel responds to selecting Kenn Faria in the accessibility tree, but
+all four slides have not been visually verified. Concurrent browser activity
+interrupted the check, followed by `noWindowsAvailable`. This is not a failed
+Vercel bypass test. A brief uninterrupted browser window was requested. Keep
+the carousel gate pending until actually checked.
+Do not move to Certified Bag Chasers yet. The deferred type-error reminder stays
+scheduled for completion of the whole standalone and multisite rollout.

@@ -1,0 +1,32 @@
+{
+  "deploymentId": "dpl_8yyCAHvWVDqHd8hY3Z15M5ZCJPVX",
+  "commit": "0a88d7f95b04ed6bf4d1ca5f1921b8157d22ce40",
+  "host": "webmaxxers-n7xb7owvs-griffinjoshs-projects.vercel.app",
+  "readyState": "READY",
+  "checks": [
+    {
+      "agent": "codex",
+      "status": 200,
+      "realHtml": true,
+      "passed": true
+    },
+    {
+      "agent": "claude",
+      "status": 200,
+      "realHtml": true,
+      "passed": true
+    },
+    {
+      "credential": "missing",
+      "status": 302,
+      "redirectsToVercelLogin": true,
+      "passed": true
+    },
+    {
+      "credential": "invalid",
+      "status": 302,
+      "redirectsToVercelLogin": true,
+      "passed": true
+    }
+  ]
+}

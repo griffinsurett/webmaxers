@@ -1,5 +1,6 @@
 """Check that every displayed custom FAQ answer participates in the built graph."""
 import json
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -62,7 +63,7 @@ def plain(markup):
     return " ".join(" ".join(parts).split())
 
 
-page = Page(Path("dist/client/faq/index.html").read_text())
+page = Page(Path(sys.argv[1] if len(sys.argv) > 1 else "dist/client/faq/index.html").read_text())
 faqs = [node for node in page.graphs if node.get("@type") == "FAQPage"]
 assert len(faqs) == 1, "Expected one collected FAQPage"
 questions = faqs[0]["mainEntity"]

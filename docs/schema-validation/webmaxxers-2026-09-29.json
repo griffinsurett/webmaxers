@@ -1,6 +1,6 @@
 {
   "date": "2026-09-29",
-  "template_checkpoint": "Greastro c71c801 plus tested ContentBridge description opt-in (current migration)",
+  "template_checkpoint": "Greastro 70f377c",
   "baseline_commit": "9cdb1721",
   "comparison_baseline": "working tree captured before this port, including earlier partial schema/type work",
   "inherited_files": {
@@ -217,14 +217,26 @@
     ]
   },
   "browser": {
-    "status": "pending",
-    "required": [
-      "FAQ open/close and rendered answer",
-      "all four testimonial slides"
-    ]
+    "status": "live FAQ passed; carousel completion pending",
+    "origin": "https://webmaxxers.com",
+    "faq_checks": [
+      "description-only answer opens",
+      "Space collapses focused answer",
+      "hosting introduction and complete MDX body display together",
+      "previous answer closes on switching"
+    ],
+    "carousel": "Kenn Faria selection changes rendered quote/attribution in accessibility tree; complete visible-slide review interrupted by concurrent Chrome activity/noWindowsAvailable.",
+    "remaining": [
+      "visually verify all four testimonial slides"
+    ],
+    "no_submissions": true
   },
   "production": {
-    "status": "pending"
+    "status": "automated checks and live FAQ passed; final carousel gate pending",
+    "deploymentId": "dpl_8yyCAHvWVDqHd8hY3Z15M5ZCJPVX",
+    "commit": "0a88d7f9",
+    "checks": 21,
+    "errors": 0
   },
   "faq_completeness": {
     "questions_before": 1,

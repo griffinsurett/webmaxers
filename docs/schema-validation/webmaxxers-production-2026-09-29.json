@@ -1,0 +1,193 @@
+{
+  "origin": "https://webmaxxers.com",
+  "deploymentId": "dpl_8yyCAHvWVDqHd8hY3Z15M5ZCJPVX",
+  "imageNormalization": "Only the exact Vercel deployment query suffix is removed; asset paths and alt text must match.",
+  "checks": [
+    {
+      "path": "/",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 2,
+      "csp_present": true
+    },
+    {
+      "path": "/faq",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 2,
+      "csp_present": true
+    },
+    {
+      "path": "/projects",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/contact-us",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true,
+      "known_environment_difference": "Only the contact form action differs: local and production PUBLIC_FORMSPREE_CONTACT_ID values differ. Live action matches the pre-migration production deployment."
+    },
+    {
+      "path": "/blog",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/blog/why-website-speed-matters",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/blog/what-are-llms-txt-files",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/privacy-policy",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/cookie-policy",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/terms-of-service",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/links",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/game",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "jsonld_blocks": 1,
+      "csp_present": true
+    },
+    {
+      "path": "/authors/griffin-surett",
+      "expected": 404,
+      "status": 404,
+      "errors": []
+    },
+    {
+      "path": "/capabilities/web-design",
+      "expected": 404,
+      "status": 404,
+      "errors": []
+    },
+    {
+      "path": "/schema-capability-qa",
+      "expected": 404,
+      "status": 404,
+      "errors": []
+    },
+    {
+      "path": "/robots.txt",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "matches_local": true
+    },
+    {
+      "path": "/llms.txt",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "matches_local": true
+    },
+    {
+      "path": "/llms-full.txt",
+      "expected": 200,
+      "status": 200,
+      "errors": [],
+      "matches_local": true
+    },
+    {
+      "path": "/sitemap.xml",
+      "expected": 200,
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/sitemap-index.xml",
+      "expected": 200,
+      "status": 200,
+      "errors": []
+    },
+    {
+      "path": "/sitemap-0.xml",
+      "expected": 200,
+      "status": 200,
+      "errors": []
+    }
+  ],
+  "errors": 0,
+  "form_environment_verification": {
+    "previous_deployment": "dpl_2DAghEVYqEdDyMCjMat4MvFUkBbv",
+    "current_deployment": "dpl_8yyCAHvWVDqHd8hY3Z15M5ZCJPVX",
+    "production_form_actions_unchanged": true,
+    "form_count": 1,
+    "note": "Local PUBLIC_FORMSPREE_CONTACT_ID differs from production; production endpoint is unchanged from the pre-migration deployment."
+  },
+  "public_requests": [
+    {
+      "path": "/",
+      "status": 200,
+      "challenge": false,
+      "expected_content": true
+    },
+    {
+      "path": "/faq",
+      "status": 200,
+      "challenge": false,
+      "expected_content": true
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "challenge": false,
+      "expected_content": true
+    }
+  ],
+  "live_faq_coverage": {
+    "questions": 22,
+    "displayed_answers_match": true
+  }
+}
