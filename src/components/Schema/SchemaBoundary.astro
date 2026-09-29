@@ -1,9 +1,16 @@
 ---
 import { collectedSections } from '@/utils/schema/collector';
+import { getBreadcrumbTrails, normalizeBreadcrumbs } from '@/utils/breadcrumbs';
+import { getPageCanonicalUrl } from '@/utils/seo';
+import { buildBreadcrumbSchema } from '@/utils/schema/breadcrumbSchema';
 import JsonLd from './JsonLd.astro';
 // Await the complete body (including nested MDX, header and footer) before emission.
 const html = await Astro.slots.render('default');
-const nodes = collectedSections(Astro.locals);
+const canonicalUrl = getPageCanonicalUrl(Astro.locals, Astro.url.pathname);
+const breadcrumbs = (await getBreadcrumbTrails(Astro.locals))
+  .map((items) => buildBreadcrumbSchema(normalizeBreadcrumbs(items, canonicalUrl)))
+  .filter(Boolean);
+const nodes = [...collectedSections(Astro.locals), ...breadcrumbs];
 ---
 <Fragment set:html={html} />
 {nodes.length > 0 && <JsonLd schema={{ '@context': 'https://schema.org', '@graph': nodes }} />}

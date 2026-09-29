@@ -1,0 +1,46 @@
+{
+  "date": "2026-09-29",
+  "change": "Shared breadcrumb navigation for UI and structured data",
+  "status": "Local release checks passed; deployment verification pending",
+  "baseCommit": "32ea32d9069362341509add3aa46ec2f42dc7106",
+  "builtOutput": {
+    "pages": 13,
+    "breadcrumbSchemas": 12,
+    "visibleBreadcrumbs": 2,
+    "errors": []
+  },
+  "typecheck": {
+    "errors": 53,
+    "warnings": 0,
+    "hints": 101
+  },
+  "externalValidation": {
+    "project": "webmaxxers",
+    "errors": 0,
+    "warnings": 0,
+    "objects": 2
+  },
+  "sourceSha256": {
+    "src/components/Schema/SchemaBoundary.astro": "e3856c36e1d69f926241159b10e66e10ff6c13fb34b8982860bdbc42e30aa43b",
+    "src/layouts/BaseLayout.astro": "80603af6082239529d9ff6d052d882b1b984544d88d981ca68a65552b9a3d954",
+    "src/layouts/SEO.astro": "5298f0b54b9839b5d6047bb12a3f8cf07348c807ac4f9e9a1c98f0ea15905f69",
+    "src/layouts/collections/BlogLayout.astro": "d2c189d2a2da5d11d50054685262f217e53c80b68a5d1a00b183f68056a9d048",
+    "src/layouts/collections/CapabilityBodyLayout.astro": "1803616763944a351e5fa2a6e7efbf09d4cfd411113d0707f599fbcda8bd2323",
+    "src/layouts/collections/IndustriesLayout.astro": "2ba63693d9bce861647d1421e1c2b7f39793c9ae429a50e97eb3319ec77508fa",
+    "src/layouts/heroes/BreadcrumbHeroCenter.astro": "74c967aa087f7152592ba13a627676c69c3ccc6d28572a73f82d334b99722c04",
+    "src/layouts/heroes/BreadcrumbHeroStart.astro": "840a9021268dfd389b53b97a5d15e0e484cec62b5afa18878685e5f78971d6b8",
+    "src/utils/query/hierarchy.ts": "7f4db6f5e44b4405001c8bdfd24fd2e0ae0a71b03ad18595f39d1132b5c1995c",
+    "src/utils/schema/README.md": "c2cff1acab19373e895d2ecb6ef33967790d6824f1c75bf13ad1e3d8d316be6a",
+    "src/utils/schema/breadcrumbSchema.ts": "261e614324793dfced83815052b7d62b7a6c2ea1dcfc556fcef697c334e059d0",
+    "src/components/Breadcrumbs.astro": "4510713eec0472b96b68eea9cf890981233d58a218d50767e2e5bb6b724278fd",
+    "src/utils/breadcrumbs.ts": "615d98d75415fa37255cb9961519290103424578862b240b4c42817c6965851d"
+  },
+  "notes": [
+    "No new visible breadcrumb UI on sites without it.",
+    "Schema-only default and custom UI use the same shared resolver.",
+    "Historical validation records describe their own checkpoints.",
+    "53 existing type errors remain deferred until all standalone and multisite schema work finishes.",
+    "Existing testimonial carousel visual gate remains pending; not part of this breadcrumb fix.",
+    "Built HTML confirms both blog breadcrumb UIs match their schema; browser navigation reached the preview but screenshot capture was interrupted."
+  ]
+}

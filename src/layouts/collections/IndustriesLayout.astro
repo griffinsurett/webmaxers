@@ -13,7 +13,8 @@ import SiteLayout from "@/layouts/SiteLayout.astro";
 import Logo from "@/components/Logo/Logo.astro";
 import BreadcrumbHeroStart from "@/layouts/heroes/BreadcrumbHeroStart.astro";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
-import { query, getBreadcrumbs } from "@/utils/query";
+import { resolveBreadcrumbs } from "@/utils/breadcrumbs";
+import { getPageCanonicalUrl } from "@/utils/seo";
 import { related } from "@/utils/query/snippets";
 import { capitalizeWords } from "@/utils/string";
 import type { CollectionLayoutProps } from "./types";
@@ -39,26 +40,10 @@ const {
 
 // Get the industry slug for filtering projects
 const industrySlug = entry ? entry.id : "";
-const breadcrumbRelations = industrySlug
-  ? await getBreadcrumbs("industries", industrySlug, true)
-  : [];
-
 // Capitalize the slug for display
 const displayTitle =
   title || capitalizeWords(entry?.id?.replace(/-/g, " ") || "");
-const industryBreadcrumbs = [
-  { label: "Home", href: "/" },
-  { label: collectionMeta?.data?.title || "Industries", href: "/industries" },
-  ...breadcrumbRelations.map((relation) => ({
-    label:
-      relation.entry?.data?.title ||
-      relation.id
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (char: string) => char.toUpperCase()),
-    href:
-      relation.id === industrySlug ? undefined : `/${relation.collection}/${relation.id}`,
-  })),
-];
+const industryBreadcrumbs = await resolveBreadcrumbs(Astro.url.pathname, getPageCanonicalUrl(Astro.locals, Astro.url.pathname), { entry });
 ---
 
 <SiteLayout {...seoProps}>

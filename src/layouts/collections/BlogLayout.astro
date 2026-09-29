@@ -1,5 +1,6 @@
 ---
 // src/layouts/collections/BlogLayout.astro
+import { useBreadcrumbs } from "@/utils/breadcrumbs";
 import SiteLayout from "@/layouts/SiteLayout.astro";
 import ArticleShareActions from "@/components/ArticleShareActions";
 import TableOfContents from "@/components/TableOfContents/TableOfContents";
@@ -22,11 +23,7 @@ const featuredImageSrc = featuredMeta
   ? (await getImage({ src: featuredMeta, width: 1200, format: "webp" })).src
   : undefined;
 const contentId = `blog-article-${entry?.id ?? "content"}`;
-const breadcrumbs = [
-  { label: "Home", href: "/" },
-  { label: "Blog", href: "/blog" },
-  { label: data.title || "Post" },
-];
+const breadcrumbs = await useBreadcrumbs(Astro);
 
 const authorEntry = await resolveAuthorEntry(data.author ?? siteData.defaultAuthor);
 const authorName = authorEntry?.data.title ?? "";
@@ -100,9 +97,9 @@ Keep it concise, practical, and easy to scan.`;
             );
             return (
               <li class="flex items-center gap-3">
-                {item.href && !isLast ? (
+                {item.url && !isLast ? (
                   <a
-                    href={item.href}
+                    href={item.url}
                     class="text-[0.68rem] leading-none uppercase tracking-[0.1em] text-text no-underline transition-colors duration-200 hover:text-heading lg:text-[0.86rem] lg:tracking-[0.14em]"
                     aria-label={isHome ? item.label : undefined}
                   >

@@ -140,3 +140,16 @@ Vercel bypass test. A brief uninterrupted browser window was requested. Keep
 the carousel gate pending until actually checked.
 Do not move to Certified Bag Chasers yet. The deferred type-error reminder stays
 scheduled for completion of the whole standalone and multisite rollout.
+
+
+## Breadcrumb consolidation — 2026-09-29
+
+The URL-segment schema builder has been replaced by Greastro's shared navigation
+resolver. UI and schema use the same resolved data; schema emission waits for
+rendered UI trails and otherwise uses the automatic hierarchy. See
+[BREADCRUMBS.md](BREADCRUMBS.md). This is an integration correction following the
+Farias `/demolitions` UI/schema mismatch, not a redesign or route change.
+
+Build, output parity, navigation destination and schema regression checks are run
+for this patch. Release evidence is recorded separately. Prior deployment records
+remain historical and do not validate uncommitted changes.

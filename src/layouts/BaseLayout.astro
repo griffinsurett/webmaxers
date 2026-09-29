@@ -10,6 +10,7 @@
 
 // Note: fonts.css and global.css are imported in Theme.astro
 import SchemaBoundary from "@/components/Schema/SchemaBoundary.astro";
+import { initializeBreadcrumbs } from "@/utils/breadcrumbs";
 import { setPageCanonicalUrl } from "@/utils/seo";
 import SEO from "./SEO.astro";
 import { siteData } from "@/content/siteData";
@@ -37,6 +38,7 @@ const {
   ...seoProps
 } = Astro.props;
 setPageCanonicalUrl(Astro.locals, Astro.url.pathname, seoProps.seo);
+await initializeBreadcrumbs(Astro, { title: seoProps.title, items: seoProps.breadcrumbs });
 ---
 
 <!doctype html>

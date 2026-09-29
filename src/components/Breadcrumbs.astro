@@ -1,0 +1,23 @@
+---
+import { useBreadcrumbs, type BreadcrumbOptions } from "@/utils/breadcrumbs";
+interface Props extends BreadcrumbOptions {
+  class?: string;
+  listClass?: string;
+  linkClass?: string;
+  currentClass?: string;
+  label?: string;
+  separator?: string;
+}
+const { class: className, listClass = "flex flex-wrap items-center gap-2 text-sm", linkClass = "underline underline-offset-4", currentClass, label = "Breadcrumb", separator = "/", ...options } = Astro.props;
+const items = await useBreadcrumbs(Astro, Object.keys(options).length ? options : undefined);
+---
+{items.length > 0 && <nav aria-label={label} class={className}>
+  <ol class={listClass}>
+    {items.map((item, index) => <li class="flex items-center gap-2">
+      {index > 0 && <span aria-hidden="true">{separator}</span>}
+      {index < items.length - 1 && item.url
+        ? <a href={item.url} class={linkClass}>{item.label}</a>
+        : <span aria-current="page" class={currentClass}>{item.label}</span>}
+    </li>)}
+  </ol>
+</nav>}

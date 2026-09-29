@@ -1,5 +1,6 @@
 ---
 // src/layouts/heroes/BreadcrumbHeroCenter.astro
+import { useBreadcrumbs, type BreadcrumbInput } from "@/utils/breadcrumbs";
 import Button from "@/components/Button/Button";
 import ContentRenderer from "@/components/ContentRenderer/ContentRenderer.astro";
 import Hero from "@/components/Hero.astro";
@@ -14,17 +15,13 @@ interface CTA {
   rightIcon?: string;
 }
 
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
 
 export interface Props {
   title?: string;
   heading?: HeadingContent;
   description?: string;
   primaryCTA?: CTA;
-  breadcrumbs?: BreadcrumbItem[];
+  breadcrumbs?: BreadcrumbInput[];
   className?: string;
   breadcrumbsClassName?: string;
   id?: string;
@@ -40,13 +37,17 @@ const {
   heading,
   description = siteData.description ?? defaultDescription,
   primaryCTA: incomingPrimaryCTA,
-  breadcrumbs = [],
+  breadcrumbs: suppliedBreadcrumbs = [],
   className = "",
   breadcrumbsClassName = "",
   id = "hero",
   minHeight,
   showButtonSection = true,
 } = Astro.props as Props;
+
+const breadcrumbs = suppliedBreadcrumbs.length
+  ? await useBreadcrumbs(Astro, { items: suppliedBreadcrumbs })
+  : [];
 
 const primaryCTA: CTA = {
   text: "Book An Intro Call",
@@ -107,9 +108,9 @@ const resolvedMinHeight = minHeight ?? "100vh";
 
                   return (
                     <li class="flex items-center gap-2">
-                      {item.href && !isLast ? (
+                      {item.url && !isLast ? (
                         <a
-                          href={item.href}
+                          href={item.url}
                           class="hero-breadcrumb-link"
                           aria-label={isHome ? item.label : undefined}
                         >

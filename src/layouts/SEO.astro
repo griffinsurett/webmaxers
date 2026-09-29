@@ -38,7 +38,6 @@ import {
   founderIds,
 } from "@/utils/schema/identity";
 import { applySiteMap } from "@/utils/schema/resolve";
-import { buildBreadcrumbSchema } from "@/utils/schema/breadcrumbSchema";
 import JsonLd from "@/components/Schema/JsonLd.astro";
 import type { ImageInput, SEOData } from "@/content/schema";
 import { setPageCanonicalUrl } from "@/utils/seo";
@@ -161,7 +160,8 @@ const structuredData: Record<string, any> = {
 };
 
 // Site-wide schema, one @graph: the page, this website, the business behind
-// it, its people (the founder, plus the page's author) and breadcrumbs. The
+// it and its people (the founder, plus the page's author). Breadcrumbs are
+// emitted after rendering by SchemaBoundary, using the shared navigation data. The
 // page subject (a layout's Service/Course/Product) and section schema (FAQs,
 // reviews) are emitted by the components that render them, via <Schema> —
 // see utils/schema/README.md.
@@ -182,7 +182,6 @@ if (authorId && !personSchemas[people.indexOf(authorId)]) {
     ? { "@type": "Person", "name": authorName }
     : { "@id": BUSINESS_ID };
 }
-const breadcrumbSchema = buildBreadcrumbSchema(canonicalPath, baseTitle, finalCanonicalUrl);
 
 // Combine everything into a single JSON-LD @graph.
 const jsonLdGraph = {
@@ -192,7 +191,6 @@ const jsonLdGraph = {
     buildWebSiteSchema(),
     businessSchema,
     ...personSchemas.filter(Boolean),
-    ...(breadcrumbSchema ? [breadcrumbSchema] : []),
   ],
 };
 

@@ -10,7 +10,7 @@ import type { CollectionEntry, CollectionKey } from 'astro:content';
 import type { Relation, RelationMap } from './types';
 import { getRelations, resolveRelations } from './relations';
 import { getOrBuildGraph, getRelationMap } from './graph';
-import { normalizeId } from './helpers';
+import { normalizeId, getFirstParentId } from './helpers';
 
 // ❌ NO module-level imports of astro:content
 
@@ -265,26 +265,18 @@ export async function getBreadcrumbs<T extends CollectionKey>(
   id: string,
   resolve: boolean = true
 ): Promise<Relation[]> {
-  const cleanId = normalizeId(id);
-  const ancestors = await getAncestors(collection, cleanId, { resolve });
-  
-  // Sort by depth (deepest first) and reverse to get root to current
-  const breadcrumbs = ancestors
-    .sort((a, b) => (b.depth || 0) - (a.depth || 0))
-    .reverse();
-  
-  // Add current entry as last item
-  // ✅ Lazy import
-  const { getEntry } = await import('astro:content');
-  const currentEntry = await getEntry(collection, cleanId);
-  
-  breadcrumbs.push({
-    type: 'child',
-    collection,
-    id: cleanId,
-    entry: currentEntry,
-  });
-  
+  const { find } = await import('./query');
+  const breadcrumbs: Relation[] = [];
+  const visited = new Set<string>();
+  let currentId: string | undefined = normalizeId(id);
+  while (currentId) {
+    if (visited.has(currentId)) throw new Error(`[breadcrumbs] Cyclic parent relationship in ${collection}/${currentId}.`);
+    visited.add(currentId);
+    const entry = await find(collection, currentId);
+    if (!entry) break; // Published query excludes draft/missing ancestors.
+    breadcrumbs.unshift({ type: breadcrumbs.length ? 'ancestor' : 'child', collection, id: currentId, ...(resolve ? { entry } : {}) });
+    currentId = getFirstParentId((entry.data as any).parent);
+  }
   return breadcrumbs;
 }
 

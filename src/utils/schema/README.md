@@ -48,7 +48,8 @@ Shared responsibilities stay in the existing utilities:
 
 | Data | Owner | Source |
 |---|---|---|
-| Business, WebSite, Person, WebPage/BlogPosting, breadcrumbs | SEO layout | siteData, collections, page metadata |
+| Business, WebSite, Person, WebPage/BlogPosting | SEO layout | siteData, collections, page metadata |
+| BreadcrumbList | SchemaBoundary, after body rendering | Shared breadcrumb resolver; exact displayed trails when UI exists |
 | Service, Course, Product | Routed item layout | entry supplied by the route |
 | FAQPage | Accordion + ContentBridge | actual rendered question answers |
 | Review / AggregateRating | Testimonial variant | actual displayed reviews |
@@ -195,3 +196,10 @@ final production build to remove fixture output. Run `astro check` as well and
 compare unrelated baseline diagnostics.
 See SCHEMA_INTEGRATION_PLAN.md and docs/SCHEMA_DRIFT_AUDIT.md for migration gates
 and per-site exceptions. Koi Crest and archived projects are excluded.
+
+## Shared breadcrumb navigation
+
+`src/utils/breadcrumbs.ts` owns navigation data for UI and schema. The schema
+serializer only converts the resolved trail. See [the breadcrumb guide](../../../docs/BREADCRUMBS.md)
+for optional UI, custom trails, parent-page rules and validation. Do not rebuild
+paths or ancestry in a renderer or in schema code.
