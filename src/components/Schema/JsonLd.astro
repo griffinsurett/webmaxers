@@ -1,0 +1,23 @@
+---
+// src/components/Schema/JsonLd.astro
+/**
+ * JsonLd — renders a schema.org JSON-LD block into the static HTML.
+ *
+ * The single place the `<script type="application/ld+json">` markup lives, so
+ * callers just pass a schema object (from a @/utils/schema builder) and don't
+ * repeat the script tag / JSON.stringify / null-guard. Renders nothing when
+ * `schema` is null/undefined, so builders that return null are safe to pass.
+ *
+ * This is build-time data, NOT client JS — the object is serialized during SSG
+ * and baked into the page for crawlers; nothing ships to the browser to run.
+ *
+ *   Prefer <Schema kind="…"> (components/Schema/Schema.astro), which resolves the node.
+ */
+import { serializeJsonLd } from "@/utils/schema/serialize";
+
+interface Props {
+  schema?: object | null;
+}
+const { schema } = Astro.props as Props;
+---
+{schema && <script type="application/ld+json" set:html={serializeJsonLd(schema)} />}

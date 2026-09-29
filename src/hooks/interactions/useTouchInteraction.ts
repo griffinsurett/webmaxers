@@ -91,7 +91,8 @@ export const useTouchInteraction = ({
     const host = resolveHost(elementRef);
     if (!host) return;
 
-    const handleTouchStart = (event: TouchEvent) => {
+    const handleTouchStart = (event: Event) => {
+      if (typeof TouchEvent === "undefined" || !(event instanceof TouchEvent)) return;
       const touch = event.touches[0];
       if (!touch) return;
 
@@ -124,7 +125,8 @@ export const useTouchInteraction = ({
       }, longPressDelay);
     };
 
-    const handleTouchMove = (event: TouchEvent) => {
+    const handleTouchMove = (event: Event) => {
+      if (typeof TouchEvent === "undefined" || !(event instanceof TouchEvent)) return;
       const touch = event.touches[0];
       if (!touch) return;
       if (!stateRef.current.active) return;
@@ -150,7 +152,8 @@ export const useTouchInteraction = ({
       });
     };
 
-    const handleTouchEnd = (event: TouchEvent) => {
+    const handleTouchEnd = (event: Event) => {
+      if (typeof TouchEvent === "undefined" || !(event instanceof TouchEvent)) return;
       const touch = event.changedTouches[0];
       if (!touch) return;
 
@@ -182,7 +185,8 @@ export const useTouchInteraction = ({
       resetState();
     };
 
-    const handleTouchCancel = (event: TouchEvent) => {
+    const handleTouchCancel = (event: Event) => {
+      if (typeof TouchEvent === "undefined" || !(event instanceof TouchEvent)) return;
       onTouchEnd(event, {
         x: stateRef.current.startX,
         y: stateRef.current.startY,

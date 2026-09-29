@@ -1,0 +1,335 @@
+{
+  "date": "2026-09-29",
+  "template_checkpoint": "Greastro c71c801 plus tested ContentBridge description opt-in (current migration)",
+  "baseline_commit": "9cdb1721",
+  "comparison_baseline": "working tree captured before this port, including earlier partial schema/type work",
+  "inherited_files": {
+    "src/utils/schema/validation.ts": {
+      "template_sha256": "6c2bc2553f416e887166a6b4488fe949ac17a644d6143e76092542bce499d65b",
+      "site_sha256": "6c2bc2553f416e887166a6b4488fe949ac17a644d6143e76092542bce499d65b"
+    },
+    "src/utils/schema/identity.ts": {
+      "template_sha256": "503280fca03174b78d616a834bce6782d1ca3029ef9729d94c60ba7e71ff7674",
+      "site_sha256": "503280fca03174b78d616a834bce6782d1ca3029ef9729d94c60ba7e71ff7674"
+    },
+    "src/utils/schema/breadcrumbSchema.ts": {
+      "template_sha256": "e24d3b65ccacc56e76c66740ca3855c55c97c9d3b066040ebec6564db64f7601",
+      "site_sha256": "e24d3b65ccacc56e76c66740ca3855c55c97c9d3b066040ebec6564db64f7601"
+    },
+    "src/utils/schema/itemIdentity.ts": {
+      "template_sha256": "11489c939d18aa445e2f7e49cbf4b295131a909e58071d665545f66ec0180dd0",
+      "site_sha256": "11489c939d18aa445e2f7e49cbf4b295131a909e58071d665545f66ec0180dd0"
+    },
+    "src/utils/schema/answerHtml.ts": {
+      "template_sha256": "cb7a3da96805842a0c6b3c75446688ac6e8da230ba6c07db091d1244005a92d6",
+      "site_sha256": "cb7a3da96805842a0c6b3c75446688ac6e8da230ba6c07db091d1244005a92d6"
+    },
+    "src/utils/schema/README.md": {
+      "template_sha256": "5a8eed0e5e5d373d1b7ee8b4b90aa134a79bf37487e899280c82977997fdf869",
+      "site_sha256": "5a8eed0e5e5d373d1b7ee8b4b90aa134a79bf37487e899280c82977997fdf869"
+    },
+    "src/utils/schema/types.ts": {
+      "template_sha256": "d84a54021b496463498bf33ffb44ecd72c8b95517098eedaa1b2b183de844906",
+      "site_sha256": "d84a54021b496463498bf33ffb44ecd72c8b95517098eedaa1b2b183de844906"
+    },
+    "src/utils/schema/numbers.ts": {
+      "template_sha256": "fb3f53ca818a967a31bba6521d0b7320567371f73b621bcfecd0cf23d0e55d5b",
+      "site_sha256": "fb3f53ca818a967a31bba6521d0b7320567371f73b621bcfecd0cf23d0e55d5b"
+    },
+    "src/utils/schema/collector.ts": {
+      "template_sha256": "03b23e6814a515ae92e309b233fd5908815c545262977b27a90ed4390498b87a",
+      "site_sha256": "03b23e6814a515ae92e309b233fd5908815c545262977b27a90ed4390498b87a"
+    },
+    "src/utils/schema/resolve.ts": {
+      "template_sha256": "ac8034c0b929c4762460bf718a4f71aece57eead5ef5b22249b126a86d71690e",
+      "site_sha256": "ac8034c0b929c4762460bf718a4f71aece57eead5ef5b22249b126a86d71690e"
+    },
+    "src/utils/schema/transforms.ts": {
+      "template_sha256": "a5d86237f483e99213942a8e08dc472a31bb7bda3b623eefae9d0b8156f6b073",
+      "site_sha256": "a5d86237f483e99213942a8e08dc472a31bb7bda3b623eefae9d0b8156f6b073"
+    },
+    "src/utils/schema/serialize.ts": {
+      "template_sha256": "6f9dc3272cde6661a5a4205187ce0ce194964e267815d93ec894bebbabb1645a",
+      "site_sha256": "6f9dc3272cde6661a5a4205187ce0ce194964e267815d93ec894bebbabb1645a"
+    },
+    "src/utils/schema/kinds/index.ts": {
+      "template_sha256": "a65623428d022e749f94c33839198f52564c10b6fbdf46302a45ef20a5911286",
+      "site_sha256": "a65623428d022e749f94c33839198f52564c10b6fbdf46302a45ef20a5911286"
+    },
+    "src/utils/schema/kinds/sections.ts": {
+      "template_sha256": "6e08faa8ce90c6d741504069b488a8d6c2c69ef25cba53e8bf12aa2548be5d0e",
+      "site_sha256": "6e08faa8ce90c6d741504069b488a8d6c2c69ef25cba53e8bf12aa2548be5d0e"
+    },
+    "src/utils/schema/kinds/offerings.ts": {
+      "template_sha256": "44f04d4e601585aba4791e44744bf463a8f10adc9c90c22008edf903bdf4cf2a",
+      "site_sha256": "44f04d4e601585aba4791e44744bf463a8f10adc9c90c22008edf903bdf4cf2a"
+    },
+    "src/components/Schema/RenderedAnswer.astro": {
+      "template_sha256": "7f67395f9e06dbb98b66c467d4ac7fd89336cab7711ae157b12e01f47e446ecd",
+      "site_sha256": "7f67395f9e06dbb98b66c467d4ac7fd89336cab7711ae157b12e01f47e446ecd"
+    },
+    "src/components/Schema/JsonLd.astro": {
+      "template_sha256": "c993129225376d79dd85c46e0bac598d1542cf5e2c0017dd85a9a8056f0aa900",
+      "site_sha256": "c993129225376d79dd85c46e0bac598d1542cf5e2c0017dd85a9a8056f0aa900"
+    },
+    "src/components/Schema/Schema.astro": {
+      "template_sha256": "acd9f18fe3b0e10bd34b4a4e94430028d6076c4cb190267346c322d3671a5c3d",
+      "site_sha256": "acd9f18fe3b0e10bd34b4a4e94430028d6076c4cb190267346c322d3671a5c3d"
+    },
+    "src/components/Schema/SchemaBoundary.astro": {
+      "template_sha256": "0c03abea9f7c7f6408bfa4643e556ce4716be2e0fcbd1d99d1697f3c3b75f7c7",
+      "site_sha256": "0c03abea9f7c7f6408bfa4643e556ce4716be2e0fcbd1d99d1697f3c3b75f7c7"
+    },
+    "src/utils/seo.ts": {
+      "template_sha256": "8d8362dbac8ff85ec84a32264ad87f80bb4aa4835c272a8f1751022feeb283fc",
+      "site_sha256": "8d8362dbac8ff85ec84a32264ad87f80bb4aa4835c272a8f1751022feeb283fc"
+    },
+    "src/utils/collections/prepare.ts": {
+      "template_sha256": "e3f0661a04fa058c67543e4d33c0801d199566146306fd6f6f6fe1339d835752",
+      "site_sha256": "e3f0661a04fa058c67543e4d33c0801d199566146306fd6f6f6fe1339d835752"
+    },
+    "src/utils/links/linkBehavior.ts": {
+      "template_sha256": "a2394721b03345a566c129c8df3077fac979f08681b0a825146349ba3b7723ee",
+      "site_sha256": "a2394721b03345a566c129c8df3077fac979f08681b0a825146349ba3b7723ee"
+    },
+    "src/utils/pages/pageRules.ts": {
+      "template_sha256": "1aa1879b4dac8efb515c2b80605d683f5bb39f68f1b6587a335ca42fbfbb500e",
+      "site_sha256": "1aa1879b4dac8efb515c2b80605d683f5bb39f68f1b6587a335ca42fbfbb500e"
+    },
+    "src/utils/pages/pageGeneration/itemPageHelpers.ts": {
+      "template_sha256": "2040435871112c9213ae6fb84c17965f29849d05f3058aa264c5bb483c558f20",
+      "site_sha256": "2040435871112c9213ae6fb84c17965f29849d05f3058aa264c5bb483c558f20"
+    },
+    "src/utils/query/helpers.ts": {
+      "template_sha256": "3e19e8d880a5ec396286f44ee7d30742eb51690007d7ff36c2e895707e057232",
+      "site_sha256": "3e19e8d880a5ec396286f44ee7d30742eb51690007d7ff36c2e895707e057232"
+    },
+    "src/utils/query/index.ts": {
+      "template_sha256": "db95a766b324ebbbe7c3734731e4be2ac57154e1639b4e422f5e6aea41eea748",
+      "site_sha256": "db95a766b324ebbbe7c3734731e4be2ac57154e1639b4e422f5e6aea41eea748"
+    },
+    "src/utils/query/snippets.ts": {
+      "template_sha256": "178bdfaceea8ef7f201fffa99675ba02c2643c95252fa8768f8cadaf95f8e688",
+      "site_sha256": "178bdfaceea8ef7f201fffa99675ba02c2643c95252fa8768f8cadaf95f8e688"
+    },
+    "src/layouts/collections/helpers/layoutUtils.ts": {
+      "template_sha256": "8ae7e71458b055bfbcd9c9ff7c4e560613fe4c6e42775dad202ec2fc71feaa87",
+      "site_sha256": "1b743dadc2427e12af6b020c6c17f9d6000dca5b67ce1c0bf2c53f8a40f09e1e"
+    },
+    "src/components/ContentRenderer/ContentBridge/ContentBridge.astro": {
+      "template_sha256": "9d0b0acce9fb1f801d0132227caed2ea3b0fdfe3603264a59d691637996bbb91",
+      "site_sha256": "9d0b0acce9fb1f801d0132227caed2ea3b0fdfe3603264a59d691637996bbb91"
+    }
+  },
+  "inherited_formatting_difference": "layoutUtils.ts: trailing whitespace removed only",
+  "build": {
+    "passed": true,
+    "html_files": 17,
+    "video_thumbnail_files_kept": 42
+  },
+  "schema_audit": {
+    "jsonld_blocks": 15,
+    "faq_pages": 1,
+    "question_instances": 22,
+    "review_instances": 4,
+    "reviews_requiring_browser_check": 3,
+    "errors": []
+  },
+  "typecheck": {
+    "before": 54,
+    "after": 53,
+    "added": [],
+    "resolved": [
+      [
+        "src/layouts/collections/BlogLayout.astro",
+        "2339",
+        "Property 'data' does not exist on type '{}'."
+      ]
+    ]
+  },
+  "output_comparison": {
+    "html_count_before": 17,
+    "html_count_after": 17,
+    "added_routes": [],
+    "removed_routes": [],
+    "differences": {
+      "faq/index.html": [
+        "text"
+      ]
+    },
+    "schema_changed_pages": 13,
+    "generated_text_matches": {
+      "robots.txt": true,
+      "llms.txt": true,
+      "llms-full.txt": true
+    }
+  },
+  "control_svg_comparison": {},
+  "external_validator": {
+    "validator": "https://validator.schema.org/",
+    "mode": "built JSON-LD snippets; no credentials sent",
+    "results": [
+      {
+        "page": "index.html",
+        "errors": 0,
+        "warnings": 0,
+        "objects": 1
+      },
+      {
+        "page": "faq/index.html",
+        "errors": 0,
+        "warnings": 0,
+        "objects": 3,
+        "questions": 22
+      },
+      {
+        "page": "blog/why-website-speed-matters/index.html",
+        "errors": 0,
+        "warnings": 0,
+        "objects": 2
+      },
+      {
+        "page": "temporary capability fixture, not published",
+        "errors": 0,
+        "warnings": 0,
+        "objects": 3
+      }
+    ]
+  },
+  "capability_fixture": {
+    "service_count": 1,
+    "services": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "@id": "https://webmaxxers.com/schema-capability-check#service",
+        "name": "Design",
+        "description": "We design business websites that look clear, feel easy to use, and help people trust your business.",
+        "url": "https://webmaxxers.com/schema-capability-check",
+        "serviceType": "Design",
+        "provider": {
+          "@id": "https://webmaxxers.com/#business"
+        }
+      }
+    ],
+    "canonical": [
+      "https://webmaxxers.com/schema-capability-check"
+    ]
+  },
+  "browser": {
+    "status": "pending",
+    "required": [
+      "FAQ open/close and rendered answer",
+      "all four testimonial slides"
+    ]
+  },
+  "production": {
+    "status": "pending"
+  },
+  "faq_completeness": {
+    "questions_before": 1,
+    "questions_after": 22,
+    "displayed_question_count": 22,
+    "checks": [
+      {
+        "title": "What's included in your ongoing support?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Can you redesign my current site or do you only build from scratch?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Will my website be mobile-friendly?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Do you handle hosting and maintenance?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Can you help with the words and images?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Do I have to pay for hosting?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Can you connect forms, bookings, or a CRM?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Will my site be secure?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Do you do SEO?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "What about AI SEO and ChatGPT visibility?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Will my site show up on search engines right away?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Can I do SEO myself later?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "How do we get started?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Do you offer payment plans?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "What if I already have SEO work done?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Can you collaborate with our internal marketing or dev team?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Will adding more posts slow the site down?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Is blogging worth it if I'm not posting every week?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Is this only for large companies?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Is this just for designers or creatives?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Can I add new work later?",
+        "displayed_description_in_schema_once": true
+      },
+      {
+        "title": "Will it still look good years from now?",
+        "displayed_description_in_schema_once": true
+      }
+    ],
+    "intentional_DOM_change": "Descriptions move from React panel markup into the same server-rendered bridge answer as MDX. Text, order within each answer and mb-4 paragraph style are retained."
+  },
+  "shared_description_regression_tests": {
+    "passed": true,
+    "coverage": [
+      "description-only",
+      "description plus body",
+      "HTML escaping",
+      "default description opt-out",
+      "existing aggregation and canonical tests"
+    ]
+  }
+}

@@ -4,11 +4,10 @@ import SiteLayout from "@/layouts/SiteLayout.astro";
 import ArticleShareActions from "@/components/ArticleShareActions";
 import TableOfContents from "@/components/TableOfContents/TableOfContents";
 import AIIconPrompt from "@/components/Footer/AIIconPrompt";
-import { getAuthorName } from "./helpers/layoutHelpers";
+import { resolveAuthorEntry } from "@/utils/seo";
 import { resolveImageMetadata } from "@/utils/images";
 import { getImage } from "astro:assets";
 import type { CollectionLayoutProps } from "./types";
-import { find, isCollectionReference } from "@/utils/query";
 import { siteData } from "@/content/siteData";
 
 const {
@@ -29,21 +28,18 @@ const breadcrumbs = [
   { label: data.title || "Post" },
 ];
 
-let authorName = getAuthorName(data.author);
+const authorEntry = await resolveAuthorEntry(data.author ?? siteData.defaultAuthor);
+const authorName = authorEntry?.data.title ?? "";
 let authorRole = "";
 let authorImageSrc = "";
 
-if (isCollectionReference(data.author)) {
-  const authorEntry = await find(data.author.collection, data.author.id);
-  if (authorEntry) {
-    const authorData = authorEntry.data as Record<string, any>;
-    authorName = authorData.title || authorData.name || authorName;
-    authorRole = authorData.role || "";
-    const authorMeta = resolveImageMetadata(authorData.featuredImage);
-    authorImageSrc = authorMeta
-      ? (await getImage({ src: authorMeta, width: 80, height: 80, format: "webp" })).src
-      : "";
-  }
+if (authorEntry) {
+  const authorData = authorEntry.data;
+  authorRole = authorData.role || "";
+  const authorMeta = resolveImageMetadata(authorData.featuredImage);
+  authorImageSrc = authorMeta
+    ? (await getImage({ src: authorMeta, width: 80, height: 80, format: "webp" })).src
+    : "";
 }
 
 const publishedDate = data.publishDate

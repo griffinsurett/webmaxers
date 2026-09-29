@@ -9,6 +9,28 @@
 import type { LinkBehaviorConfigType, ValueFormatterType } from "@/content/schema";
 import { formatPhoneNumber } from "@/utils/string";
 
+/** Absolute HTTP(S) link; contact protocols are links, not web-page identities. */
+export function absoluteWebUrl(value: unknown, base: string): string | undefined {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  try {
+    const url = new URL(value, base);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Shared SEO canonical rule: preserve explicit overrides; generated paths have no trailing slash. */
+export function canonicalWebUrl(pathname: string, base: string, override?: string): string {
+  const value = override || (pathname === "/" ? "/" : pathname.replace(/\/+$/, ""));
+  const absolute = absoluteWebUrl(value, base);
+  if (!absolute) throw new Error(`[urls] Invalid canonical URL: ${value}`);
+  const url = new URL(absolute);
+  if (!override && url.pathname !== "/") url.pathname = url.pathname.replace(/\/+$/, "");
+  url.hash = "";
+  return url.href;
+}
+
 /**
  * Format a value based on the formatter type
  */
@@ -36,7 +58,7 @@ export function buildUrl(
   item: Record<string, any>,
   config: LinkBehaviorConfigType,
   collection: string,
-  slug: string
+  id: string
 ): string | undefined {
   if (!config) return undefined;
 
@@ -44,7 +66,6 @@ export function buildUrl(
 
   switch (mode) {
     case "prefixed": {
-      // URL = prefix + description value
       const prefix = config.prefix ?? item[config.linkPrefix ?? "linkPrefix"] ?? "";
       const value = item.description ?? "";
       if (!prefix || !value) return undefined;
@@ -52,23 +73,19 @@ export function buildUrl(
     }
 
     case "field": {
-      // URL = item.link (or configured field)
       const linkField = config.link ?? "url";
       return item[linkField] ?? undefined;
     }
 
     case "root":
-      // URL = /slug
-      return `/${slug}`;
+      return `/${id}`;
 
     case "none":
-      // No URL
       return undefined;
 
     case "standard":
     default:
-      // URL = /collection/slug
-      return `/${collection}/${slug}`;
+      return `/${collection}/${id}`;
   }
 }
 
@@ -79,13 +96,13 @@ export function applyLinkBehavior(
   item: Record<string, any>,
   config: LinkBehaviorConfigType,
   collection: string,
-  slug: string
+  id: string
 ): { url?: string; displayValue?: string } {
   if (!config) {
     return {};
   }
 
-  const url = buildUrl(item, config, collection, slug);
+  const url = buildUrl(item, config, collection, id);
   const displayValue = formatValue(
     item.description,
     config.valueFormatter ?? "none"

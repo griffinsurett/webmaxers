@@ -28,13 +28,28 @@ import { siteData } from "@/content/siteData";
 import siteLogo from "@/assets/Logo.jpg";
 import defaultOGImage from "@/assets/Logo.jpg";
 import { getImageUrl } from "@/utils/images";
+import {
+  BUSINESS_ID,
+  WEBSITE_ID,
+  buildBusinessSchema,
+  buildPersonSchema,
+  buildWebSiteSchema,
+  personId,
+  founderIds,
+} from "@/utils/schema/identity";
+import { applySiteMap } from "@/utils/schema/resolve";
+import { buildBreadcrumbSchema } from "@/utils/schema/breadcrumbSchema";
+import JsonLd from "@/components/Schema/JsonLd.astro";
 import type { ImageInput, SEOData } from "@/content/schema";
+import { setPageCanonicalUrl } from "@/utils/seo";
+import { absoluteWebUrl } from "@/utils/links/linkBehavior";
 
 export interface Props {
   title?: string;              // Page title
   description?: string;        // Page description
   image?: ImageInput;          // Featured image
   author?: string;            // Author name
+  authorId?: string;          // `authors` entry id — links the schema author
   publishDate?: Date | string; // Publication date (for articles)
   seo?: SEOData;              // SEO overrides
   siteName?: string;          // Site name override
@@ -47,6 +62,7 @@ const {
   description,
   image,
   author,
+  authorId,
   publishDate,
   seo = {},
   siteName = siteData.title,
@@ -76,9 +92,10 @@ const finalTwitterImageUrl = getImageUrl(seo?.twitterImage || seo?.ogImage, fina
 const finalTwitterCard = seo?.twitterCard || "summary_large_image";
 
 // Additional SEO fields
-const finalKeywords = seo?.keywords || ["astro", "static site generator", "web development"];
+// No placeholder default: an empty list omits the tag entirely.
+const finalKeywords: string[] = seo?.keywords || [];
 const canonicalPath = Astro.url.pathname === '/' ? '/' : Astro.url.pathname.replace(/\/$/, '');
-const finalCanonicalUrl = seo?.canonicalUrl || `${siteData.url}${canonicalPath}`;
+const finalCanonicalUrl = setPageCanonicalUrl(Astro.locals, Astro.url.pathname, seo);
 const effectiveRobots = seo?.robots || robots || "index, follow";
 
 // Author and publisher
@@ -90,9 +107,7 @@ const publisherName = siteData.legalName || siteData.title;
  * Social platforms require absolute URLs for images
  */
 const makeAbsolute = (url: string): string => {
-  if (url.startsWith('http')) return url;
-  if (url.startsWith('/')) return `${siteData.url}${url}`;
-  return `${siteData.url}/${url}`;
+  return absoluteWebUrl(url, siteData.url) ?? "";
 };
 
 const absoluteOgImage = makeAbsolute(finalOgImageUrl);
@@ -101,44 +116,39 @@ const absoluteTwitterImage = makeAbsolute(finalTwitterImageUrl);
 // Only the root URL is the WebSite entity; everything else defaults to WebPage.
 //
 // This previously read `!publishDate ? "WebSite" : "Article"`, which typed
-// EVERY undated page as WebSite — so the whole site shipped nodes each claiming
-// to be the site root. A `publishDate` also means "this content has a date",
-// not "this is editorial": legal docs render a "last updated" date and were
-// typed as articles because of it.
+// EVERY undated page as WebSite — so a 30-page site shipped 30 nodes each
+// claiming to be the site root. A `publishDate` also means "this content has a
+// date", not "this is editorial": legal documents render a "last updated" date
+// and were typed as articles because of it.
 //
-// WebPage is the safe default. Editorial content opts IN via `seo.schemaType`
-// (BlogLayout sets "BlogPosting"), the same override pattern as every other
-// seo.* field above.
-const schemaType =
-  seo?.schemaType || (canonicalPath === "/" ? "WebSite" : "WebPage");
+// WebPage is the safe default. Genuinely editorial content opts IN via
+// `seo.schemaType` (BlogLayout sets "BlogPosting"), the same override pattern
+// as every other seo.* field above.
+//
+// The homepage is a WebPage too: the WebSite entity is its own node in the
+// @graph below (utils/schema/identity.ts), which every page is part of.
+const schemaType = seo?.schemaType || "WebPage";
 
 /**
  * Structured data for search engines (JSON-LD)
  * Provides rich snippets in search results
  */
-const structuredData = {
-  "@context": "https://schema.org",
+const structuredData: Record<string, any> = {
   "@type": schemaType,
   "name": finalOgTitle,
   "headline": finalOgTitle,
   "description": finalOgDescription,
   "image": absoluteOgImage,
   "url": finalCanonicalUrl,
-  "publisher": {
-    "@type": "Organization",
-    "name": publisherName,
-    "url": siteData.url,
-    "logo": {
-      "@type": "ImageObject",
-      "url": makeAbsolute(siteLogo.src),
-      "width": siteLogo.width,
-      "height": siteLogo.height
-    }
-  },
-  "author": {
-    "@type": publishDate ? "Person" : "Organization",
-    "name": authorName,
-  },
+  "isPartOf": { "@id": WEBSITE_ID },
+  // The business, site and people are full nodes in the @graph below; these
+  // reference them by @id instead of repeating partial copies.
+  "publisher": { "@id": BUSINESS_ID },
+  "author": authorId
+    ? { "@id": personId(authorId) }
+    : publishDate && author
+      ? { "@type": "Person", "name": authorName }
+      : { "@id": BUSINESS_ID },
   // Article-specific fields
   ...(publishDate && {
     "datePublished": new Date(publishDate).toISOString(),
@@ -148,6 +158,42 @@ const structuredData = {
     "@type": "WebPage",
     "@id": finalCanonicalUrl
   }
+};
+
+// Site-wide schema, one @graph: the page, this website, the business behind
+// it, its people (the founder, plus the page's author) and breadcrumbs. The
+// page subject (a layout's Service/Course/Product) and section schema (FAQs,
+// reviews) are emitted by the components that render them, via <Schema> —
+// see utils/schema/README.md.
+const people = [
+  ...new Set([...await founderIds(), authorId].filter(Boolean) as string[]),
+];
+const [businessSchema, ...personSchemas] = await Promise.all([
+  // `schemaMap.business` (src/utils/schema/siteMap.ts) can add/remove properties.
+  buildBusinessSchema({ logoUrl: makeAbsolute(siteLogo.src) }).then((node) =>
+    applySiteMap("business", node, { pathname: Astro.url.pathname, locals: Astro.locals as any }),
+  ),
+  ...people.map((id) => buildPersonSchema(id)),
+]);
+// An author id with no `authors` entry: fall back rather than reference a
+// person node that doesn't exist.
+if (authorId && !personSchemas[people.indexOf(authorId)]) {
+  structuredData.author = author
+    ? { "@type": "Person", "name": authorName }
+    : { "@id": BUSINESS_ID };
+}
+const breadcrumbSchema = buildBreadcrumbSchema(canonicalPath, baseTitle, finalCanonicalUrl);
+
+// Combine everything into a single JSON-LD @graph.
+const jsonLdGraph = {
+  "@context": "https://schema.org",
+  "@graph": [
+    structuredData,
+    buildWebSiteSchema(),
+    businessSchema,
+    ...personSchemas.filter(Boolean),
+    ...(breadcrumbSchema ? [breadcrumbSchema] : []),
+  ],
 };
 
 // Write per-page manifest entry during static build so the robots-llms
@@ -177,7 +223,7 @@ if (import.meta.env.MODE !== 'development') {
 <meta name="description" content={finalMetaDescription} />
 <meta name="author" content={authorName} />
 <meta name="publisher" content={publisherName} />
-<meta name="keywords" content={finalKeywords.join(", ")} />
+{finalKeywords.length > 0 && <meta name="keywords" content={finalKeywords.join(", ")} />}
 <link rel="canonical" href={finalCanonicalUrl} />
 <meta name="robots" content={effectiveRobots} />
 
@@ -201,4 +247,4 @@ if (import.meta.env.MODE !== 'development') {
 <meta name="twitter:creator" content={authorName} />
 
 <!-- JSON-LD Structured Data -->
-<script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+<JsonLd schema={jsonLdGraph} />

@@ -43,6 +43,24 @@ export function capitalizeWords(str: string): string {
 }
 
 /**
+ * Convert a slug-like string into a readable title.
+ *
+ * @example
+ * humanizeSlug('about-us') // 'About Us'
+ * humanizeSlug('web_design') // 'Web Design'
+ */
+export function humanizeSlug(str: string): string {
+  if (!str) return str;
+
+  return capitalizeWords(
+    str
+      .replace(/[-_]+/g, " ")
+      .trim()
+      .replace(/\s+/g, " ")
+  );
+}
+
+/**
  * Convert a string to kebab-case
  * 
  * Handles:

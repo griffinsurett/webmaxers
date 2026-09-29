@@ -1,0 +1,11 @@
+---
+import { answerHtml } from '@/utils/schema/answerHtml';
+import { resolveSchema } from '@/utils/schema/resolve';
+const { item, schema } = Astro.props;
+const html = await Astro.slots.render('default');
+if (schema) {
+  await resolveSchema({ kind: schema, items: [{ ...item, renderedAnswer: answerHtml(html || "") }],
+    pathname: Astro.url.pathname, locals: Astro.locals });
+}
+---
+<Fragment set:html={html} />

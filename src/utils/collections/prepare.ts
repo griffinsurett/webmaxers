@@ -7,13 +7,18 @@ import type { CollectionKey, CollectionEntry } from "astro:content";
 import { render as renderEntry } from "astro:content";
 import type { AstroComponentFactory } from "astro/runtime/server/index.js";
 import type { MetaData, BaseData } from "@/content/schema";
-
+import { getFirstParentId } from "@/utils/query/helpers";
 // ❌ NO imports that touch pages/filesystem during module load
 // ✅ Import inside functions
 
 export interface PreparedFields {
   id: string;
+  collection?: string;
   url?: string;
+  /** Generated page path, distinct from a card's contact/checkout/custom link. */
+  pageUrl?: string;
+  /** SEO identity derived from the same resolved link and item/collection SEO. */
+  canonicalUrl?: string;
   displayValue?: string;
   /** Lazy render function - call to get Content component when needed */
   render?: () => Promise<{ Content: AstroComponentFactory }>;
@@ -22,11 +27,9 @@ export interface PreparedFields {
 
 export type PreparedItem = BaseData & PreparedFields;
 
-/** Normalize parent reference to first parent slug (handles array or string) */
-function getFirstParentSlug(parent: string | string[] | undefined): string | undefined {
-  if (!parent) return undefined;
-  if (Array.isArray(parent)) return parent[0];
-  return parent;
+/** The quote shown by TestimonialCard; schema consumes this same selection. */
+export function getTestimonialQuote(item: { content?: string | null; description?: string | null }): string {
+  return (item.content ?? item.description ?? "").trim();
 }
 
 export async function prepareEntry<T extends CollectionKey>(
@@ -46,9 +49,11 @@ export async function prepareEntry<T extends CollectionKey>(
   const identifier = entry.id;
   const data = entry.data as Record<string, any>;
 
-  // Resolve parent entry if item has a parent and we have entries map
-  const parentSlug = getFirstParentSlug(data.parent);
-  const parentEntry = parentSlug && entriesMap ? entriesMap.get(parentSlug) : undefined;
+  // Use the same primary-parent rule as static route generation.
+  const parentId = getFirstParentId(data.parent);
+  const parentEntry = parentId
+    ? entriesMap?.get(parentId) ?? await (await import("@/utils/query")).find(collection, parentId)
+    : undefined;
 
   // Check for link behavior config (item-level overrides collection-level)
   const linkBehavior = mergeLinkBehavior(
@@ -58,35 +63,58 @@ export async function prepareEntry<T extends CollectionKey>(
 
   let itemUrl: string | undefined;
   let displayValue: string | undefined;
+  const hasPage = shouldItemHavePage(entry, meta, parentEntry);
+  const pageUrl = hasPage
+    ? (shouldItemUseRootPath(entry, meta) ? `/${identifier}` : `/${collection}/${identifier}`)
+    : undefined;
 
   if (linkBehavior) {
     // Use link behavior to determine URL and display value
     const linkResult = applyLinkBehavior(data, linkBehavior, collection as string, identifier);
-    itemUrl = linkResult.url;
+    // Preserve the existing explicit URL fallback (e.g. a map link in a
+    // collection of prefixed phone/email entries). Explicit "none" disables it.
+    itemUrl = linkResult.url ?? (linkBehavior.mode === "none" ? undefined : data.url);
     displayValue = linkResult.displayValue;
   } else {
     // Standard URL generation
     const hasExistingUrl = data.url !== undefined;
-    const hasPage = shouldItemHavePage(entry, meta, parentEntry);
 
-    if (!hasExistingUrl && hasPage) {
-      const useRootPath = shouldItemUseRootPath(entry, meta);
-      itemUrl = useRootPath ? `/${identifier}` : `/${collection}/${identifier}`;
+    if (hasExistingUrl) {
+      itemUrl = data.url;
+    } else if (hasPage) {
+      itemUrl = pageUrl;
     }
   }
 
+  // Store raw body for variants that need it - don't render Content here
+  // Rendering MDX Content is expensive and should only happen when actually displayed
   let content: string | undefined;
   if ("body" in entry) {
     content = (entry as any).body;
   }
 
+  // Store lazy render closure using standalone render() — entry.render() removed in Astro 6
   const hasBody = "body" in entry;
-  const renderFn = hasBody ? () => renderEntry(entry as any) : undefined;
+  const renderFn = hasBody
+    ? () => renderEntry(entry as any)
+    : undefined;
+
+  const { absoluteWebUrl, canonicalWebUrl } = await import("@/utils/links/linkBehavior");
+  const { mergeItemSEO } = await import("@/utils/seo");
+  const { siteData } = await import("@site/content/siteData");
+  const seo = mergeItemSEO(data, meta);
+  const webUrl = absoluteWebUrl(pageUrl, siteData.url);
+  const canonicalUrl = webUrl || seo?.canonicalUrl
+    ? canonicalWebUrl(webUrl ?? "/", siteData.url, seo?.canonicalUrl)
+    : undefined;
 
   return {
     ...data,
     id: identifier,
-    ...(itemUrl && { url: itemUrl }),
+    collection,
+    url: itemUrl,
+    pageUrl,
+    canonicalUrl,
     ...(displayValue && { displayValue }),
     ...(renderFn && { render: renderFn }),
     ...(content && { content }),
@@ -98,7 +126,6 @@ export async function prepareCollectionEntries<T extends CollectionKey>(
   collection: T,
   meta: MetaData
 ): Promise<PreparedItem[]> {
-  // Build a map of entries by slug for efficient parent lookup
   const entriesMap = new Map<string, CollectionEntry<T>>();
   for (const entry of entries) {
     if (entry.id) entriesMap.set(entry.id, entry);

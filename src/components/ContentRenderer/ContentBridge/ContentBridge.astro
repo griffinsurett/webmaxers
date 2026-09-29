@@ -25,6 +25,9 @@
  * </ContentBridge>
  */
 
+import RenderedAnswer from "@/components/Schema/RenderedAnswer.astro";
+import type { KindName } from "@/utils/schema/kinds";
+
 interface ContentItem {
   Content?: any;
   content?: string;
@@ -45,12 +48,20 @@ interface Props {
   bridgeId?: string | number;
   /** Additional CSS classes */
   className?: string;
+  schema?: KindName | false;
+  /** Render the displayed introduction with the body so schema captures both.
+   * Consumers enabling this must not render the description a second time. */
+  includeDescription?: boolean;
+  descriptionClassName?: string;
 }
 
 const {
   items = [],
   bridgeId,
   className = "",
+  schema,
+  includeDescription = false,
+  descriptionClassName,
 } = Astro.props as Props;
 
 const normalizedBridgeId =
@@ -76,6 +87,7 @@ const resolvedItems: ResolvedItem[] = await Promise.all(
         const { Content } = await item.render();
         return { Content };
       } catch (e) {
+        if (schema) throw e; // Never publish raw MDX as a successfully rendered answer.
         // Fallback to raw content if render fails
         return { content: item.content };
       }
@@ -97,6 +109,10 @@ const resolvedItems: ResolvedItem[] = await Promise.all(
       style="display: none;"
       data-bridge-slot={index}
     >
+      <RenderedAnswer item={items[index]} schema={schema}>
+      {includeDescription && items[index]?.description && (
+        <p class={descriptionClassName}>{items[index].description}</p>
+      )}
       {/* Render Astro component if available */}
       {item.Content ? (
         <item.Content />
@@ -104,6 +120,7 @@ const resolvedItems: ResolvedItem[] = await Promise.all(
       item.content ? (
         <div set:html={item.content} />
       ) : null}
+      </RenderedAnswer>
     </div>
   ))}
 
@@ -112,5 +129,5 @@ const resolvedItems: ResolvedItem[] = await Promise.all(
     Receives normal props (including contentSlotId strings)
     Uses document.getElementById() to access content
   */}
-  <slot bridgeId={normalizedBridgeId} />
+  <slot />
 </div>

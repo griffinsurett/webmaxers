@@ -41,7 +41,7 @@ export const useHoverInteraction = ({
     elem: null as Element | null,
     index: null as number | null,
     leftAt: 0,
-    rect: null as DOMRect | null,
+    rect: null as Pick<DOMRect, "left" | "top" | "right" | "bottom"> | null,
     minDist: 0,
     reentryGraceMs: 0,
     lastPos: { x: NaN, y: NaN },

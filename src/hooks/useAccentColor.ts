@@ -10,7 +10,7 @@ export function useAccentColor() {
     {
       raw: true,
       validate: (value): value is AccentColor =>
-        ACCENT_COLORS.includes(value),
+        ACCENT_COLORS.some((color) => color === value),
       syncTabs: true,
     }
   );

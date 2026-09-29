@@ -9,7 +9,10 @@
  */
 
 // Note: fonts.css and global.css are imported in Theme.astro
+import SchemaBoundary from "@/components/Schema/SchemaBoundary.astro";
+import { setPageCanonicalUrl } from "@/utils/seo";
 import SEO from "./SEO.astro";
+import { siteData } from "@/content/siteData";
 import Theme from "./Theme.astro";
 
 // Integration bundles - consolidate all integration scripts
@@ -33,10 +36,11 @@ const {
   noChat = false,
   ...seoProps
 } = Astro.props;
+setPageCanonicalUrl(Astro.locals, Astro.url.pathname, seoProps.seo);
 ---
 
 <!doctype html>
-<html lang="en" class="scroll-smooth">
+<html lang={siteData.language ?? "en"} class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -54,6 +58,7 @@ const {
   </head>
 
   <body class={bodyClass}>
+    <SchemaBoundary>
     {showSkipLink && (
       <a
         href={`#${mainId}`}
@@ -92,5 +97,6 @@ const {
     {/* Consent banner — outside the noChat gate on purpose: consent is a legal
         requirement and must not be switchable off with the chat widget. */}
     <PreferencesLayout />
+      </SchemaBoundary>
   </body>
 </html>

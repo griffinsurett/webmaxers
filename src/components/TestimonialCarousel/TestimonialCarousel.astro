@@ -1,9 +1,11 @@
 ---
 import { getImage } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
 import TestimonialCarouselClient from "./TestimonialCarousel";
 import EyebrowSection from "@/layouts/EyebrowSection.astro";
-import { getCollection } from "astro:content";
-import { getCollectionMeta } from "@/utils/collections";
+import { query, sortByOrder } from "@/utils/query";
+import Schema from "@/components/Schema/Schema.astro";
+import { getCollectionMeta, prepareCollectionEntries } from "@/utils/collections";
 import { resolveImageMetadata, getImageAlt } from "@/utils/images";
 import servicesBg from "@/assets/fire-pic.jpg";
 
@@ -25,15 +27,17 @@ const bg = withBackground
     ])
   : null;
 
-const raw = await getCollection("testimonials");
+const raw = await query("testimonials").orderBy(sortByOrder()).all();
 
 // Eyebrow comes from the collection's _meta title.
 const meta = getCollectionMeta("testimonials");
 const eyebrow = meta.title ?? "Testimonials";
 
-const sorted = raw
-  .filter((e) => !e.data.draft)
-  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+// Preparation preserves this collection's fields while adding shared URLs and
+// lazy content. Both the carousel and schema consume this same prepared array.
+type PreparedReview = Awaited<ReturnType<typeof prepareCollectionEntries>>[number]
+  & CollectionEntry<"testimonials">["data"];
+const preparedReviews = await prepareCollectionEntries(raw, "testimonials", meta) as PreparedReview[];
 
 interface SerializedItem {
   id: string;
@@ -46,8 +50,8 @@ interface SerializedItem {
 }
 
 const items: SerializedItem[] = await Promise.all(
-  sorted.map(async (entry) => {
-    const meta = resolveImageMetadata(entry.data.featuredImage);
+  preparedReviews.map(async (item) => {
+    const meta = resolveImageMetadata(item.featuredImage);
     let imageSrc: string | undefined;
 
     if (meta) {
@@ -62,18 +66,19 @@ const items: SerializedItem[] = await Promise.all(
     }
 
     return {
-      id: entry.id,
-      quote: entry.data.description ?? "",
-      author: entry.data.author ?? entry.data.title,
-      role: entry.data.role ?? "",
-      company: entry.data.company,
+      id: item.id,
+      quote: item.description ?? "",
+      author: item.author ?? item.title,
+      role: item.role ?? "",
+      company: item.company,
       imageSrc,
-      imageAlt: getImageAlt(entry.data.featuredImage, entry.data.author ?? entry.data.title),
+      imageAlt: getImageAlt(item.featuredImage, item.author ?? item.title),
     };
   }),
 );
 ---
 
+<Schema kind="reviews" items={preparedReviews} map={{ body: { from: "description", as: "text" }, rating: false }} />
 <div id={id} class:list={["tc-section", { "tc-section--bg": withBackground }]}>
   {bg && (
     <div class="tc-bg" aria-hidden="true">

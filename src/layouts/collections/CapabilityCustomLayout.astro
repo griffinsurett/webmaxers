@@ -6,15 +6,22 @@
  * Use this when a capability page should define its entire structure,
  * including the hero, directly inside the MDX file.
  */
+import Schema from "@/components/Schema/Schema.astro";
+import { resolveSubject } from "@/utils/schema/resolve";
 import SiteLayout from "@/layouts/SiteLayout.astro";
 import type { CollectionLayoutProps } from "./types";
 
+export const schemaKind = "service";
+
 const {
+  entry,
   Content,
   seoProps = {},
 } = Astro.props as CollectionLayoutProps;
+const subject = await resolveSubject(Astro, { kind: schemaKind, entry, seo: seoProps.seo });
 ---
 
 <SiteLayout {...seoProps}>
+  <Schema node={subject} />
   {Content && <Content />}
 </SiteLayout>

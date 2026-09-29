@@ -7,6 +7,8 @@
  * browser/server code and Node-only build tooling.
  */
 
+import { getFirstParentId } from "../query/helpers";
+
 // Helper to normalize either a full entry or raw data
 const getItemData = (entryOrData: any) =>
   entryOrData?.data ? entryOrData.data : entryOrData;
@@ -64,7 +66,7 @@ export function shouldItemHavePageData(
   }
 
   // 3. Check collection's itemsChildHasPage for items with parents
-  if (item?.parent && metaData?.itemsChildHasPage !== undefined) {
+  if (getFirstParentId(item?.parent) && metaData?.itemsChildHasPage !== undefined) {
     return metaData.itemsChildHasPage;
   }
 
@@ -101,9 +103,12 @@ export function shouldProcessCollectionData(
     return true;
   }
 
-  // Only process if an item explicitly opts in (and isn't draft)
+  // Parent and child defaults can opt entries in too. Use the same precedence
+  // as preparation and route filtering, including draft exclusion.
+  const parents = new Map(entries.filter((entry) => !isDraft(entry)).map((entry) => [entry.id, entry]));
   return entries.some((entry) => {
     const data = getItemData(entry);
-    return data?.hasPage === true && !isDraft(data);
+    const parentId = getFirstParentId(data?.parent);
+    return shouldItemHavePageData(data, metaData, true, parentId ? parents.get(parentId) : undefined);
   });
 }

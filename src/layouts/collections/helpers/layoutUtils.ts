@@ -1,7 +1,7 @@
 // src/layouts/collections/helpers/layoutUtils.ts
 /**
  * Layout Discovery and Selection Utilities
- * 
+ *
  * Handles:
  * - Dynamic import of layout components from full paths
  * - Layout selection based on collection/item config
@@ -29,12 +29,12 @@ const DEFAULT_INDEX_LAYOUT_PATH = '@/layouts/collections/CollectionIndexLayout.a
 
 /**
  * Resolve a layout path to the actual module
- * 
+ *
  * Supports:
  * - @/layouts/collections/BlogLayout.astro
  * - /src/layouts/collections/BlogLayout.astro
  * - ../BlogLayout.astro
- * 
+ *
  * @param layoutPath - Layout path from frontmatter
  * @returns Layout component module
  */
@@ -46,7 +46,7 @@ function resolveLayoutModule(layoutPath: string): any {
   const relativePath = `../${filename}`;
 
   const module = allLayouts[relativePath];
-  
+
   if (!module || typeof module !== 'object' || !('default' in module)) {
     const available = Object.keys(allLayouts).map(p => p.replace('../', '')).join(', ');
     throw new Error(
@@ -55,13 +55,19 @@ function resolveLayoutModule(layoutPath: string): any {
       `Make sure the file exists and has a default export.`
     );
   }
-  
-  return module.default;
+
+  return module;
+}
+
+/** The selected layout owns its subject kind, regardless of collection name. */
+export function getLayoutSchemaKind(layoutPath?: string): string | undefined {
+  const module = resolveLayoutModule(layoutPath || DEFAULT_ITEM_LAYOUT_PATH);
+  return typeof module.schemaKind === "string" ? module.schemaKind : undefined;
 }
 
 /**
  * Get layout component from path
- * 
+ *
  * @param layoutPath - Full path to layout (e.g., "@/layouts/collections/BlogLayout.astro")
  * @returns Layout component
  * @throws Error if layout cannot be imported
@@ -75,7 +81,7 @@ export async function getLayoutComponent(layoutPath?: string) {
   }
 
   try {
-    const component = resolveLayoutModule(path);
+    const component = resolveLayoutModule(path).default;
 
     // Cache the component
     layoutCache.set(path, component);
@@ -90,10 +96,10 @@ export async function getLayoutComponent(layoutPath?: string) {
 
 /**
  * Determine which layout path to use for a collection/item
- * 
+ *
  * Uses override pattern:
  * - Item pages use itemLayout or itemsLayout or CollectionLayout
- * 
+ *
  * @param meta - Collection metadata
  * @param item - Item data (optional)
  * @param isItemPage - Whether this is an item page
@@ -116,10 +122,10 @@ export function getLayoutPath(
 
 /**
  * Get layout path for collection index pages
- * 
+ *
  * Uses the indexLayout field from _meta.mdx
  * Defaults to CollectionIndexLayout if not specified
- * 
+ *
  * @param meta - Collection metadata
  * @returns Layout path to use
  */

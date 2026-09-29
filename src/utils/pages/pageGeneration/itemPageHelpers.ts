@@ -7,12 +7,13 @@
  */
 
 import type { CollectionKey, CollectionEntry } from "astro:content";
-import { getCollection, render as renderEntry } from "astro:content";
-import { getCollectionMeta } from "@/utils/collections";
+import { render as renderEntry } from "astro:content";
+import { getCollectionMeta, getPublishedCollection } from "@/utils/collections";
+import { getFirstParentId } from "@/utils/query/helpers";
+import { shouldProcessCollectionData } from "../pageRules";
 import {
   shouldItemHavePage,
   shouldItemUseRootPath,
-  shouldProcessCollection,
 } from "@/utils/pages";
 import { getPageCollections } from "@/utils/pages/pageGeneration";
 import { buildItemSEOProps } from "@/utils/seo";
@@ -27,7 +28,8 @@ import type { MetaData } from "@/content/schema";
  */
 export type ItemFilter = (
   entry: CollectionEntry<CollectionKey>,
-  meta: MetaData
+  meta: MetaData,
+  parent?: CollectionEntry<CollectionKey>
 ) => boolean;
 
 /**
@@ -87,7 +89,7 @@ export interface PreparedPageData {
 
 export async function generateItemPaths<TParams>(
   filter: ItemFilter,
-  buildParams: (collection: string, slug: string) => TParams
+  buildParams: (collection: string, id: string) => TParams
 ): Promise<StaticPath<TParams>[]> {
   const collections = getPageCollections();
   const paths: StaticPath<TParams>[] = [];
@@ -95,16 +97,18 @@ export async function generateItemPaths<TParams>(
   for (const coll of collections) {
     const collectionKey = coll as CollectionKey;
 
-    const shouldProcess = await shouldProcessCollection(collectionKey);
-    if (!shouldProcess) continue;
-
     const meta = getCollectionMeta(collectionKey);
-    const entries = (await getCollection(collectionKey)) as CollectionEntry<
+    const entries = (await getPublishedCollection(collectionKey)) as CollectionEntry<
       typeof collectionKey
     >[];
+    if (!shouldProcessCollectionData(entries, meta)) continue;
+    const entriesMap = new Map(entries.map((entry) => [entry.id, entry]));
 
     entries
-      .filter((entry) => filter(entry as CollectionEntry<CollectionKey>, meta))
+      .filter((entry) => {
+        const parentId = getFirstParentId((entry.data as any).parent);
+        return filter(entry, meta, parentId ? entriesMap.get(parentId) : undefined);
+      })
       .forEach((entry) => {
         const id = entry.id;
         paths.push({
@@ -143,6 +147,7 @@ export async function prepareItemPageData(
   // Get the actual layout component
   const LayoutComponent = await getLayoutComponent(layoutPath);
 
+  // Prepare content if MDX
   let Content = null;
   try {
     const rendered = await renderEntry(entry as any);
@@ -168,16 +173,16 @@ export async function prepareItemPageData(
  * Filter for root-level items
  * Items that should have a page AND use root path
  */
-export const rootLevelFilter: ItemFilter = (entry, meta) => {
-  return shouldItemHavePage(entry, meta) && shouldItemUseRootPath(entry, meta);
+export const rootLevelFilter: ItemFilter = (entry, meta, parent) => {
+  return shouldItemHavePage(entry, meta, parent) && shouldItemUseRootPath(entry, meta);
 };
 
 /**
  * Filter for collection-level items
  * Items that should have a page but NOT use root path
  */
-export const collectionLevelFilter: ItemFilter = (entry, meta) => {
-  return shouldItemHavePage(entry, meta) && !shouldItemUseRootPath(entry, meta);
+export const collectionLevelFilter: ItemFilter = (entry, meta, parent) => {
+  return shouldItemHavePage(entry, meta, parent) && !shouldItemUseRootPath(entry, meta);
 };
 
 /**

@@ -1,0 +1,9 @@
+---
+import { collectedSections } from '@/utils/schema/collector';
+import JsonLd from './JsonLd.astro';
+// Await the complete body (including nested MDX, header and footer) before emission.
+const html = await Astro.slots.render('default');
+const nodes = collectedSections(Astro.locals);
+---
+<Fragment set:html={html} />
+{nodes.length > 0 && <JsonLd schema={{ '@context': 'https://schema.org', '@graph': nodes }} />}

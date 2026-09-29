@@ -4,7 +4,6 @@ import { animationProps } from "@/integrations/scroll-animations";
 interface FaqAccordionItemData {
   id?: string;
   title: string;
-  description?: string;
   contentSlotId: string;
 }
 
@@ -100,7 +99,6 @@ export default function FaqAccordion({
               }`}
             >
               <div className="max-w-4xl pb-8 pr-14 text-lg leading-relaxed text-text md:pb-10">
-                {item.description && <p className="mb-4">{item.description}</p>}
                 <div
                   ref={(el) => {
                     if (el) panelRefs.current.set(itemId, el);

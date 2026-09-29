@@ -48,9 +48,13 @@ const DEFAULT_DISALLOWED_PATHS = ['/404'];
 // Manifest reader
 // ---------------------------------------------------------------------------
 
+function resolveSeoDir(distDir: string): string | undefined {
+  return [join(distDir, '__seo'), join(distDir, '..', '__seo')].find(existsSync);
+}
+
 function readManifest(distDir: string): PageManifestEntry[] {
-  const seoDir = join(distDir, '__seo');
-  if (!existsSync(seoDir)) return [];
+  const seoDir = resolveSeoDir(distDir);
+  if (!seoDir) return [];
   return readdirSync(seoDir)
     .filter((f) => f.endsWith('.json'))
     .map((f) => {
@@ -103,7 +107,7 @@ function buildLlms(entries: PageManifestEntry[], siteUrl: string, srcDir: string
     `# ${siteData.title}`,
     ...(siteData.tagline ? [`> ${siteData.tagline}`] : []),
     '',
-    siteData.description,
+    siteData.description ?? "",
     '',
     ...(siteData.location ? [`Location: ${siteData.location}`, ''] : []),
   ];
@@ -437,7 +441,7 @@ function buildLlmsFull(entries: PageManifestEntry[], siteUrl: string, srcDir: st
     `# ${siteData.title}`,
     ...(siteData.tagline ? [`> ${siteData.tagline}`] : []),
     '',
-    siteData.description,
+    siteData.description ?? "",
     '',
     ...(siteData.location ? [`Location: ${siteData.location}`, ''] : []),
     `Full content: ${siteUrl}/llms-full.txt`,
@@ -551,9 +555,11 @@ function buildLlmsFull(entries: PageManifestEntry[], siteUrl: string, srcDir: st
 // ---------------------------------------------------------------------------
 
 export default function robotsLlmsIntegration(config: RobotsLlmsConfig = {}): AstroIntegration {
+  let projectRoot: string;
   return {
     name: 'robots-llms',
     hooks: {
+      'astro:config:done': ({ config }) => { projectRoot = fileURLToPath(config.root); },
       'astro:build:done': async ({ dir, logger }) => {
         const siteUrl = siteData.url.replace(/\/$/, '');
         const clientDir = fileURLToPath(dir);
@@ -595,8 +601,8 @@ export default function robotsLlmsIntegration(config: RobotsLlmsConfig = {}): As
 
         // Clean up manifest — not needed in final dist
         try {
-          const seoDir = join(distDir, '__seo');
-          if (existsSync(seoDir)) rmSync(seoDir, { recursive: true, force: true });
+          const seoDir = resolveSeoDir(distDir);
+          if (seoDir) rmSync(seoDir, { recursive: true, force: true });
         } catch (_) {}
       },
     },

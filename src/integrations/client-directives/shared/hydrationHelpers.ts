@@ -8,7 +8,7 @@
 export const waitForHydrationReady = (): Promise<void> => {
   if (typeof requestAnimationFrame === 'function') {
     return new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(resolve))
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
     );
   }
 

@@ -26,7 +26,7 @@ import type { CollectionKey } from 'astro:content';
 //     .orderBy(sortByDate('publishDate', 'desc'))
 //     .limit(limit);
 
-export const byTag = (collection: CollectionKey, tags: string | string[], limit?: number) => {
+export const byTag = <T extends CollectionKey>(collection: T, tags: string | string[], limit?: number) => {
   const tagList = (Array.isArray(tags) ? tags : [tags]).filter(Boolean);
   if (tagList.length === 0) {
     // No tags to match; return empty query
@@ -52,7 +52,7 @@ export const byTag = (collection: CollectionKey, tags: string | string[], limit?
  * Example: byItemKeys("about-us", "our-mission")
  * Example: byItemKeys("about-us", ["our-mission", "our-vision"])
  */
-export const byItemKeys = (collection: CollectionKey, keys: string | string[]) => {
+export const byItemKeys = <T extends CollectionKey>(collection: T, keys: string | string[]) => {
   const keyList = (Array.isArray(keys) ? keys : [keys]).filter(Boolean);
   if (keyList.length === 0) {
     return query(collection).where(() => false).limit(0);
@@ -84,7 +84,7 @@ export const byItemKeys = (collection: CollectionKey, keys: string | string[]) =
 /**
  * Root level items only (no parent)
  */
-export const roots = (collection: CollectionKey) =>
+export const roots = <T extends CollectionKey>(collection: T) =>
   query(collection)
     .where(whereNoParent())
     .orderBy(sortByOrder());
@@ -100,7 +100,7 @@ export const leaves = async (collection: CollectionKey) => {
 /**
  * Children of a specific parent
  */
-export const children = (collection: CollectionKey, parentId: string) => {
+export const children = <T extends CollectionKey>(collection: T, parentId: string) => {
   // Guard against missing/undefined parent ids so the query doesn't crash
   const targetId = parentId ? normalizeId(parentId) : "";
   if (!targetId) {
@@ -114,7 +114,7 @@ export const children = (collection: CollectionKey, parentId: string) => {
 
       if (Array.isArray(parent)) {
         return parent.some((p) => {
-          const id = typeof p === "string" ? p : p?.id || p?.slug || "";
+          const id = typeof p === "string" ? p : p?.id || "";
           return normalizeId(id) === targetId;
         });
       }
@@ -147,7 +147,7 @@ export const parent = (
     : [];
 
   const targetIds = parentRefs
-    .map((p) => (typeof p === "string" ? p : p?.id || p?.slug || ""))
+    .map((p) => (typeof p === "string" ? p : p?.id || ""))
     .filter(Boolean)
     .map(normalizeId);
 
@@ -183,7 +183,7 @@ export const siblings = (
     : [];
 
   const targetParentIds = parentRefs
-    .map((p) => (typeof p === "string" ? p : p?.id || p?.slug || ""))
+    .map((p) => (typeof p === "string" ? p : p?.id || ""))
     .filter(Boolean)
     .map(normalizeId);
 
@@ -206,7 +206,7 @@ export const siblings = (
 
       if (Array.isArray(parent)) {
         return parent.some((p) => {
-          const id = typeof p === "string" ? p : p?.id || p?.slug || "";
+          const id = typeof p === "string" ? p : p?.id || "";
           return id && parentIdSet.has(normalizeId(id));
         });
       }
@@ -252,8 +252,8 @@ const matchesRef = (fieldValue: any, targetNormalized: string): boolean => {
  * @param field - The reference field name (e.g., "solutions")
  * @param targetId - The ID of the target entry (e.g., "blogs")
  */
-export const related = (
-  collection: CollectionKey,
+export const related = <T extends CollectionKey>(
+  collection: T,
   field: string,
   targetId: string
 ) => {
@@ -274,8 +274,8 @@ export const related = (
  * @param field - The reference field name (e.g., "solutions")
  * @param targetId - The ID of the target entry (e.g., "blogs")
  */
-export const relatedRoots = (
-  collection: CollectionKey,
+export const relatedRoots = <T extends CollectionKey>(
+  collection: T,
   field: string,
   targetId: string
 ) => {

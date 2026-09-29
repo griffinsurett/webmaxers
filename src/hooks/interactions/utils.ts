@@ -13,8 +13,6 @@ export function resolveHost(
 
 export function getPositionForHost(host: HostElement | null): number {
   if (!host) return 0;
-  if (host === window) {
-    return typeof window !== "undefined" ? window.scrollY || 0 : 0;
-  }
+  if ("scrollY" in host) return host.scrollY || 0;
   return host.scrollTop || 0;
 }

@@ -28,6 +28,7 @@ export {
 export {
   getQueryKey,
   normalizeId,
+  getFirstParentId,
   entryExists,
   safeGetEntry,
 } from './helpers';

@@ -4,10 +4,7 @@
  */
 
 import type { CollectionEntry, CollectionKey } from 'astro:content';
-/**
- * Get a clean ID from an entry specifically for query operations
- * This ensures the ID is normalized for graph lookups
- */
+
 export function getQueryKey(entry: CollectionEntry<CollectionKey>): string {
   return normalizeId(entry.id);
 }
@@ -20,6 +17,13 @@ export function normalizeId(id: string): string {
   return id
     .replace(/\.(mdx?|json)$/i, '')
     .trim();
+}
+
+/** The primary parent, shared by entry preparation and static page generation. */
+export function getFirstParentId(parent: unknown): string | undefined {
+  const ref = Array.isArray(parent) ? parent[0] : parent;
+  const id = typeof ref === "string" ? ref : (ref as { id?: unknown } | null)?.id;
+  return typeof id === "string" ? normalizeId(id) || undefined : undefined;
 }
 
 /**

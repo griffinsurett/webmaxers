@@ -192,7 +192,10 @@ export const collections = {
         author: z.string(),
         role: z.string(),
         company: z.string().optional(),
-        rating: z.number().min(1).max(5).default(5),
+        // No default: a star rating must be the reviewer's own (Google's rule
+        // for Review schema). Missing ratings remain unrated.
+        reviewedItem: refSchema(["capabilities"]).optional(),
+        rating: z.number().min(1).max(5).optional(),
         featured: z.boolean().default(false),
       }),
   }),

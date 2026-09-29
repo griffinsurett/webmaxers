@@ -118,6 +118,7 @@ if (queryProp) {
     // Build data object with automatic metadata
     data = {
       items: preparedItems,
+      collectionName: queryCollection,
 
       // Use manual override if provided, otherwise use meta title
       // (but not on the collection page itself to avoid redundancy)

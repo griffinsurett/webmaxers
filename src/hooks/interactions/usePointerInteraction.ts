@@ -64,7 +64,8 @@ export const usePointerInteraction = ({
     const host = resolveHost(elementRef);
     if (!host) return;
 
-    const handlePointerDown = (event: PointerEvent) => {
+    const handlePointerDown = (event: Event) => {
+      if (typeof PointerEvent === "undefined" || !(event instanceof PointerEvent)) return;
       if (!pointerTypes.includes(event.pointerType)) return;
       const pointerId = event.pointerId;
       const state = {
@@ -102,7 +103,8 @@ export const usePointerInteraction = ({
       longPressTimersRef.current.set(pointerId, timer);
     };
 
-    const handlePointerMove = (event: PointerEvent) => {
+    const handlePointerMove = (event: Event) => {
+      if (typeof PointerEvent === "undefined" || !(event instanceof PointerEvent)) return;
       if (!pointerTypes.includes(event.pointerType)) return;
       const pointerId = event.pointerId;
       const state = pointerStateRef.current.get(pointerId);
@@ -131,7 +133,8 @@ export const usePointerInteraction = ({
       });
     };
 
-    const handlePointerUp = (event: PointerEvent) => {
+    const handlePointerUp = (event: Event) => {
+      if (typeof PointerEvent === "undefined" || !(event instanceof PointerEvent)) return;
       if (!pointerTypes.includes(event.pointerType)) return;
       const pointerId = event.pointerId;
       const state = pointerStateRef.current.get(pointerId);
@@ -158,7 +161,8 @@ export const usePointerInteraction = ({
       pointerStateRef.current.delete(pointerId);
     };
 
-    const handlePointerCancel = (event: PointerEvent) => {
+    const handlePointerCancel = (event: Event) => {
+      if (typeof PointerEvent === "undefined" || !(event instanceof PointerEvent)) return;
       if (!pointerTypes.includes(event.pointerType)) return;
       const pointerId = event.pointerId;
       clearLongPressTimer(pointerId);

@@ -355,6 +355,9 @@ export const baseSchema = ({ image }: { image: Function }) =>
     // Per-item link behavior override (takes priority over collection's itemsLinkBehavior)
     linkBehavior: LinkBehaviorConfig,
     llms: llmsItemSchema,
+    // Hand-set structured-data values for THIS entry — the last override
+    // layer (see src/utils/schema/README.md). e.g. `schema: { name: "…" }`.
+    schema: z.record(z.string(), z.any()).optional(),
   });
 
 export type BaseData = z.infer<ReturnType<typeof baseSchema>>;

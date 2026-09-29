@@ -175,7 +175,6 @@ function CookiePreferencesModal({
             allowMultiple
             className="space-y-3"
             items={accordionItems}
-            showIndicator={false}
             headerSlot={({ item, id, expanded }) => {
               const category = cookieCategories.find((c) => c.id === item.id);
               if (!category) return null;
@@ -254,7 +253,6 @@ function CookiePreferencesModal({
           variant="primary"
           onClick={handleConfirm}
           className="flex-1"
-          animated={false}
           type="button"
           disabled={isPending}
         >

@@ -30,6 +30,7 @@ export default defineConfig({
   output: "static",
 
   vite: {
+    resolve: { alias: { "@site": new URL("./src", import.meta.url).pathname } },
     plugins: [
       tailwindcss(),
       {

@@ -110,7 +110,8 @@ export default function useEngagementAutoplay({
       if (pauseOnEngage) pause();
     };
 
-    const onLeave = (event: MouseEvent) => {
+    const onLeave = (event: Event) => {
+      if (!(event instanceof MouseEvent)) return;
       const nextHost =
         (event.relatedTarget as Element | null)?.closest?.(itemSelector) ??
         null;
