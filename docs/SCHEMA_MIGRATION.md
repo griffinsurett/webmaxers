@@ -138,7 +138,8 @@ all four slides have not been visually verified. Concurrent browser activity
 interrupted the check, followed by `noWindowsAvailable`. This is not a failed
 Vercel bypass test. A brief uninterrupted browser window was requested. Keep
 the carousel gate pending until actually checked.
-Do not move to Certified Bag Chasers yet. The deferred type-error reminder stays
+The later user request authorizes continuing Certified Bag Chasers technical work
+while this visual gate remains pending. The deferred type-error reminder stays
 scheduled for completion of the whole standalone and multisite rollout.
 
 
