@@ -153,3 +153,9 @@ Farias `/demolitions` UI/schema mismatch, not a redesign or route change.
 Build, output parity, navigation destination and schema regression checks are run
 for this patch. Release evidence is recorded separately. Prior deployment records
 remain historical and do not validate uncommitted changes.
+
+Breadcrumb release `beade259` is deployed (`dpl_HirnYdz8ndXYuoRAsN4dQgR9j7vm`).
+Authenticated checks on the production alias and exact deployment matched the
+release build. Schema.org sampled markup had zero errors/warnings; all built
+breadcrumb destinations and UI trails passed. See
+[breadcrumb validation](schema-validation/breadcrumbs-2026-09-29.json).

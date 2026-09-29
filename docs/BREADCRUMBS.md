@@ -1,7 +1,7 @@
 # One breadcrumb system
 
 Breadcrumbs are navigation data, not a schema-only feature. `src/utils/breadcrumbs.ts`
-resolves the trail once for UI, JSON-LD and other server-side consumers. It uses
+resolves trails for UI, JSON-LD and other server-side consumers. It uses
 `getBreadcrumbs()` from the existing query system, collection metadata, page rules
 and `prepareEntry()` page/canonical URLs. It never uses a card's checkout/contact
 link as a parent-page destination.

@@ -1,7 +1,7 @@
 {
   "date": "2026-09-29",
   "change": "Shared breadcrumb navigation for UI and structured data",
-  "status": "Local release checks passed; deployment verification pending",
+  "status": "Committed, pushed, deployed and authenticated production checks passed",
   "baseCommit": "32ea32d9069362341509add3aa46ec2f42dc7106",
   "builtOutput": {
     "pages": 13,
@@ -42,5 +42,69 @@
     "53 existing type errors remain deferred until all standalone and multisite schema work finishes.",
     "Existing testimonial carousel visual gate remains pending; not part of this breadcrumb fix.",
     "Built HTML confirms both blog breadcrumb UIs match their schema; browser navigation reached the preview but screenshot capture was interrupted."
+  ],
+  "deployment": {
+    "status": "READY",
+    "projectId": "prj_8NsXLKA1X8hXZdFHs67CgRUXYTIC",
+    "deploymentId": "dpl_HirnYdz8ndXYuoRAsN4dQgR9j7vm",
+    "url": "webmaxxers-r8le0cqqd-griffinjoshs-projects.vercel.app",
+    "commit": "beade259acd65861f422f324bcc761b58d1342ec"
+  },
+  "liveChecks": [
+    {
+      "project": "webmaxxers",
+      "path": "/",
+      "status": 200,
+      "challenged": false,
+      "graphMatchesRelease": true,
+      "breadcrumbTrails": []
+    },
+    {
+      "project": "webmaxxers",
+      "path": "/faq",
+      "status": 200,
+      "challenged": false,
+      "graphMatchesRelease": true,
+      "breadcrumbTrails": [
+        [
+          "Home",
+          "FAQs"
+        ]
+      ]
+    },
+    {
+      "project": "webmaxxers",
+      "path": "/blog",
+      "status": 200,
+      "challenged": false,
+      "graphMatchesRelease": true,
+      "breadcrumbTrails": [
+        [
+          "Home",
+          "Blog"
+        ]
+      ]
+    },
+    {
+      "project": "webmaxxers",
+      "path": "/blog/why-website-speed-matters",
+      "status": 200,
+      "challenged": false,
+      "graphMatchesRelease": true,
+      "breadcrumbTrails": [
+        [
+          "Home",
+          "Blog",
+          "Why Website Speed Matters More Than Most Businesses Realize"
+        ]
+      ]
+    },
+    {
+      "project": "webmaxxers",
+      "path": "/faq",
+      "immutableDeployment": "dpl_HirnYdz8ndXYuoRAsN4dQgR9j7vm",
+      "status": 200,
+      "graphMatchesRelease": true
+    }
   ]
 }
