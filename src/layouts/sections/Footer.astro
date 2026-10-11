@@ -282,16 +282,14 @@ const legalColClass = [
       justify-content: center;
       overflow: hidden;
       width: 100%;
-      /* The wordmark is the page's closing baseline, so it sits ON the bottom
-         edge: no bottom padding. The `line-height: 0.78` on the large line
-         already pulls the box tight around the letters, leaving ~4px under
-         them at 1440 — enough that descenders clear the `overflow: hidden`
-         without the glyphs floating above the edge.
-
-         All the breathing room goes on top, where it separates the lockup from
-         the footer content lifting off it. Measured: this is the gap that read
-         as "too much Y spacing" — it was above the wordmark, not below. */
-      padding-top: clamp(0.75rem, 1.5vw, 1.5rem);
+      /* No padding on either side, so the space above the lockup matches the
+         space below it. The mark sets the box height, and the only gap left at
+         each edge is the margin built into the mark itself, which is the same
+         top and bottom. (It used to have 0.75-1.5rem of top padding on top of
+         that, which read as more room above than below.) The `line-height:
+         0.78` on the large line keeps the text inside the mark's height, so
+         descenders still clear the `overflow: hidden`. */
+      padding-top: 0;
       padding-bottom: 0;
       pointer-events: none;
   }

@@ -34,3 +34,15 @@ pnpm-debug.log*
 .claude/
 .vercel
 .env*
+
+# Disposable local investigation output (keep one-off work in the OS temp directory)
+.scratch/
+.tmp/
+tmp/
+test-results/
+playwright-report/
+coverage/
+__pycache__/
+*.pyc
+*.log
+.vercel/

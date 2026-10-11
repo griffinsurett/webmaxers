@@ -16,7 +16,11 @@ import { shouldShowCollectionCTA } from "../utils/helpers";
 import { toArray } from "@/utils/array";
 
 interface Props extends BaseVariantProps {
-  columns?: 1 | 2 | 3;
+  /**
+   * 1, 2 or 3 — or "auto": three posts sit in one row of three, any other
+   * count uses rows of two (so four stays a 2x2 grid, never 3 + 1).
+   */
+  columns?: 1 | 2 | 3 | "auto";
   /** Small uppercase eyebrow (rendered as the SectionHeading title pill). */
   eyebrow?: string;
   /** Show the "View all" section button. Default true; pass false to hide it. */
@@ -45,10 +49,15 @@ const viewAllText = `View All ${collectionTitle || "Articles"}`;
 // Section "View all" CTA shows only when explicitly enabled AND there's a target.
 const showCTA = showButtonSection && shouldShowCollectionCTA(collectionUrl, safeItems.length);
 
+const resolvedColumns: 1 | 2 | 3 =
+  columns === "auto" ? (safeItems.length === 3 ? 3 : 2) : columns;
+
 const columnClasses = {
   1: "grid-cols-1",
   2: "grid-cols-1 lg:grid-cols-2",
-  3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+  // Straight from one column to three: a 2-column middle step would leave the
+  // third card alone on its own row.
+  3: "grid-cols-1 lg:grid-cols-3",
 };
 ---
 
@@ -66,7 +75,7 @@ const columnClasses = {
       </div>
     )}
 
-    <ul class:list={["grid list-none gap-8", columnClasses[columns]]}>
+    <ul class:list={["grid list-none gap-8", columnClasses[resolvedColumns]]}>
       {safeItems.map((item: any) => (
         <li>
           <ArticleCard {...item} />

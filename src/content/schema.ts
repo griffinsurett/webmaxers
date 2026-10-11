@@ -345,6 +345,17 @@ export const baseSchema = ({ image }: { image: Function }) =>
         if (val instanceof Date) return val;
         return new Date(val);
       }),
+    // Set ONLY when a published item is materially revised. Drives the
+    // "Last updated" line on posts and the structured-data dateModified;
+    // leave it off and both fall back to publishDate.
+    updatedDate: z
+      .union([z.date(), z.string()])
+      .optional()
+      .transform((val) => {
+        if (!val) return undefined;
+        if (val instanceof Date) return val;
+        return new Date(val);
+      }),
     order: z.number().default(0),
     itemLayout: z.string().optional(),
     // Parent reference for content hierarchy (slug of parent item in same collection)

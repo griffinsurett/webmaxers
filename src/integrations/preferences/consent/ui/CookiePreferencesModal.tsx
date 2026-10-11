@@ -175,6 +175,10 @@ function CookiePreferencesModal({
             allowMultiple
             className="space-y-3"
             items={accordionItems}
+            // The header below draws its own +/- circle on the left, so the
+            // Accordion's default right-hand indicator would be a second "+"
+            // squeezed in beside the toggle.
+            showIndicator={false}
             headerSlot={({ item, id, expanded }) => {
               const category = cookieCategories.find((c) => c.id === item.id);
               if (!category) return null;

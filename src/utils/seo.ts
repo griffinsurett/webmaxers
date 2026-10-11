@@ -64,6 +64,7 @@ export interface SEOProps {
   author?: string; // Author name (resolved from reference)
   authorId?: string; // `authors` entry id (links the schema author node)
   publishDate?: Date | string; // Publication date
+  updatedDate?: Date | string; // Last material revision, if any
   seo?: SEOData; // Additional SEO overrides
   siteName?: string; // Site name for OG tags
   addToLLMs?: boolean; // Whether this page appears in llms.txt (default: true)
@@ -138,6 +139,7 @@ export async function buildItemSEOProps(
     author: authorName,
     authorId: resolveAuthorId(itemData.author),
     publishDate: itemData.publishDate,
+    updatedDate: itemData.updatedDate,
     addToLLMs,
     seo: mergeItemSEO(itemData, collectionMeta),
   };

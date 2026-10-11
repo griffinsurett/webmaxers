@@ -59,11 +59,14 @@ const dateLabel = displayDate
       year: "numeric",
       month: "short",
       day: "numeric",
+      // Front-matter dates are midnight UTC; local formatting showed the day
+      // before in US time zones (and baked that into local builds).
+      timeZone: "UTC",
     })
   : "";
 ---
 
-<article class="ac-dark group flex  flex-col">
+<article class="ac-dark group flex h-full flex-col">
   {/* Media */}
   {/* No url -> a plain <div>, not a hidden <a>. This was `<a href={url}
       aria-hidden={!url}>`, which still emitted `href=""` — a VALID href that
@@ -106,7 +109,10 @@ const dateLabel = displayDate
       variant="secondary"
       href={url}
       size="sm"
-      className="ac-dark__link mt-4 self-start"
+      // mt-auto pins the link to the card's foot, so cards in one row line
+      // their links up even when the titles wrap to different heights; pt-4
+      // keeps the gap above it that the old mt-4 gave.
+      className="ac-dark__link mt-auto pt-4 self-start"
     >
       Read article
     </Button>

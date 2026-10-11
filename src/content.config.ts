@@ -99,6 +99,12 @@ export const collections = {
         tags: z.array(z.string()).default([]),
         readingTime: z.number().optional(),
         capabilities: refSchema("capabilities"),
+        // Questions that belong to this post alone. Rendered as an FAQ section
+        // (with FAQPage schema) after the article. Site-wide questions belong
+        // in the `faq` collection instead, which feeds the /faq page.
+        faqs: z
+          .array(z.object({ question: z.string(), answer: z.string() }))
+          .default([]),
       }),
   }),
 

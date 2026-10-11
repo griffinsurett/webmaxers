@@ -1,0 +1,117 @@
+---
+title: "Core Web Vitals Explained: LCP, INP and CLS in Plain English"
+description: "What Core Web Vitals are, what good LCP, INP and CLS scores look like, how to check yours, and whether they affect Google rankings."
+publishDate: 2026-10-11
+order: 3
+author: "griffin-surett"
+draft: false
+featuredImage:
+  src: "@/assets/blog/core-web-vitals-thumbnail.jpg"
+  alt: "Core Web Vitals illustrated in three silver panels: LCP loading a page, INP responding to a click, and CLS keeping content aligned."
+capabilities:
+  - web-development
+  - seo
+seo:
+  metaTitle: "Core Web Vitals Explained: LCP, INP and CLS in Plain English"
+  metaDescription: "What Core Web Vitals are, what good LCP, INP and CLS scores look like, how to check yours, and whether they affect Google rankings."
+  ogTitle: "Core Web Vitals Explained: LCP, INP and CLS in Plain English"
+  ogDescription: "What Core Web Vitals are, what good LCP, INP and CLS scores look like, how to check yours, and whether they affect Google rankings."
+  twitterCard: "summary_large_image"
+  keywords: ["core web vitals", "largest contentful paint", "interaction to next paint", "cumulative layout shift", "lcp inp cls", "core web vitals seo"]
+faqs:
+  - question: "What is a good Core Web Vitals score?"
+    answer: "LCP of 2.5 seconds or less, INP of 200 milliseconds or less, and CLS of 0.1 or less. A page passes when at least 75% of real visits hit all three."
+  - question: "Why is my PageSpeed score different from my Core Web Vitals?"
+    answer: "The 0–100 score is a one-off lab test on a simulated phone. Core Web Vitals come from real visitors over the past 28 days. Google ranks on the real-visitor data."
+  - question: "What happened to First Input Delay (FID)?"
+    answer: "Google replaced it with Interaction to Next Paint (INP) in March 2024. INP is stricter because it looks at every click during a visit, not just the first."
+  - question: "Why does my site say \"no data\"?"
+    answer: "The page doesn't get enough Chrome traffic for Google to report real-visitor scores yet. Use the lab results until it does."
+  - question: "How long until fixes show up?"
+    answer: "Real-visitor data covers a rolling 28 days, so expect about four weeks before the new numbers fully replace the old ones."
+  - question: "Do I need a developer to fix Core Web Vitals?"
+    answer: "Some fixes are simple, like compressing images or removing plugins you don't use. Hosting, scripts and layout shifts usually need someone who knows the code."
+---
+
+## What are Core Web Vitals?
+
+Core Web Vitals are three scores Google uses to measure how real visitors experience your page: how fast it loads, how quickly it responds, and whether it stays still. Google wants all three in the "good" range, and they're one of the signals it looks at when ranking pages.
+
+If you've ever opened a PageSpeed report, seen a wall of acronyms and closed the tab, this guide is for you. Here's what each score means, what "good" looks like, how to check yours, and how much they really matter for SEO.
+
+| Score | What it measures | Good | Needs work | Poor |
+| --- | --- | --- | --- | --- |
+| LCP (Largest Contentful Paint) | How fast the main content shows up | 2.5 s or less | 2.5–4 s | Over 4 s |
+| INP (Interaction to Next Paint) | How fast the page reacts to a click or tap | 200 ms or less | 200–500 ms | Over 500 ms |
+| CLS (Cumulative Layout Shift) | How much the page jumps while loading | 0.1 or less | 0.1–0.25 | Over 0.25 |
+
+Google grades each score on real visits, at the 75th percentile. In plain terms: at least three out of four visitors need a good experience for the page to pass.
+
+## LCP: how fast the main content loads
+
+Largest Contentful Paint is the time between clicking a link and seeing the biggest thing on the screen. That's usually your hero image, main headline or product photo: the moment a visitor thinks "OK, the page is here."
+
+Good is 2.5 seconds or less. Over 4 seconds is poor, and plenty of visitors won't wait that long.
+
+What usually slows it down:
+
+- Huge, uncompressed hero images or background videos
+- Slow hosting or no caching, so the server takes a while to answer
+- Fonts, sliders and scripts that load before the main content
+- Bloated page builders that load code for features the page never uses
+
+The fix, in one line: make the biggest thing on the page smaller, and load it first. Our [website speed guide](/blog/why-website-speed-matters) covers the fixes in more detail.
+
+## INP: how fast the page responds to clicks
+
+Interaction to Next Paint measures the delay between a visitor tapping something (a menu, a button, "add to cart") and the page visibly reacting. It looks at interactions across the whole visit, not just the first one, so a page that feels sluggish halfway through still gets caught.
+
+Good is 200 milliseconds or less, roughly the length of a blink. Over 500 ms is poor: long enough that people tap again, or give up.
+
+INP replaced an older score, First Input Delay (FID), in March 2024. If an article or tool still talks about FID, it's out of date.
+
+What usually slows it down:
+
+- Too many third-party scripts: chat widgets, trackers, ad tags, review pop-ups
+- Heavy JavaScript that ties up the browser while it runs
+- Plugins that do extra work every time someone clicks
+
+The fix: remove scripts you don't use, and delay the rest until the page has finished loading.
+
+## CLS: why content jumps around
+
+Cumulative Layout Shift scores how much the page moves while someone is trying to use it. You've felt this: you go to tap a link, an ad loads above it, everything shifts down, and you hit the wrong thing.
+
+Unlike the other two, CLS isn't measured in time. It's a score where 0 means nothing moved. 0.1 or less is good; over 0.25 is poor.
+
+What usually causes it:
+
+- Photos and videos with no dimensions in the code, so the browser can't save their spot
+- Ads, embeds and cookie banners that push content down as they appear
+- Custom fonts loading late and resizing the text
+
+The fix: reserve the space for everything before it loads, so nothing has to shove the page around to fit.
+
+## How to check your Core Web Vitals
+
+You can check all three for free in a couple of minutes. Start with mobile: it's almost always the weaker score.
+
+1. **PageSpeed Insights** (pagespeed.web.dev). Paste in any URL. The top section, "Discover what your real users are experiencing," shows real-visitor data and a pass or fail. The 0–100 score further down is a lab test: useful for spotting problems, but it isn't what Google ranks on.
+2. **Google Search Console.** Under Experience, the Core Web Vitals report sorts every page on your site into good, needs improvement or poor, for mobile and desktop.
+
+Seeing "no data"? Google only reports real-visitor scores once a page gets enough Chrome traffic. Smaller sites often don't, so use the lab results as your guide until they do.
+
+## Do Core Web Vitals affect SEO?
+
+Yes, but less than most people think. Google recommends that site owners get good Core Web Vitals and says they line up with what its ranking systems reward. But they sit behind relevance and useful content. Speed can't rescue a page that doesn't answer what the searcher asked.
+
+Where they matter is the close calls. If your page and a competitor's answer the search equally well, the one that loads faster and holds still tends to come out ahead.
+
+The bigger payoff is usually your visitors. A page that loads quickly, responds instantly and doesn't jump keeps more people around long enough to call, book or buy.
+
+Not sure how your site scores? [Get a free speed review](/contact-us) and we'll tell you which fixes would make the biggest difference.
+
+## Sources
+
+- [Google Search Central: Understanding Core Web Vitals and Google search results](https://developers.google.com/search/docs/appearance/core-web-vitals)
+- [web.dev: How the Core Web Vitals metrics thresholds were defined](https://web.dev/articles/defining-core-web-vitals-thresholds)

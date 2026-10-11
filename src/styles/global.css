@@ -753,6 +753,33 @@ body {
     @apply text-primary underline decoration-primary/40 transition-colors duration-200 hover:decoration-primary;
   }
 
+  /* Markdown tables. `display: block` + overflow lets a wide table scroll
+     sideways on a phone instead of squeezing every cell to a word per line.
+     The rows keep their column alignment (the browser wraps them in one
+     anonymous table box); the cell min-widths are what make it overflow and
+     scroll rather than shrink. */
+  .written-rich-text table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    margin-block: 1.75rem;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  .written-rich-text th,
+  .written-rich-text td {
+    min-width: 7rem;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .written-rich-text th {
+    @apply text-heading font-medium;
+    border-bottom-color: var(--color-border-strong);
+    white-space: nowrap;
+  }
+
   .emphasized-text {
     @apply text-transparent secondary-gradient bg-clip-text;
   }

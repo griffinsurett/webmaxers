@@ -29,9 +29,8 @@ import { animationProps } from "@/integrations/scroll-animations/props";
     <CurtainReveal>
       <HomeTop slot="top" scrollTarget="#work" />
 
-      {/* PROJECTS + BENEFITS share one opaque `bg-gradient` wrapper so the
-          gradient runs across both as a single surface rather than restarting
-          per section. Neither variant paints its own background. */}
+      {/* PROJECTS — the panel the curtain reveals. Benefits, technologies and
+          the blog moved to the next curtain's top panel (below). */}
       <div slot="bottom" id="work" class="bg-gradient">
         <ContentRenderer
           query={byTag("projects", "featured").orderBy(sortByOrder())}
@@ -39,7 +38,21 @@ import { animationProps } from "@/integrations/scroll-animations/props";
           title={"Selected work\n& explorations"}
           collectionUrl="/projects"
         />
+      </div>
+    </CurtainReveal>
 
+
+
+      {/* FAQs moved to /faq */}
+
+    {/* BENEFITS → TECHNOLOGIES → BLOG, then the CTA. The same curtain as the
+        top of the page: this whole run is ONE top panel, taller than the
+        viewport, so it scrolls in straight behind the filmstrip, scrolls
+        through, pins when the blog's bottom edge reaches the viewport bottom,
+        and lifts off the closing CTA. (A short top panel — the blog alone —
+        left the curtain's lead-in spacer showing as a blank band above it.) */}
+    <CurtainReveal>
+      <div slot="top" class="bg-gradient">
         <div class="section-rule-t">
           <ContentRenderer
             query={query("benefits").orderBy(sortByOrder()).limit(8)}
@@ -49,41 +62,36 @@ import { animationProps } from "@/integrations/scroll-animations/props";
             description="Your website should do more than look good — it should quietly work for your business every day. It should make you easier to trust the moment someone lands on it, easier to find when people search, and easier to contact when they're ready to act. Every site we build is designed around outcomes like these, so the things that actually move your business forward keep happening long after launch."
           />
         </div>
-
-            <div class="bottom-content-section">
-      <ContentRenderer
-        query={byTag("technologies", "featured")
-          .orderBy(sortByOrder())
-          .limit(13)}
-        variant="TechnologiesVariant"
-        title="Featured Technologies"
-        description="These are some of the tools and platforms we use to build and support websites."
-      />
-    </div>
+        <div class="bottom-content-section">
+          <ContentRenderer
+            query={byTag("technologies", "featured")
+              .orderBy(sortByOrder())
+              .limit(13)}
+            variant="TechnologiesVariant"
+            title="Featured Technologies"
+            description="These are some of the tools and platforms we use to build and support websites."
+          />
+        </div>
+        <!-- BLOG — editorial cards (webmaxers style) under a GWS SectionHeading. -->
+        <ContentRenderer
+          query={query("blog").orderBy(sortByDate("publishDate", "desc")).limit(4)}
+          variant="BlogVariant"
+          {/* Roomier than the variant's default (py-4 / lg:py-12): matches the
+              site's standard section rhythm (outer-section is py-24). */}
+          className="section-rule-t py-16! lg:py-24!"
+          columns="auto"
+          showButtonSection={false}
+          eyebrow="Latest Articles"
+          title="Latest Articles"
+          heading={{
+            before: "Stay Informed. Read Our Latest Insights.",
+          }}
+        />
       </div>
+      {/* CLOSING CTA — split panel / outer space with the spinning mark.
+          (The previous photo version is HomeFounderCtaSectionOld.) */}
+      <HomeCtaSection slot="bottom" />
     </CurtainReveal>
-
-
-
-      {/* FAQs moved to /faq */}
-
-    <!-- BLOG — editorial cards (webmaxers style) under a GWS SectionHeading. -->
-    <ContentRenderer
-      query={query("blog").orderBy(sortByDate("publishDate", "desc")).limit(4)}
-      variant="BlogVariant"
-      className="bg-gradient section-rule-t"
-      columns={2}
-      showButtonSection={false}
-      eyebrow="Latest Articles"
-      title="Latest Articles"
-      heading={{
-        before: "Stay Informed. Read Our Latest Insights.",
-      }}
-    />
-
-    {/* CLOSING CTA — split panel / outer space with the spinning mark.
-        (The previous photo version is HomeFounderCtaSectionOld.) */}
-    <HomeCtaSection />
   <!-- </div> -->
 
   {/*
