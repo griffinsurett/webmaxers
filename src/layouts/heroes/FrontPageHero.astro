@@ -81,6 +81,7 @@ const {
             .where((entry) => entry.data.featured === true)
             .limit(3)}
           variant="TestimonialCirclesCounterVariant"
+          id="hero-clients-mobile"
           className="lg:hidden [&_.text-2xl]:text-3xl [&_.support-text]:text-base"
           counterStart={10}
           counterEnd={100}
@@ -107,6 +108,10 @@ const {
           .where((entry) => entry.data.featured === true)
           .limit(3)}
         variant="TestimonialCirclesCounterVariant"
+        {/* Explicit ids: the auto-generated one is "testimonials-home", the
+            same id as the testimonials carousel these circles link to, so the
+            link pointed at itself and clicking it did nothing. */}
+        id="hero-clients"
         className="hidden lg:flex shrink-0 lg:w-[340px]"
         counterStart={10}
         counterEnd={100}

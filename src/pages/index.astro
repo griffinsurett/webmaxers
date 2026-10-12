@@ -27,7 +27,8 @@ import { animationProps } from "@/integrations/scroll-animations/props";
         panel, so the curtain lifts every layer of it together to reveal the
         work below. Everything that region needs lives in HomeTop, not here. */}
     <CurtainReveal>
-      <HomeTop slot="top" scrollTarget="#work" />
+      {/* The hero's scroll arrow goes to the section directly under it. */}
+      <HomeTop slot="top" scrollTarget="#about" />
 
       {/* PROJECTS — the panel the curtain reveals. Benefits, technologies and
           the blog moved to the next curtain's top panel (below). */}
