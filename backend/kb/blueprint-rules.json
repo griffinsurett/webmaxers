@@ -1,0 +1,621 @@
+{
+  "version": "demo-2026-11",
+  "note": "DEMO rules. Replace with real Webmaxxers sales and strategy rules. Edit this file and restart the backend; no code changes needed.",
+  "maxRecommendedAddons": 6,
+  "templates": [
+    {
+      "id": "restaurant",
+      "match": [
+        "restaurant",
+        "cafe",
+        "bakery",
+        "catering",
+        "pizz",
+        "diner",
+        "brewery",
+        "food truck",
+        "coffee"
+      ],
+      "core": [
+        {
+          "id": "menu",
+          "title": "Menu",
+          "aliases": [
+            "menu",
+            "food",
+            "drinks"
+          ],
+          "purpose": "Show what is on offer so visitors can decide quickly.",
+          "cta": "Order now"
+        },
+        {
+          "id": "catering",
+          "title": "Catering",
+          "aliases": [
+            "cater",
+            "events",
+            "private"
+          ],
+          "purpose": "Win larger orders and events.",
+          "cta": "Request catering"
+        },
+        {
+          "id": "about",
+          "title": "About",
+          "aliases": [
+            "about",
+            "story",
+            "team"
+          ],
+          "purpose": "Build trust with the people and story behind the business.",
+          "cta": "Visit us"
+        }
+      ]
+    },
+    {
+      "id": "clinic",
+      "match": [
+        "clinic",
+        "dental",
+        "dentist",
+        "doctor",
+        "medical",
+        "chiropract",
+        "therapy",
+        "veterinar",
+        "orthodont",
+        "optometr",
+        "physio"
+      ],
+      "core": [
+        {
+          "id": "services",
+          "title": "Services",
+          "aliases": [
+            "service",
+            "treatment",
+            "procedure"
+          ],
+          "purpose": "Explain the care offered in plain language.",
+          "cta": "Book an appointment"
+        },
+        {
+          "id": "providers",
+          "title": "Providers",
+          "aliases": [
+            "provider",
+            "doctor",
+            "team",
+            "staff",
+            "dentist",
+            "meet"
+          ],
+          "purpose": "Introduce the people patients will see.",
+          "cta": "Book an appointment"
+        },
+        {
+          "id": "patient-info",
+          "title": "Patient Info",
+          "aliases": [
+            "patient",
+            "insurance",
+            "new patient",
+            "forms"
+          ],
+          "purpose": "Answer first-visit questions about insurance, forms and what to expect.",
+          "cta": "Book an appointment"
+        }
+      ]
+    },
+    {
+      "id": "professional-services",
+      "match": [
+        "law",
+        "attorney",
+        "legal",
+        "account",
+        "cpa",
+        "consult",
+        "agency",
+        "financial",
+        "insurance",
+        "real estate",
+        "realtor",
+        "architect",
+        "bookkeep"
+      ],
+      "core": [
+        {
+          "id": "about",
+          "title": "About",
+          "aliases": [
+            "about",
+            "firm",
+            "team",
+            "story"
+          ],
+          "purpose": "Show credibility and the people behind the firm.",
+          "cta": "Book a consultation"
+        },
+        {
+          "id": "services",
+          "title": "Services",
+          "aliases": [
+            "service",
+            "practice",
+            "areas",
+            "solutions"
+          ],
+          "purpose": "Explain what the firm does and for whom.",
+          "cta": "Book a consultation"
+        },
+        {
+          "id": "case-studies",
+          "title": "Case Studies",
+          "aliases": [
+            "case",
+            "result",
+            "portfolio",
+            "testimonial",
+            "work"
+          ],
+          "purpose": "Prove results with real examples.",
+          "cta": "Book a consultation"
+        }
+      ]
+    },
+    {
+      "id": "retail",
+      "match": [
+        "shop",
+        "store",
+        "retail",
+        "boutique",
+        "ecommerce",
+        "e-commerce",
+        "online store",
+        "products"
+      ],
+      "core": [
+        {
+          "id": "shop",
+          "title": "Shop",
+          "aliases": [
+            "shop",
+            "products",
+            "store",
+            "catalog",
+            "collection"
+          ],
+          "purpose": "Let visitors browse and buy.",
+          "cta": "Shop now"
+        },
+        {
+          "id": "about",
+          "title": "About",
+          "aliases": [
+            "about",
+            "story",
+            "brand"
+          ],
+          "purpose": "Tell the brand story and build trust.",
+          "cta": "Shop now"
+        },
+        {
+          "id": "shipping-and-returns",
+          "title": "Shipping and Returns",
+          "aliases": [
+            "shipping",
+            "return",
+            "delivery",
+            "policy"
+          ],
+          "purpose": "Remove buying doubts about delivery and returns.",
+          "cta": "Shop now"
+        }
+      ]
+    },
+    {
+      "id": "b2b-tech",
+      "match": [
+        "software",
+        "saas",
+        "platform",
+        "it services",
+        "managed it",
+        "cyber",
+        "tech"
+      ],
+      "core": [
+        {
+          "id": "solutions",
+          "title": "Solutions",
+          "aliases": [
+            "solution",
+            "service",
+            "product",
+            "platform"
+          ],
+          "purpose": "Explain what the company solves and for whom.",
+          "cta": "Book a demo"
+        },
+        {
+          "id": "case-studies",
+          "title": "Case Studies",
+          "aliases": [
+            "case",
+            "customer",
+            "result",
+            "work"
+          ],
+          "purpose": "Prove outcomes with real customers.",
+          "cta": "Book a demo"
+        },
+        {
+          "id": "about",
+          "title": "About",
+          "aliases": [
+            "about",
+            "company",
+            "team"
+          ],
+          "purpose": "Show who is behind the product.",
+          "cta": "Book a demo"
+        }
+      ]
+    },
+    {
+      "id": "home-services",
+      "match": [
+        "plumb",
+        "hvac",
+        "heating",
+        "cooling",
+        "roof",
+        "electric",
+        "landscap",
+        "lawn",
+        "clean",
+        "paint",
+        "remodel",
+        "contractor",
+        "construction",
+        "pest",
+        "garage",
+        "handyman",
+        "carpet",
+        "floor",
+        "fence",
+        "pool",
+        "moving",
+        "locksmith",
+        "tree",
+        "pressure wash",
+        "window"
+      ],
+      "core": [
+        {
+          "id": "about",
+          "title": "About",
+          "aliases": [
+            "about",
+            "story",
+            "team",
+            "company"
+          ],
+          "purpose": "Build trust with the people behind the business.",
+          "cta": "Call now"
+        },
+        {
+          "id": "services",
+          "title": "Services",
+          "aliases": [
+            "service",
+            "what we do"
+          ],
+          "purpose": "Give an overview of everything the business offers.",
+          "cta": "Get a quote"
+        },
+        {
+          "id": "projects",
+          "title": "Our Work",
+          "aliases": [
+            "project",
+            "work",
+            "portfolio",
+            "gallery",
+            "result",
+            "review",
+            "testimonial"
+          ],
+          "purpose": "Show proof of past work and results.",
+          "cta": "Get a quote"
+        }
+      ]
+    },
+    {
+      "id": "generic",
+      "match": [],
+      "core": [
+        {
+          "id": "about",
+          "title": "About",
+          "aliases": [
+            "about",
+            "story",
+            "team",
+            "company"
+          ],
+          "purpose": "Build trust with the people behind the business.",
+          "cta": "Contact us"
+        },
+        {
+          "id": "services",
+          "title": "Services",
+          "aliases": [
+            "service",
+            "what we do",
+            "offer"
+          ],
+          "purpose": "Give an overview of what the business offers.",
+          "cta": "Contact us"
+        },
+        {
+          "id": "projects",
+          "title": "Our Work",
+          "aliases": [
+            "project",
+            "work",
+            "portfolio",
+            "gallery",
+            "result"
+          ],
+          "purpose": "Show proof of past work and results.",
+          "cta": "Contact us"
+        }
+      ]
+    }
+  ],
+  "exclusiveGroups": [
+    [
+      "addon-ai-chat",
+      "addon-live-chat"
+    ]
+  ],
+  "addons": [
+    {
+      "sku": "addon-managed-forms",
+      "priority": 1,
+      "recommendWhen": [
+        {}
+      ],
+      "whyYes": "Every website needs reliable delivery of contact and quote requests.",
+      "whyNo": "Not needed for this plan."
+    },
+    {
+      "sku": "addon-quote-system",
+      "priority": 3,
+      "recommendWhen": [
+        {
+          "goal": [
+            "quotes"
+          ]
+        }
+      ],
+      "whyYes": "Your main goal is quote requests, so a guided quote form converts better than a plain contact form.",
+      "whyNo": "Only needed when quote requests are the main goal."
+    },
+    {
+      "sku": "addon-booking",
+      "priority": 2,
+      "recommendWhen": [
+        {
+          "goal": [
+            "bookings"
+          ]
+        },
+        {
+          "goal": [
+            "calls",
+            "leads",
+            "quotes"
+          ],
+          "signal": [
+            "compBooking"
+          ]
+        },
+        {
+          "goal": [
+            "calls",
+            "leads",
+            "quotes"
+          ],
+          "signal": [
+            "compNoBooking"
+          ]
+        }
+      ],
+      "skipWhenTool": [
+        "booking",
+        "calendly",
+        "acuity",
+        "square appointments"
+      ],
+      "whyYes": "Lets visitors who prefer not to phone book online, which helps you stand out from local competitors.",
+      "whyNo": "Only needed when bookings are a goal or competitors offer online booking."
+    },
+    {
+      "sku": "addon-live-chat",
+      "priority": 5,
+      "recommendWhen": [
+        {
+          "signal": [
+            "compChat"
+          ]
+        },
+        {
+          "goal": [
+            "sales"
+          ]
+        }
+      ],
+      "whyYes": "Competitors offer live chat, and quick answers help convert visitors who are comparing options.",
+      "whyNo": "Not a priority unless competitors offer chat or you sell online."
+    },
+    {
+      "sku": "addon-ai-chat",
+      "priority": 4,
+      "recommendWhen": [
+        {
+          "goal": [
+            "leads",
+            "sales"
+          ],
+          "industry": [
+            "professional-services",
+            "b2b-tech",
+            "retail"
+          ]
+        }
+      ],
+      "whyYes": "Answers visitor questions at any hour and captures leads when no one is available.",
+      "whyNo": "Not needed for this type of business right now."
+    },
+    {
+      "sku": "addon-ai-lead-qualification",
+      "priority": 7,
+      "requires": [
+        "addon-ai-chat",
+        "addon-live-chat"
+      ],
+      "recommendWhen": [
+        {
+          "goal": [
+            "leads",
+            "quotes"
+          ],
+          "industry": [
+            "professional-services",
+            "b2b-tech"
+          ]
+        }
+      ],
+      "whyYes": "Sorts serious enquiries from casual ones so your team talks to the right people first.",
+      "whyNo": "Needs a chat tool first, and mainly helps lead-heavy businesses."
+    },
+    {
+      "sku": "addon-file-uploads",
+      "priority": 8,
+      "requires": [
+        "addon-managed-forms",
+        "addon-quote-system"
+      ],
+      "recommendWhen": [
+        {
+          "goal": [
+            "quotes"
+          ],
+          "industry": [
+            "home-services"
+          ]
+        }
+      ],
+      "whyYes": "Photos of the problem let you quote faster and more accurately.",
+      "whyNo": "Only useful when customers need to send photos or documents."
+    },
+    {
+      "sku": "addon-crm",
+      "priority": 9,
+      "recommendWhen": [
+        {
+          "tool": [
+            "crm",
+            "hubspot",
+            "salesforce",
+            "zoho",
+            "pipedrive"
+          ]
+        }
+      ],
+      "whyYes": "You already use a CRM, so new enquiries can flow straight into it.",
+      "whyNo": "Only relevant if you already use a CRM."
+    },
+    {
+      "sku": "addon-reviews",
+      "priority": 6,
+      "recommendWhen": [
+        {
+          "industry": [
+            "home-services",
+            "restaurant",
+            "clinic"
+          ]
+        },
+        {
+          "signal": [
+            "compReviews"
+          ]
+        }
+      ],
+      "whyYes": "Showing real customer reviews builds trust quickly, and competitors already do.",
+      "whyNo": "Not a priority for this type of business."
+    },
+    {
+      "sku": "addon-notifications",
+      "priority": 10,
+      "requires": [
+        "addon-managed-forms",
+        "addon-quote-system",
+        "addon-booking"
+      ],
+      "recommendWhen": [
+        {
+          "goal": [
+            "calls",
+            "quotes",
+            "bookings"
+          ]
+        }
+      ],
+      "whyYes": "Instant alerts mean new enquiries are never missed, which matters when customers are ready to act.",
+      "whyNo": "Needs a form, quote or booking tool to send alerts from."
+    },
+    {
+      "sku": "addon-payments",
+      "priority": 11,
+      "recommendWhen": [
+        {
+          "goal": [
+            "sales"
+          ]
+        },
+        {
+          "industry": [
+            "retail"
+          ]
+        }
+      ],
+      "whyYes": "You want to sell online, so you need to take payments.",
+      "whyNo": "Only needed if you take payments on the website."
+    },
+    {
+      "sku": "addon-newsletter",
+      "priority": 12,
+      "recommendWhen": [
+        {
+          "goal": [
+            "sales",
+            "leads"
+          ],
+          "industry": [
+            "retail",
+            "restaurant",
+            "professional-services"
+          ]
+        }
+      ],
+      "whyYes": "Keeps past customers and prospects coming back.",
+      "whyNo": "Ongoing email is not a priority for this plan."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+# Production-style stack: the API image plus Postgres with pgvector.
+# Use it for a self-hosted deployment, a staging copy, or the launch rehearsal.
+#
+#   cp .env.production.example .env.production     (then fill in the values)
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+#
+# Required values are marked :? so compose refuses to start if one is missing.
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-blueprint}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-blueprint}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # No published port: only the API container can reach the database.
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      NODE_ENV: production
+      PORT: "8000"
+      DATABASE_URL: postgres://${POSTGRES_USER:-blueprint}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-blueprint}
+      CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS to the site origin, e.g. https://webmaxxers.com}
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      DATABASE_SSL: ${DATABASE_SSL:-disable}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      KB_BUCKET: ${KB_BUCKET:-knowledge}
+      KB_POLL_SECONDS: ${KB_POLL_SECONDS:-60}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      MAX_MESSAGES_PER_SESSION: ${MAX_MESSAGES_PER_SESSION:-40}
+      MAX_SESSIONS_PER_IP: ${MAX_SESSIONS_PER_IP:-5}
+    stop_grace_period: 30s # longer than the app's 25s drain
+
+volumes:
+  db-data:

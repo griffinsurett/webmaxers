@@ -1,0 +1,238 @@
+{
+  "version": "demo-2026-11",
+  "currency": "USD",
+  "note": "DEMO pricing for development. Replace with real Webmaxxers pricing before launch.",
+  "items": [
+    {
+      "sku": "site-starter",
+      "kind": "website_type",
+      "name": "Starter Website",
+      "description": "The foundation for most local service businesses: Home, About, Services, a proof page (Projects/Reviews) and Contact.",
+      "price": 1250,
+      "included_pages": 5,
+      "metadata": {
+        "best_for": [
+          "local services",
+          "contractors",
+          "professional services",
+          "restaurants"
+        ],
+        "family": "brochure"
+      }
+    },
+    {
+      "sku": "site-business",
+      "kind": "website_type",
+      "name": "Lead-Gen Business Website",
+      "description": "For businesses with several distinct services or service areas that each deserve a ranking page.",
+      "price": 2250,
+      "included_pages": 10,
+      "metadata": {
+        "best_for": [
+          "multi-service contractors",
+          "clinics",
+          "law firms",
+          "agencies"
+        ],
+        "family": "brochure"
+      }
+    },
+    {
+      "sku": "site-ecommerce",
+      "kind": "website_type",
+      "name": "E-commerce Starter",
+      "description": "Adds a product catalog, cart and checkout (up to 50 products loaded).",
+      "price": 3500,
+      "included_pages": 10,
+      "metadata": {
+        "best_for": [
+          "retail",
+          "product brands",
+          "online stores"
+        ],
+        "family": "ecommerce"
+      }
+    },
+    {
+      "sku": "page-standard",
+      "kind": "page",
+      "name": "Standard Page",
+      "description": "An informational page such as About, Team, FAQ, Careers or Financing.",
+      "price": 250
+    },
+    {
+      "sku": "page-service",
+      "kind": "page",
+      "name": "Service Page",
+      "description": "A dedicated page for one service: what it is, signs you need it, process, proof, FAQs and a service-specific CTA. Ranks for that service's searches.",
+      "price": 250
+    },
+    {
+      "sku": "page-location",
+      "kind": "page",
+      "name": "Location / Service-Area Page",
+      "description": "A page for one city or service area with genuinely local content (projects, reviews, regulations). Only recommended when the business really serves that area.",
+      "price": 200
+    },
+    {
+      "sku": "page-advanced",
+      "kind": "page",
+      "name": "Advanced Page",
+      "description": "A page with custom functionality: cost calculator, filterable project gallery, interactive menu, comparison tool or client portal entry.",
+      "price": 450
+    },
+    {
+      "sku": "page-legal",
+      "kind": "page",
+      "name": "Legal Page",
+      "description": "Privacy policy, terms or accessibility statement based on the client's provided policy text.",
+      "price": 75
+    },
+    {
+      "sku": "content-article",
+      "kind": "content",
+      "name": "Blog / Resource Article",
+      "description": "One researched article (1,200 to 1,800 words) targeting a real customer question, linked into the related service page.",
+      "price": 150
+    },
+    {
+      "sku": "content-hub",
+      "kind": "content",
+      "name": "Resource Hub Setup",
+      "description": "Blog/resources index with categories, internal linking and article templates. Required once before articles are published.",
+      "price": 300
+    },
+    {
+      "sku": "addon-managed-forms",
+      "kind": "addon",
+      "name": "Managed Forms",
+      "description": "Form configuration, lead routing with fallback, spam protection and delivery monitoring with alerts.",
+      "setup": 150,
+      "monthly": 25,
+      "metadata": {
+        "category": "forms"
+      }
+    },
+    {
+      "sku": "addon-ai-chat",
+      "kind": "addon",
+      "name": "AI Customer Service Chat",
+      "description": "Answers approved customer questions 24/7, routes visitors to the right service and captures leads after hours.",
+      "setup": 500,
+      "monthly": 79,
+      "metadata": {
+        "category": "chat"
+      }
+    },
+    {
+      "sku": "addon-live-chat",
+      "kind": "addon",
+      "name": "Live Chat",
+      "description": "Lets visitors talk to staff in real time during business hours.",
+      "setup": 150,
+      "monthly": 20,
+      "metadata": {
+        "category": "chat"
+      }
+    },
+    {
+      "sku": "addon-ai-lead-qualification",
+      "kind": "addon",
+      "name": "AI Lead Qualification",
+      "description": "Collects and qualifies prospects conversationally before they reach the sales team.",
+      "setup": 400,
+      "monthly": 49,
+      "metadata": {
+        "category": "chat"
+      }
+    },
+    {
+      "sku": "addon-booking",
+      "kind": "addon",
+      "name": "Appointment Booking",
+      "description": "Visitors schedule appointments or site visits directly, synced to the business calendar.",
+      "setup": 250,
+      "monthly": 0,
+      "metadata": {
+        "category": "booking"
+      }
+    },
+    {
+      "sku": "addon-quote-system",
+      "kind": "addon",
+      "name": "Estimate / Quote System",
+      "description": "Multi-step quote request that gathers the details needed for an accurate estimate.",
+      "setup": 400,
+      "monthly": 0,
+      "metadata": {
+        "category": "forms"
+      }
+    },
+    {
+      "sku": "addon-file-uploads",
+      "kind": "addon",
+      "name": "File / Photo Uploads",
+      "description": "Customers attach project photos, plans or documents to their request.",
+      "setup": 150,
+      "monthly": 10,
+      "metadata": {
+        "category": "forms"
+      }
+    },
+    {
+      "sku": "addon-crm",
+      "kind": "addon",
+      "name": "CRM Integration",
+      "description": "Sends leads into the client's existing CRM or workflow tool.",
+      "setup": 300,
+      "monthly": 0,
+      "metadata": {
+        "category": "crm"
+      }
+    },
+    {
+      "sku": "addon-reviews",
+      "kind": "addon",
+      "name": "Review Integration",
+      "description": "Displays verified customer reviews and ratings from Google or other platforms.",
+      "setup": 150,
+      "monthly": 15,
+      "metadata": {
+        "category": "reviews"
+      }
+    },
+    {
+      "sku": "addon-notifications",
+      "kind": "addon",
+      "name": "Email / SMS Notifications",
+      "description": "Instant alerts to staff when a customer submits a form, books or pays.",
+      "setup": 100,
+      "monthly": 15,
+      "metadata": {
+        "category": "forms"
+      }
+    },
+    {
+      "sku": "addon-payments",
+      "kind": "addon",
+      "name": "Payment Integration",
+      "description": "Accept online deposits or full payments.",
+      "setup": 300,
+      "monthly": 0,
+      "metadata": {
+        "category": "payments"
+      }
+    },
+    {
+      "sku": "addon-newsletter",
+      "kind": "addon",
+      "name": "Newsletter Signup",
+      "description": "Captures email subscribers for ongoing nurturing.",
+      "setup": 100,
+      "monthly": 0,
+      "metadata": {
+        "category": "forms"
+      }
+    }
+  ]
+}

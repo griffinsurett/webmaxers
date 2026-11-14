@@ -1,0 +1,23 @@
+# Local Postgres + pgvector for the Blueprint Agent knowledge base (demo/dev only).
+# Start: npm run db:up   Stop: npm run db:down   Reset data: npm run db:reset
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: webmaxxers-blueprint-db
+    environment:
+      POSTGRES_USER: blueprint
+      POSTGRES_PASSWORD: blueprint
+      POSTGRES_DB: blueprint
+    ports:
+      - "54329:5432"
+    volumes:
+      - blueprint-db-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blueprint -d blueprint"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  blueprint-db-data:
