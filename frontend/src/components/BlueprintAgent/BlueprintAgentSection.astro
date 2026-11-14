@@ -1,0 +1,39 @@
+---
+// src/components/BlueprintAgent/BlueprintAgentSection.astro
+import Eyebrow from "@/components/Eyebrow";
+import BlueprintAgent from "./BlueprintAgent.tsx";
+
+interface Props {
+  id?: string;
+  class?: string;
+}
+
+const { id = "blueprint-builder", class: className = "" } = Astro.props;
+---
+
+<section id={id} class:list={["relative w-full py-16 lg:py-24 px-4 sm:px-6 lg:px-8 z-20 blueprint-section-root", className]}>
+  <div class="max-w-7xl mx-auto space-y-8">
+    {/* Section Header */}
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+      <Eyebrow>AI Strategic Architecture</Eyebrow>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-md">
+        Webmaxxers Website Blueprint Builder
+      </h2>
+      <p class="text-sm sm:text-base text-zinc-300 max-w-2xl mx-auto leading-relaxed drop-shadow">
+        Chat with our AI strategist to architect your website's sitemap, content requirements, 
+        and clear investment breakdown. Click <span class="text-red-400 font-bold">✕</span> on any page node to customize your exact scope in real-time.
+      </p>
+    </div>
+
+    {/* The Interactive React Island */}
+    <BlueprintAgent client:visible />
+  </div>
+</section>
+
+<style>
+  .blueprint-section-root {
+    isolation: isolate;
+    background-color: var(--color-bg, #080808);
+  }
+</style>
+

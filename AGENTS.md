@@ -1,5 +1,20 @@
 # Webmaxxers
 
+## Repository layout
+
+One Git repository, two independent deployments:
+
+- `frontend/`: the Astro website (everything described below). Deployed to Vercel with Root
+  Directory `frontend`. **Paths in this file, such as `src/...`, `docs/...`, `dist/client` and
+  `vercel.json`, are relative to `frontend/`**, and its commands (`npm run build`, `astro check`)
+  run from `frontend/`.
+- `backend/`: the Blueprint Agent API (Express, Postgres, OpenAI). Deployed to Railway with Root
+  Directory `backend`. Its own `package.json`, tests and docs (`backend/README.md`,
+  `backend/DEPLOY.md`).
+
+The two share no code; the website reaches the backend only through `PUBLIC_AGENT_API_URL`.
+`../greastro` and `../AGENTS.md` below are relative to the repository root (this folder).
+
 This is a brand project built on Greastro. Read `../greastro/AGENTS.md` for the
 shared architecture and `../AGENTS.md` for private deployment verification.
 Preserve Webmaxxers's content and design when inheriting template utilities.
