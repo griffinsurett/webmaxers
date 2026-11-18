@@ -28,6 +28,19 @@
     ]
   },
   {
+    "id": "website-blueprint",
+    "title": "Website Blueprint",
+    "description": "Plan your website with our AI strategist and get an instant price",
+    "url": "/blueprint",
+    "icon": "fa6-solid:compass-drafting",
+    "order": 3,
+    "openInNewTab": false,
+    "menu": [
+      "main-menu",
+      "footer-menu"
+    ]
+  },
+  {
     "id": "play-for-a-discount",
     "title": "Play for a Discount",
     "description": "Beat Saucer Defender and claim a discount on your website project",
