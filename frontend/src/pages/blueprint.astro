@@ -1,6 +1,11 @@
 ---
 // src/pages/blueprint.astro
+// The star field covers the whole page (hero + tool), like the collection index
+// pages: CollectionIndexBackdrop pins one viewport-tall field behind everything,
+// and the hero and section are transparent so they inherit it.
 import SiteLayout from "@/layouts/SiteLayout.astro";
+import CollectionIndexBackdrop from "@/layouts/collections/CollectionIndexBackdrop.astro";
+import SecondaryHero from "@/layouts/heroes/SecondaryHero.astro";
 import BlueprintAgentSection from "@/components/BlueprintAgent/BlueprintAgentSection.astro";
 ---
 
@@ -8,8 +13,13 @@ import BlueprintAgentSection from "@/components/BlueprintAgent/BlueprintAgentSec
   title="AI Website Blueprint Builder"
   description="Plan your website architecture, content strategy, and get an instant transparent investment estimate with our AI website strategist."
 >
-  <main class="min-h-screen pt-24 pb-16 bg-[#080808]">
+  <CollectionIndexBackdrop>
+    <SecondaryHero
+      id="blueprint-hero"
+      title="AI Strategic Architecture"
+      heading="Webmaxxers Website Blueprint Builder"
+      description="Chat with our AI strategist to architect your website's sitemap, content requirements, and clear investment breakdown. Click ✕ on any page node to customize your exact scope in real-time."
+    />
     <BlueprintAgentSection id="blueprint" />
-  </main>
+  </CollectionIndexBackdrop>
 </SiteLayout>
-
